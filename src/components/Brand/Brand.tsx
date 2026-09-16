@@ -2,9 +2,11 @@ import React from 'react';
 
 import type { AppTheme } from '../../theme/theme';
 
-import { Image, Text, View } from 'react-native';
+import { Image, View } from 'react-native';
 import { isLoaded } from 'expo-font';
 import Svg, { Circle, Path } from 'react-native-svg';
+import { fonts } from '../../theme/typography';
+import { Text } from '../Text/Text';
 
 import styles from './Brand.styles';
 
@@ -34,7 +36,7 @@ export const TakyaBrand: React.FC<TakyaBrandProps> = (props) => {
                     styles.wordmark,
                     {
                         color,
-                        fontFamily: isLoaded('LeckerliOne') ? 'LeckerliOne' : undefined,
+                        fontFamily: isLoaded(fonts.title) ? fonts.title : undefined,
                     },
                 ]}
             >

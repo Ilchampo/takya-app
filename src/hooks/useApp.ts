@@ -42,7 +42,11 @@ export interface AppState {
 
 export const useApp = (): AppState => {
     const [fontsLoaded, fontError] = useFonts({
-        LeckerliOne: require('../../assets/LeckerliOne-Regular.ttf'),
+        LeckerliOne: require('../../assets/fonts/LeckerliOne-Regular.ttf'),
+        'Avenir-Regular': require('../../assets/fonts/Avenir-Regular.otf'),
+        'Avenir-Medium': require('../../assets/fonts/Avenir-Medium.otf'),
+        'Avenir-Heavy': require('../../assets/fonts/Avenir-Heavy.otf'),
+        'Avenir-Black': require('../../assets/fonts/Avenir-Black.otf'),
     });
 
     const [ready, setReady] = useState(false);

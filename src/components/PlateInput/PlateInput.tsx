@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import type { AppTheme } from '../../theme/theme';
 
-import { Text, TextInput, View } from 'react-native';
+import { TextInput, View } from 'react-native';
+import { Text } from '../Text/Text';
 
 import * as plateUtils from '../../lib/utils/licensePlate.utils';
 import styles from './PlateInput.styles';

@@ -2,9 +2,10 @@ import React from 'react';
 
 import type { AppTheme } from '../../theme/theme';
 
-import { Pressable, Text, useColorScheme, View } from 'react-native';
+import { Pressable, useColorScheme, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { createTheme } from '../../theme/theme';
+import { Text } from '../../components/Text/Text';
 
 import styles from './ErrorScreen.styles';
 

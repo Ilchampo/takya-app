@@ -2,8 +2,9 @@ import React from 'react';
 
 import type * as types from '../../lib/types';
 
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { vehicleDetails, vehicleLookupNote } from '../../data/vehicle.data';
+import { Text } from '../Text/Text';
 
 import styles from './VehicleDetails.styles';
 

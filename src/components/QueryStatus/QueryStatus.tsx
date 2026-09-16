@@ -3,7 +3,8 @@ import React from 'react';
 import type { AppTheme } from '../../theme/theme';
 import type * as types from '../../lib/types';
 
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, View } from 'react-native';
+import { Text } from '../Text/Text';
 import { displayPlate } from '../../lib/utils/licensePlate.utils';
 import { formatLookupDate } from '../../lib/utils/date.utils';
 import { ServiceSection } from '../ServiceSection/ServiceSection';

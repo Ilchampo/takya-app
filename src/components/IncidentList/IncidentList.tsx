@@ -3,8 +3,9 @@ import React from 'react';
 import type { FiscaliaIncident } from '../../lib/interfaces/incident.interface';
 import type * as types from '../../lib/types';
 
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { flaggedPersonFromSubject, projectedIncidentRecords } from '../../data/incidents.data';
+import { Text } from '../Text/Text';
 
 import config from '../../lib/configs/app.config';
 import styles from './IncidentList.styles';

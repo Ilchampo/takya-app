@@ -1,12 +1,14 @@
 import type * as types from '../lib/types';
 
 import { palette } from './palette';
+import { fonts } from './typography';
 
 export const createTheme = (mode: types.ThemeMode) => {
     return {
         mode,
         dark: mode === 'dark',
         colors: palette[mode],
+        fonts,
         spacing: {
             xs: 4,
             sm: 8,

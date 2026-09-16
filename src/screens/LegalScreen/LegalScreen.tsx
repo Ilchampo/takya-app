@@ -1,8 +1,9 @@
 import type { AppTheme } from '../../theme/theme';
 
-import { ScrollView, Text, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from '../../components/Icon/Icon';
+import { Text } from '../../components/Text/Text';
 import { TopBar } from '../../components/TopBar/TopBar';
 
 import styles from './LegalScreen.styles';

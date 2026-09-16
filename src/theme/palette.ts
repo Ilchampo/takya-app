@@ -2,6 +2,7 @@ import type { ThemeMode } from '../lib/types';
 
 /**
  * Edit colors here. Light and dark use the same keys so a token can be compared in one glance.
+ * Brand: primary #F7C703, secondary #E4DFD9 (light canvas), black #2A323F.
  * Native splash and adaptive icon in `app.json` still need a matching `primary` hex.
  */
 export type Palette = {
@@ -30,21 +31,21 @@ export type Palette = {
 export const palette: Record<ThemeMode, Palette> = {
     light: {
         // Surfaces
-        background: '#FCF5E6',
-        surface: '#FFFFFF',
-        surfaceMuted: '#FFF0E1',
-        surfaceStrong: '#EEEDE8',
-        border: '#E5E4DF',
+        background: '#E4DFD9',
+        surface: '#F8F6F3',
+        surfaceMuted: '#EDE6D2',
+        surfaceStrong: '#D5D0CA',
+        border: '#C9C4BE',
         // Content
-        text: '#20201E',
-        textMuted: '#66665F',
-        textFaint: '#71716A',
+        text: '#2A323F',
+        textMuted: '#5C6570',
+        textFaint: '#7A8290',
         // Brand
-        primary: '#FD7F3B',
-        primaryPressed: '#A94712',
-        onPrimary: '#341608',
-        onPrimaryMuted: '#522817',
-        onPrimaryFaint: '#71351F',
+        primary: '#F7C703',
+        primaryPressed: '#C49F02',
+        onPrimary: '#2A323F',
+        onPrimaryMuted: '#4A5565',
+        onPrimaryFaint: '#6B7380',
         onPrimaryOverlay: '#FFFFFF55',
         // Status
         success: '#19764A',
@@ -52,26 +53,26 @@ export const palette: Record<ThemeMode, Palette> = {
         danger: '#A33A25',
         dangerMuted: '#FCE8E3',
         // Effects
-        overlay: 'rgba(20, 12, 8, 0.48)',
-        shadow: '#592609',
+        overlay: 'rgba(42, 50, 63, 0.48)',
+        shadow: '#2A323F',
     },
     dark: {
         // Surfaces
-        background: '#171411',
-        surface: '#1D1D1C',
-        surfaceMuted: '#33261D',
-        surfaceStrong: '#30302F',
-        border: '#343432',
+        background: '#2A323F',
+        surface: '#343C4A',
+        surfaceMuted: '#3D3F2E',
+        surfaceStrong: '#3E4654',
+        border: '#4A5260',
         // Content
         text: '#F4F4F1',
-        textMuted: '#ACACA6',
-        textFaint: '#9A9A94',
+        textMuted: '#B0B6C0',
+        textFaint: '#8B93A0',
         // Brand
-        primary: '#FD7F3B',
-        primaryPressed: '#FD9D69',
-        onPrimary: '#341608',
-        onPrimaryMuted: '#522817',
-        onPrimaryFaint: '#71351F',
+        primary: '#F7C703',
+        primaryPressed: '#FFD54A',
+        onPrimary: '#2A323F',
+        onPrimaryMuted: '#4A5565',
+        onPrimaryFaint: '#6B7380',
         onPrimaryOverlay: '#FFFFFF55',
         // Status
         success: '#78D6A2',
@@ -79,7 +80,7 @@ export const palette: Record<ThemeMode, Palette> = {
         danger: '#FF9B88',
         dangerMuted: '#44231D',
         // Effects
-        overlay: 'rgba(20, 12, 8, 0.48)',
-        shadow: '#592609',
+        overlay: 'rgba(42, 50, 63, 0.56)',
+        shadow: '#2A323F',
     },
 };
