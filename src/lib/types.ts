@@ -9,6 +9,7 @@ export type Diagnostics = {
     status: number;
     contentType: string;
     elapsedMs: number;
+    retryAfterMs?: number;
 };
 
 export type SuccessfulSource = {
@@ -44,6 +45,8 @@ export type LookupHistoryItem = {
     fetchedAt: number;
 };
 
+export type RateLimitDecision = { allowed: true } | { allowed: false; retryAfterMs: number };
+
 export type VehicleDetail = {
     key: string;
     label: string;
@@ -61,6 +64,9 @@ export type ServiceWrapperOptions = {
     onAttempt?: (attempt: number) => void | Promise<void>;
     wait?: (ms: number, signal?: AbortSignal) => Promise<void>;
     shouldRetry?: (error: unknown, attempt: number) => boolean;
+    retryDelay?: (error: unknown, nextAttempt: number) => number | undefined;
+    onRetry?: (error: unknown, delayMs: number) => void | Promise<void>;
+    random?: () => number;
 };
 
 export type SourceTone = 'idle' | 'loading' | 'success' | 'error';
@@ -132,6 +138,9 @@ export type Dependencies = {
     vehicle?: typeof lookupVehicle;
     fiscalia?: typeof lookupFiscalia;
     wait?: (ms: number, signal?: AbortSignal) => Promise<void>;
+    consumeLookupRateLimit?: (now?: number) => Promise<RateLimitDecision>;
+    getSourceCooldown?: (service: ServiceId, now?: number) => Promise<number>;
+    setSourceCooldown?: (service: ServiceId, cooldownUntil: number) => Promise<void>;
 };
 
 export type SearchOptions = {

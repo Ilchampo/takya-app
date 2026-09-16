@@ -35,6 +35,15 @@ export const delay = (ms: number, signal?: AbortSignal): Promise<void> =>
 
 export const retryBackoffMs = (attempt: number): number => 500 * 2 ** (attempt - 2);
 
+export const retryBackoffWithJitterMs = (
+    attempt: number,
+    random: () => number = Math.random,
+): number => {
+    const jitter = Math.min(1, Math.max(0, random()));
+
+    return Math.round(retryBackoffMs(attempt) * (0.5 + jitter * 0.5));
+};
+
 const throwIfAborted = (signal?: AbortSignal): void => {
     if (signal?.aborted) {
         throw abortError();
@@ -117,10 +126,12 @@ export const serviceWrapper = async <T>(
         Number.isInteger(configuredRetries) && configuredRetries >= 0 ? configuredRetries : 0;
 
     const wait = options.wait ?? delay;
+    const random = options.random ?? (options.wait ? () => 1 : Math.random);
 
-    const { signal, onAttempt, shouldRetry } = options;
+    const { signal, onAttempt, shouldRetry, retryDelay, onRetry } = options;
 
     let lastError: unknown;
+    let nextRetryDelay = 0;
 
     for (let attempt = 1; attempt <= maxRetries + 1; attempt++) {
         throwIfAborted(signal);
@@ -130,7 +141,7 @@ export const serviceWrapper = async <T>(
                 await onAttempt(attempt);
             }
 
-            await wait(retryBackoffMs(attempt), signal);
+            await wait(nextRetryDelay, signal);
 
             throwIfAborted(signal);
         } else if (onAttempt) {
@@ -152,6 +163,19 @@ export const serviceWrapper = async <T>(
 
             if (attempt > maxRetries || (shouldRetry && !shouldRetry(error, attempt))) {
                 throw error;
+            }
+
+            const configuredDelay = retryDelay?.(error, attempt + 1);
+
+            nextRetryDelay =
+                configuredDelay !== undefined &&
+                Number.isFinite(configuredDelay) &&
+                configuredDelay >= 0
+                    ? configuredDelay
+                    : retryBackoffWithJitterMs(attempt + 1, random);
+
+            if (onRetry) {
+                await onRetry(error, nextRetryDelay);
             }
         }
     }

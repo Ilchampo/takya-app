@@ -9,6 +9,9 @@ import * as searchService from '../lib/services/search.service';
 const searchPlate = searchService.createPlateSearch({
     getCachedLookup: dbService.getCachedLookup,
     saveLookup: dbService.saveLookup,
+    consumeLookupRateLimit: dbService.consumeLookupRateLimit,
+    getSourceCooldown: dbService.getSourceCooldown,
+    setSourceCooldown: dbService.setSourceCooldown,
 });
 
 const cancelledSource = {
@@ -81,6 +84,7 @@ export const usePlateSearch = ({
 
             setLoading(true);
             setError(null);
+            setResult(null);
 
             try {
                 await searchPlate(normalized, {

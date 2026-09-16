@@ -10,6 +10,22 @@ import config from '../configs/app.config.ts';
 const isAbortError = (error: unknown): boolean =>
     error instanceof Error && error.name === 'AbortError';
 
+const parseRetryAfterMs = (value: string | null, now = Date.now()): number | undefined => {
+    if (!value) {
+        return undefined;
+    }
+
+    const seconds = Number(value);
+
+    if (Number.isFinite(seconds) && seconds >= 0) {
+        return Math.ceil(seconds * 1_000);
+    }
+
+    const date = Date.parse(value);
+
+    return Number.isFinite(date) ? Math.max(0, date - now) : undefined;
+};
+
 const configuredSourceUrl = (value: string, source: string): string => {
     const configuredValue = value.trim();
 
@@ -52,6 +68,10 @@ const request = async (
                     status: response.status,
                     contentType: response.headers.get('content-type') ?? '',
                     elapsedMs: Date.now() - startedAt,
+                    retryAfterMs:
+                        response.status === 429
+                            ? parseRetryAfterMs(response.headers.get('retry-after'))
+                            : undefined,
                 };
 
                 if (!response.ok) {

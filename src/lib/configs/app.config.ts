@@ -7,11 +7,26 @@ const TTL_DAYS = 3 as const;
 const TIMEOUT = 10 as const;
 const HISTORY_LIMIT = 5 as const;
 const MAX_RETRIES = 3 as const;
+const RATE_LIMIT_MAX_REQUESTS = 5 as const;
+const RATE_LIMIT_WINDOW_SECONDS = 60 as const;
+const RATE_LIMIT_DEFAULT_COOLDOWN_SECONDS = 60 as const;
 
 const ttlDays = parsePositiveEnvInt(process.env.EXPO_PUBLIC_APP_TTL_DAYS, TTL_DAYS);
 const historyLimit = parsePositiveEnvInt(process.env.EXPO_PUBLIC_APP_HISTORY_LIMIT, HISTORY_LIMIT);
 const timeoutSeconds = parsePositiveEnvInt(process.env.EXPO_PUBLIC_APP_TIMEOUT_SEC, TIMEOUT);
 const maxRetries = parseNonNegativeEnvInt(process.env.EXPO_PUBLIC_APP_MAX_RETRIES, MAX_RETRIES);
+const rateLimitMaxRequests = parsePositiveEnvInt(
+    process.env.EXPO_PUBLIC_APP_RATE_LIMIT_MAX_REQUESTS,
+    RATE_LIMIT_MAX_REQUESTS,
+);
+const rateLimitWindowSeconds = parsePositiveEnvInt(
+    process.env.EXPO_PUBLIC_APP_RATE_LIMIT_WINDOW_SEC,
+    RATE_LIMIT_WINDOW_SECONDS,
+);
+const rateLimitDefaultCooldownSeconds = parsePositiveEnvInt(
+    process.env.EXPO_PUBLIC_APP_RATE_LIMIT_DEFAULT_COOLDOWN_SEC,
+    RATE_LIMIT_DEFAULT_COOLDOWN_SECONDS,
+);
 
 const config: Config = {
     branding: {
@@ -29,6 +44,11 @@ const config: Config = {
         historyLimit,
         timeout: secondsTomilliSeconds(timeoutSeconds),
         maxRetries,
+        rateLimit: {
+            maxRequests: rateLimitMaxRequests,
+            window: secondsTomilliSeconds(rateLimitWindowSeconds),
+            defaultCooldown: secondsTomilliSeconds(rateLimitDefaultCooldownSeconds),
+        },
     },
 } as const;
 
