@@ -174,6 +174,7 @@ test('partial cache keeps the successful source and only fetches the missing one
         saveLookup: async (result) => {
             saved.push(result);
         },
+        consumeLookupRateLimit: async () => assert.fail('partial refetch must not consume quota'),
         vehicle: async () => assert.fail('must not refetch a cached SRI result'),
         fiscalia: async (plate) => {
             fiscaliaCalls++;
@@ -193,6 +194,7 @@ test('partial cache keeps the successful source and only fetches the missing one
 test('refresh ignores a complete cache and queries both sources again', async () => {
     let sriCalls = 0;
     let fiscaliaCalls = 0;
+    let limiterCalls = 0;
     const search = createPlateSearch({
         getCachedLookup: async () => ({
             plate: 'PBC1234',
@@ -202,6 +204,10 @@ test('refresh ignores a complete cache and queries both sources again', async ()
             fiscalia: { status: 'success', data: { cabecera: [] } },
         }),
         saveLookup: async () => {},
+        consumeLookupRateLimit: async () => {
+            limiterCalls++;
+            return { allowed: true };
+        },
         vehicle: async (plate) => {
             sriCalls++;
             return reply(plate);
@@ -214,6 +220,7 @@ test('refresh ignores a complete cache and queries both sources again', async ()
     const result = await search('PBC1234', { refresh: true, onUpdate: () => {} });
     assert.equal(sriCalls, 1);
     assert.equal(fiscaliaCalls, 1);
+    assert.equal(limiterCalls, 1);
     assert.equal(result.fromCache, false);
 });
 
