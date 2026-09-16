@@ -1,6 +1,6 @@
 import type * as types from '../types.ts';
 
-import { parseJson, stringifyJson } from '../utils/misc.utils.ts';
+import { asRecord, parseJson, stringifyJson } from '../utils/misc.utils.ts';
 import { tryNormalizePlate } from '../utils/licensePlate.utils.ts';
 import {
     isVehicleNotFoundProjection,
@@ -100,11 +100,28 @@ const sourceFromFiscaliaPayload = (
     };
 };
 
+const recordFromSource = (source: types.SuccessfulSource | null): Record<string, unknown> | null =>
+    source ? asRecord(source.data) : null;
+
 const persistableLookupPayloads = (
     result: types.LookupResult,
+    existing?: {
+        sri: Record<string, unknown> | null;
+        fiscalia: Record<string, unknown> | null;
+        fetchedAt: number;
+    },
 ): { sri: Record<string, unknown>; fiscalia: Record<string, unknown> } | null => {
-    const sri = payloadForSri(result.sri, result.plate);
-    const fiscalia = payloadForFiscalia(result.fiscalia, result.fetchedAt);
+    const sri =
+        payloadForSri(result.sri, result.plate) ??
+        recordFromSource(existing?.sri ? sourceFromSriPayload(existing.sri, result.plate) : null);
+
+    const fiscalia =
+        payloadForFiscalia(result.fiscalia, result.fetchedAt) ??
+        recordFromSource(
+            existing?.fiscalia
+                ? sourceFromFiscaliaPayload(existing.fiscalia, existing.fetchedAt)
+                : null,
+        );
 
     if (!sri && !fiscalia) {
         return null;
@@ -299,15 +316,27 @@ export const getCachedLookup = async (
 };
 
 export const saveLookup = async (result: types.LookupResult): Promise<void> => {
-    const payloads = persistableLookupPayloads(result);
-
-    if (!payloads) {
-        return;
-    }
-
     const database = await getDatabase();
 
     await database.withTransactionAsync(async () => {
+        const row = await database.getFirstAsync<types.LookupRow>(
+            'SELECT plate, sri_json, fiscalia_json, fetched_at FROM lookups WHERE plate = ?',
+            result.plate,
+        );
+
+        const sriJson = row ? parseJson(row.sri_json) : { valid: false as const };
+        const fiscaliaJson = row ? parseJson(row.fiscalia_json) : { valid: false as const };
+
+        const payloads = persistableLookupPayloads(result, {
+            sri: sriJson.valid ? sriJson.data : null,
+            fiscalia: fiscaliaJson.valid ? fiscaliaJson.data : null,
+            fetchedAt: row?.fetched_at ?? result.fetchedAt,
+        });
+
+        if (!payloads) {
+            return;
+        }
+
         await database.runAsync(
             `INSERT INTO lookups (plate, sri_json, fiscalia_json, fetched_at)
                 VALUES (?, ?, ?, ?)
