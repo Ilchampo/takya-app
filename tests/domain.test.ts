@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { incidentRecords } from '../src/data/incidents.data.ts';
-import { vehicleDetails } from '../src/data/vehicle.data.ts';
+import { vehicleDetails, vehicleLookupNote } from '../src/data/vehicle.data.ts';
 import { describeLookupAge } from '../src/lib/utils/date.utils.ts';
 import {
     displayPlate,
@@ -11,7 +11,7 @@ import {
     isValidPlate,
     normalizePlate,
 } from '../src/lib/utils/licensePlate.utils.ts';
-import { sanitizeGovernmentData } from '../src/lib/utils/privacy.utils.ts';
+import { projectVehicleData, sanitizeGovernmentData } from '../src/lib/utils/privacy.utils.ts';
 
 test('plate input formatting is friendly but service normalization remains strict', () => {
     assert.equal(formatPlateInput(' abc-1234 '), 'ABC-1234');
@@ -62,6 +62,46 @@ test('vehicle details are defensive and preserve unavailable values', () => {
     );
     assert.equal(vehicleDetails({ mensaje: 'sin datos' }), null);
     assert.equal(vehicleDetails([]), null);
+    assert.equal(
+        vehicleDetails({
+            sriVehicleNotFound: true,
+            mensaje: 'El vehículo no existe',
+        }),
+        null,
+    );
+    assert.equal(
+        vehicleLookupNote({
+            sriVehicleNotFound: true,
+            mensaje: 'El vehículo no existe',
+        }),
+        'El vehículo no existe',
+    );
+});
+
+test('SRI projection keeps vehicle sheets and explicit not-found replies', () => {
+    assert.deepEqual(
+        projectVehicleData({
+            numeroPlaca: 'PBC1234',
+            descripcionMarca: 'KIA',
+            cedulaPropietario: '0123456789',
+        }),
+        {
+            numeroPlaca: 'PBC1234',
+            descripcionMarca: 'KIA',
+        },
+    );
+    assert.deepEqual(
+        projectVehicleData({
+            data: [],
+            objeto: null,
+            mensajeServidor: { texto: 'El vehículo no existe' },
+        }),
+        {
+            sriVehicleNotFound: true,
+            mensaje: 'El vehículo no existe',
+        },
+    );
+    assert.equal(projectVehicleData({ mensajeServidor: { texto: 'error interno' } }), null);
 });
 
 test('incident parser keeps only general Fiscalía fields and ignores the rest', () => {

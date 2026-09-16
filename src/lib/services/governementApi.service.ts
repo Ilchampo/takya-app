@@ -3,7 +3,11 @@ import type * as types from '../types.ts';
 import { GovernmentApiError } from '../errors/service.errors.ts';
 import { abortError, serviceWrapper } from '../utils/service.utils.ts';
 import { normalizePlate, tryNormalizePlate } from '../utils/licensePlate.utils.ts';
-import { projectFiscaliaData, projectVehicleData } from '../utils/privacy.utils.ts';
+import {
+    isVehicleNotFoundProjection,
+    projectFiscaliaData,
+    projectVehicleData,
+} from '../utils/privacy.utils.ts';
 
 import config from '../configs/app.config.ts';
 
@@ -216,7 +220,11 @@ export const lookupVehicle = async (value: string, options: types.RequestOptions
     );
     const data = projectVehicleData(result.data);
 
-    if (!data || tryNormalizePlate(String(data.numeroPlaca)) !== plate) {
+    if (
+        !data ||
+        (!isVehicleNotFoundProjection(data) &&
+            tryNormalizePlate(String(data.numeroPlaca)) !== plate)
+    ) {
         throw new GovernmentApiError(
             'La fuente no devolvió una ficha vehicular válida para esta placa.',
             result.diagnostics,

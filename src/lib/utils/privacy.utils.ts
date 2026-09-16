@@ -1,5 +1,5 @@
 import { incidentRecords } from '../../data/incidents.data.ts';
-import { asRecord } from './misc.utils.ts';
+import { asRecord, asText } from './misc.utils.ts';
 
 const MAX_VEHICLE_FIELD_LENGTH = 120;
 const MAX_INCIDENTS = 100;
@@ -53,25 +53,56 @@ const safeVehicleValue = (value: unknown): string | number | boolean | null => {
     return typeof value === 'boolean' ? value : null;
 };
 
-export const projectVehicleData = (data: unknown): Record<string, unknown> | null => {
-    const record = asRecord(sanitizeGovernmentData(data));
+const vehicleNotFoundMessage = (record: Record<string, unknown>): string | null => {
+    if (record.sriVehicleNotFound === true) {
+        return asText(record.mensaje) || 'El vehículo no existe';
+    }
 
-    if (!record || typeof record.numeroPlaca !== 'string' || !record.numeroPlaca.trim()) {
+    const mensajeServidor = asRecord(record.mensajeServidor);
+    const mensaje = asText(mensajeServidor?.texto);
+
+    if (record.objeto !== null || !Array.isArray(record.data) || !mensaje) {
         return null;
     }
 
-    const projected: Record<string, unknown> = {
-        numeroPlaca: record.numeroPlaca.trim().slice(0, MAX_VEHICLE_FIELD_LENGTH),
-    };
+    return mensaje;
+};
 
-    for (const key of ['descripcionMarca', 'descripcionModelo', 'colorVehiculo1']) {
-        if (key in record) {
-            projected[key] = safeVehicleValue(record[key]);
-        }
+export const projectVehicleData = (data: unknown): Record<string, unknown> | null => {
+    const record = asRecord(sanitizeGovernmentData(data));
+
+    if (!record) {
+        return null;
     }
 
-    return projected;
+    if (typeof record.numeroPlaca === 'string' && record.numeroPlaca.trim()) {
+        const projected: Record<string, unknown> = {
+            numeroPlaca: record.numeroPlaca.trim().slice(0, MAX_VEHICLE_FIELD_LENGTH),
+        };
+
+        for (const key of ['descripcionMarca', 'descripcionModelo', 'colorVehiculo1']) {
+            if (key in record) {
+                projected[key] = safeVehicleValue(record[key]);
+            }
+        }
+
+        return projected;
+    }
+
+    const mensaje = vehicleNotFoundMessage(record);
+
+    if (!mensaje) {
+        return null;
+    }
+
+    return {
+        sriVehicleNotFound: true,
+        mensaje: mensaje.slice(0, MAX_VEHICLE_FIELD_LENGTH),
+    };
 };
+
+export const isVehicleNotFoundProjection = (data: Record<string, unknown>): boolean =>
+    data.sriVehicleNotFound === true;
 
 export const projectFiscaliaData = (data: unknown): Record<string, unknown> | null => {
     const incidents = incidentRecords(sanitizeGovernmentData(data));

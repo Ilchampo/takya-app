@@ -3,7 +3,7 @@ import React from 'react';
 import type { AppTheme } from '../../theme/theme';
 
 import { StyleSheet, Text, View } from 'react-native';
-import { vehicleDetails } from '../../data/vehicle.data';
+import { vehicleDetails, vehicleLookupNote } from '../../data/vehicle.data';
 
 import styles from './VehicleDetails.styles';
 
@@ -15,11 +15,12 @@ interface VehicleDetailsProps {
 export const VehicleDetails: React.FC<VehicleDetailsProps> = (props) => {
     const { data, theme } = props;
     const details = vehicleDetails(data);
+    const note = vehicleLookupNote(data);
 
     if (!details) {
         return (
             <Text style={[styles.note, { color: theme.colors.textMuted }]}>
-                La respuesta no contiene una ficha vehicular que podamos mostrar.
+                {note ?? 'La respuesta no contiene una ficha vehicular que podamos mostrar.'}
             </Text>
         );
     }
