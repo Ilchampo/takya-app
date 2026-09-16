@@ -62,11 +62,30 @@ export const initializeDatabase = async (now = Date.now()): Promise<void> => {
       key TEXT PRIMARY KEY NOT NULL,
       value TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS lookup_rate_events (
+      requested_at INTEGER NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS lookup_rate_events_requested_at
+      ON lookup_rate_events(requested_at);
+
+    CREATE TABLE IF NOT EXISTS source_cooldowns (
+      source TEXT PRIMARY KEY NOT NULL,
+      cooldown_until INTEGER NOT NULL
+    );
   `);
 
     await deleteExpiredLookups(now);
     await scrubCachedSensitiveData(database);
     await trimHistory();
+
+    await database.runAsync(
+        'DELETE FROM lookup_rate_events WHERE requested_at <= ?',
+        now - config.service.rateLimit.window,
+    );
+
+    await database.runAsync('DELETE FROM source_cooldowns WHERE cooldown_until <= ?', now);
 };
 
 export const deleteExpiredLookups = async (now = Date.now()): Promise<void> => {
@@ -160,6 +179,101 @@ export const listLookupHistory = async (now = Date.now()): Promise<types.LookupH
         'SELECT plate, fetched_at AS fetchedAt FROM lookups WHERE fetched_at > ? ORDER BY fetched_at DESC LIMIT ?',
         now - config.service.TTL,
         config.service.historyLimit,
+    );
+};
+
+export const consumeLookupRateLimit = async (
+    now = Date.now(),
+): Promise<types.RateLimitDecision> => {
+    const database = await getDatabase();
+    const windowStartedAt = now - config.service.rateLimit.window;
+
+    let decision: types.RateLimitDecision = {
+        allowed: false,
+        retryAfterMs: config.service.rateLimit.window,
+    };
+
+    await database.withTransactionAsync(async () => {
+        await database.runAsync(
+            'DELETE FROM lookup_rate_events WHERE requested_at <= ?',
+            windowStartedAt,
+        );
+
+        const state = await database.getFirstAsync<{
+            requestCount: number;
+            oldestRequest: number | null;
+        }>(
+            `SELECT
+                COUNT(*) AS requestCount,
+                MIN(requested_at) AS oldestRequest
+             FROM lookup_rate_events`,
+        );
+
+        if ((state?.requestCount ?? 0) >= config.service.rateLimit.maxRequests) {
+            const oldestRequest = state?.oldestRequest ?? now;
+
+            decision = {
+                allowed: false,
+                retryAfterMs: Math.max(
+                    1_000,
+                    Math.min(
+                        config.service.rateLimit.window,
+                        oldestRequest + config.service.rateLimit.window - now,
+                    ),
+                ),
+            };
+
+            return;
+        }
+
+        await database.runAsync('INSERT INTO lookup_rate_events (requested_at) VALUES (?)', now);
+
+        decision = { allowed: true };
+    });
+
+    return decision;
+};
+
+export const getSourceCooldown = async (
+    source: types.ServiceId,
+    now = Date.now(),
+): Promise<number> => {
+    const database = await getDatabase();
+
+    const row = await database.getFirstAsync<{ cooldownUntil: number }>(
+        'SELECT cooldown_until AS cooldownUntil FROM source_cooldowns WHERE source = ?',
+        source,
+    );
+
+    if (!row) {
+        return 0;
+    }
+
+    if (row.cooldownUntil <= now) {
+        await database.runAsync('DELETE FROM source_cooldowns WHERE source = ?', source);
+        return 0;
+    }
+
+    return row.cooldownUntil - now;
+};
+
+export const setSourceCooldown = async (
+    source: types.ServiceId,
+    cooldownUntil: number,
+): Promise<void> => {
+    if (!Number.isFinite(cooldownUntil) || cooldownUntil <= Date.now()) {
+        return;
+    }
+
+    const database = await getDatabase();
+
+    await database.runAsync(
+        `INSERT INTO source_cooldowns (source, cooldown_until)
+         VALUES (?, ?)
+         ON CONFLICT(source) DO UPDATE SET
+           cooldown_until = MAX(source_cooldowns.cooldown_until, excluded.cooldown_until)`,
+        source,
+        cooldownUntil,
     );
 };
 
