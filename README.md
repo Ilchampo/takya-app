@@ -17,6 +17,7 @@ expires automatically and can be deleted at any time from the application.
 ## Store builds
 
 Set `EXPO_PUBLIC_SRI_URL`, `EXPO_PUBLIC_FISCALIA_LOOKUP_URL`, and `EXPO_PUBLIC_FISCALIA_ENTRY_URL`
-as EAS environment variables or secrets before running `eas build`. Native versioning uses
-`ios.buildNumber` and `android.versionCode` in `app.json`; production builds auto-increment those
-values locally.
+as EAS environment variables or secrets before running `eas build`. Native versioning is stored
+remotely by EAS (`appVersionSource: "remote"`). Production builds auto-increment `ios.buildNumber`
+and `android.versionCode` on Expo's servers, so those values do not need to be committed after each
+upload.

@@ -143,8 +143,12 @@ export const createPlateSearch = (dependencies: types.Dependencies) => {
             return cached;
         }
 
-        await assertRateLimit();
-        checkCancelled();
+        const completingCachedLookup = Boolean(cachedSri || cachedFiscalia);
+
+        if (!completingCachedLookup) {
+            await assertRateLimit();
+            checkCancelled();
+        }
 
         let snapshot: types.LookupProgress = {
             plate,
