@@ -9,11 +9,21 @@
         "ios": "expo start --ios",
         "typecheck": "tsc --noEmit",
         "test": "node --experimental-strip-types --test tests/*.test.ts",
-        "verify": "npm run typecheck && npm run lint && npm test",
+        "verify": "npm run typecheck && npm run format && npm run lint",
         "format": "prettier --write .",
         "format:check": "prettier --check .",
         "lint": "expo lint",
-        "lint:fix": "expo lint --fix"
+        "lint:fix": "expo lint --fix",
+        "prepare": "husky"
+    },
+    "lint-staged": {
+        "*.{js,jsx,ts,tsx}": [
+            "prettier --write",
+            "eslint --fix"
+        ],
+        "*.{json,md}": [
+            "prettier --write"
+        ]
     },
     "dependencies": {
         "eslint-config-expo": "~57.0.2",
@@ -32,6 +42,8 @@
         "@types/react": "~19.2.2",
         "eslint": "^9.39.5",
         "eslint-config-prettier": "^10.1.8",
+        "husky": "^9.1.7",
+        "lint-staged": "^17.5.1",
         "prettier": "^3.9.7",
         "typescript": "~6.0.3"
     }
