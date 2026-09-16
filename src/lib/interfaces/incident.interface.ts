@@ -9,7 +9,7 @@ export interface FlaggedPerson {
 
 export interface FiscaliaSubject {
     persona: string;
-    tipo: string;
+    tipo: FlaggedPersonStatus;
 }
 
 export interface FiscaliaIncident {

@@ -1,7 +1,7 @@
 import type { Config } from '../interfaces/config.interface';
 
-import { daysToMilliSeconds, secondsTomilliSeconds } from '../utils/date.utils';
-import { parsePositiveEnvInt, parseNonNegativeEnvInt } from '../utils/misc.utils';
+import { daysToMilliSeconds, secondsTomilliSeconds } from '../utils/date.utils.ts';
+import { parsePositiveEnvInt, parseNonNegativeEnvInt } from '../utils/misc.utils.ts';
 
 const TTL_DAYS = 3 as const;
 const TIMEOUT = 10 as const;

@@ -1,4 +1,4 @@
-import { incidentRecords } from '../../data/incidents.data.ts';
+import { fiscaliaIncidents } from '../../data/incidents.data.ts';
 import { asRecord, asText } from './misc.utils.ts';
 
 const MAX_VEHICLE_FIELD_LENGTH = 120;
@@ -6,6 +6,8 @@ const MAX_INCIDENTS = 100;
 const MAX_INCIDENT_PEOPLE = 100;
 const MAX_INCIDENT_FIELD_LENGTH = 500;
 const MAX_PERSON_NAME_LENGTH = 160;
+
+const VEHICLE_DETAIL_KEYS = ['descripcionMarca', 'descripcionModelo', 'colorVehiculo1'] as const;
 
 const normalizedKey = (key: string): string =>
     key
@@ -41,9 +43,11 @@ const sanitizeValue = (value: unknown, insideSubjects = false): unknown => {
 
 export const sanitizeGovernmentData = (data: unknown): unknown => sanitizeValue(data);
 
+const clip = (value: string, maxLength: number): string => value.slice(0, maxLength);
+
 const safeVehicleValue = (value: unknown): string | number | boolean | null => {
     if (typeof value === 'string') {
-        return value.trim().slice(0, MAX_VEHICLE_FIELD_LENGTH);
+        return clip(value.trim(), MAX_VEHICLE_FIELD_LENGTH);
     }
 
     if (typeof value === 'number' && Number.isFinite(value)) {
@@ -69,7 +73,7 @@ const vehicleNotFoundMessage = (record: Record<string, unknown>): string | null 
 };
 
 export const projectVehicleData = (data: unknown): Record<string, unknown> | null => {
-    const record = asRecord(sanitizeGovernmentData(data));
+    const record = asRecord(data);
 
     if (!record) {
         return null;
@@ -77,10 +81,10 @@ export const projectVehicleData = (data: unknown): Record<string, unknown> | nul
 
     if (typeof record.numeroPlaca === 'string' && record.numeroPlaca.trim()) {
         const projected: Record<string, unknown> = {
-            numeroPlaca: record.numeroPlaca.trim().slice(0, MAX_VEHICLE_FIELD_LENGTH),
+            numeroPlaca: clip(record.numeroPlaca.trim(), MAX_VEHICLE_FIELD_LENGTH),
         };
 
-        for (const key of ['descripcionMarca', 'descripcionModelo', 'colorVehiculo1']) {
+        for (const key of VEHICLE_DETAIL_KEYS) {
             if (key in record) {
                 projected[key] = safeVehicleValue(record[key]);
             }
@@ -97,7 +101,7 @@ export const projectVehicleData = (data: unknown): Record<string, unknown> | nul
 
     return {
         sriVehicleNotFound: true,
-        mensaje: mensaje.slice(0, MAX_VEHICLE_FIELD_LENGTH),
+        mensaje: clip(mensaje, MAX_VEHICLE_FIELD_LENGTH),
     };
 };
 
@@ -109,7 +113,7 @@ export const projectFiscaliaData = (
     endDate = Date.now(),
     months = 24,
 ): Record<string, unknown> | null => {
-    const incidents = incidentRecords(sanitizeGovernmentData(data), endDate, months);
+    const incidents = fiscaliaIncidents(data, endDate, months);
 
     if (!incidents) {
         return null;
@@ -119,19 +123,19 @@ export const projectFiscaliaData = (
 
     return {
         cabecera: incidents.slice(0, MAX_INCIDENTS).map((incident) => {
-            const people = incident.personasSenaladas.slice(0, remainingPeople).map((person) => ({
-                persona: person.nombreCompleto.slice(0, MAX_PERSON_NAME_LENGTH),
-                tipo: person.estado,
+            const people = incident.sujetos.slice(0, remainingPeople).map((person) => ({
+                persona: clip(person.persona, MAX_PERSON_NAME_LENGTH),
+                tipo: person.tipo,
             }));
 
             remainingPeople -= people.length;
 
             return {
-                ciudad: incident.ciudad.slice(0, MAX_INCIDENT_FIELD_LENGTH),
-                fecha: incident.fecha.slice(0, MAX_INCIDENT_FIELD_LENGTH),
-                hora: incident.hora.slice(0, MAX_INCIDENT_FIELD_LENGTH),
-                gen_delito_tipopenal: incident.gen_delito_tipopenal.slice(
-                    0,
+                ciudad: clip(incident.ciudad, MAX_INCIDENT_FIELD_LENGTH),
+                fecha: clip(incident.fecha, MAX_INCIDENT_FIELD_LENGTH),
+                hora: clip(incident.hora, MAX_INCIDENT_FIELD_LENGTH),
+                gen_delito_tipopenal: clip(
+                    incident.gen_delito_tipopenal,
                     MAX_INCIDENT_FIELD_LENGTH,
                 ),
                 sujetos: people,

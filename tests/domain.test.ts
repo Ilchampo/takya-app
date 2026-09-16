@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { incidentRecords } from '../src/data/incidents.data.ts';
+import { incidentRecords, projectedIncidentRecords } from '../src/data/incidents.data.ts';
 import { vehicleDetails, vehicleLookupNote } from '../src/data/vehicle.data.ts';
 import {
     describeLookupAge,
@@ -15,7 +15,11 @@ import {
     isValidPlate,
     normalizePlate,
 } from '../src/lib/utils/licensePlate.utils.ts';
-import { projectVehicleData, sanitizeGovernmentData } from '../src/lib/utils/privacy.utils.ts';
+import {
+    projectFiscaliaData,
+    projectVehicleData,
+    sanitizeGovernmentData,
+} from '../src/lib/utils/privacy.utils.ts';
 
 test('plate input formatting is friendly but service normalization remains strict', () => {
     assert.equal(formatPlateInput(' abc-1234 '), 'ABC-1234');
@@ -106,6 +110,52 @@ test('SRI projection keeps vehicle sheets and explicit not-found replies', () =>
         },
     );
     assert.equal(projectVehicleData({ mensajeServidor: { texto: 'error interno' } }), null);
+});
+
+test('Fiscalía projection allowlists UI fields and is idempotent', () => {
+    const requestDate = Date.parse('2026-09-16T12:00:00');
+    const raw = {
+        mensaje: 'ruido',
+        cabecera: [
+            {
+                ndd: 'REF-1',
+                fecha: '2026-09-14',
+                hora: '11:01:05',
+                gen_delito_tipopenal: 'Registro de prueba',
+                ciudad: 'Quito',
+                pro_descripcion: 'Pichincha',
+                vehiculos: [{ placa: 'PBC1234' }],
+                sujetos: [
+                    {
+                        0: '0123456789',
+                        cedula: '0123456789',
+                        persona: 'CRESPO GARCIA JONNY MANOLO',
+                        tipo: 'SOSPECHOSO',
+                    },
+                ],
+            },
+        ],
+    };
+    const projected = projectFiscaliaData(raw, requestDate);
+
+    assert.deepEqual(projected, {
+        cabecera: [
+            {
+                ciudad: 'Quito',
+                fecha: '2026-09-14',
+                hora: '11:01:05',
+                gen_delito_tipopenal: 'Registro de prueba',
+                sujetos: [
+                    {
+                        persona: 'CRESPO GARCIA JONNY MANOLO',
+                        tipo: 'SOSPECHOSO',
+                    },
+                ],
+            },
+        ],
+    });
+    assert.deepEqual(projectFiscaliaData(projected, requestDate), projected);
+    assert.equal(raw.cabecera[0]?.sujetos[0]?.cedula, '0123456789');
 });
 
 test('incident parser keeps only general Fiscalía fields and ignores the rest', () => {
@@ -293,6 +343,12 @@ test('incident parser keeps only records inside the lookback window', () => {
     assert.deepEqual(
         incidentRecords({ cabecera: [sample('2011-11-09', '08:00:00')] }, requestDate),
         [],
+    );
+    assert.deepEqual(
+        projectedIncidentRecords({
+            cabecera: [sample('2011-11-09', '08:00:00')],
+        })?.map((incident) => incident.fecha),
+        ['2011-11-09'],
     );
     assert.equal(isWithinLookback('16/09/2024', requestDate, 24), true);
     assert.equal(isWithinLookback('15/09/2024', requestDate, 24), false);

@@ -28,6 +28,12 @@ test('SRI lookup uses a normalized encoded plate and a GET request', async () =>
 
 test('Fiscalía lookup initializes its session and sends the captured form contract', async () => {
     const urls: unknown[] = [];
+    const now = new Date();
+    const fecha = [
+        now.getFullYear(),
+        String(now.getMonth() + 1).padStart(2, '0'),
+        String(now.getDate()).padStart(2, '0'),
+    ].join('-');
     const result = await lookupFiscalia('ABC-123', {
         initializeSession: true,
         fetchImpl: async (url, init) => {
@@ -44,9 +50,15 @@ test('Fiscalía lookup initializes its session and sends the captured form contr
                 (init?.headers as Record<string, string>)['Content-Type'],
                 'application/x-www-form-urlencoded',
             );
+
             return Response.json({
                 cabecera: [
                     {
+                        ndd: 'REF-1',
+                        fecha,
+                        hora: '11:01:05',
+                        gen_delito_tipopenal: 'Registro de prueba',
+                        ciudad: 'Quito',
                         sujetos: [
                             {
                                 0: '0123456789',
@@ -64,6 +76,10 @@ test('Fiscalía lookup initializes its session and sends the captured form contr
     assert.deepEqual(result.data, {
         cabecera: [
             {
+                ciudad: 'Quito',
+                fecha,
+                hora: '11:01:05',
+                gen_delito_tipopenal: 'Registro de prueba',
                 sujetos: [
                     {
                         persona: 'CRESPO GARCIA JONNY MANOLO',
@@ -195,7 +211,7 @@ test('Fiscalía session and lookup receive separate timeout signals', async () =
             signals.push(init?.signal);
             return url === config.source.fiscaliaEntry
                 ? new Response('session')
-                : Response.json({});
+                : Response.json({ cabecera: [] });
         },
     });
     assert.equal(signals.length, 2);
