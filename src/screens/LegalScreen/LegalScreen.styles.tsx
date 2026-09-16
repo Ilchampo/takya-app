@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import { fonts } from '../../theme/typography';
 
 const styles = StyleSheet.create({
     safe: { flex: 1 },
@@ -19,10 +20,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     title: {
+        fontFamily: fonts.title,
         fontSize: 34,
-        lineHeight: 38,
-        fontWeight: '900',
-        letterSpacing: -1.1,
+        lineHeight: 46,
     },
     intro: { fontSize: 15, lineHeight: 23 },
     card: { borderWidth: 1, borderRadius: 22, padding: 18, gap: 14 },

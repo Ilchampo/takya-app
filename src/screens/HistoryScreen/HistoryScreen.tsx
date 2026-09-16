@@ -3,11 +3,12 @@ import React from 'react';
 import type { AppTheme } from '../../theme/theme';
 import type * as types from '../../lib/types';
 
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TopBar } from '../../components/TopBar/TopBar';
 import { QueryStatus } from '../../components/QueryStatus/QueryStatus';
 import { Button } from '../../components/Button/Button';
+import { Text } from '../../components/Text/Text';
 import { displayPlate } from '../../lib/utils/licensePlate.utils';
 
 import styles from './HistoryScreen.styles';

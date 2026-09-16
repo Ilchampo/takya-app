@@ -1,4 +1,5 @@
 import { StyleSheet } from 'react-native';
+import { fonts } from '../../theme/typography';
 
 const styles = StyleSheet.create({
     safe: {
@@ -15,9 +16,9 @@ const styles = StyleSheet.create({
         gap: 14,
     },
     title: {
+        fontFamily: fonts.title,
         fontSize: 26,
-        lineHeight: 32,
-        fontWeight: '700',
+        lineHeight: 36,
     },
     message: {
         fontSize: 15,

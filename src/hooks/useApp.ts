@@ -5,12 +5,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { BackHandler } from 'react-native';
 import { useFonts } from 'expo-font';
 
+import { validateGovernmentApiConfig } from '../lib/services/governementApi.service';
 import { useAppTheme } from './useAppTheme';
 import { usePlateSearch } from './usePlateSearch';
 import { useSavedLookup } from './useSavedLookup';
 
 import * as dbService from '../lib/services/database.service';
-import { validateGovernmentApiConfig } from '../lib/services/governementApi.service';
 
 export interface AppState {
     fontsLoaded: boolean;
@@ -42,7 +42,11 @@ export interface AppState {
 
 export const useApp = (): AppState => {
     const [fontsLoaded, fontError] = useFonts({
-        LeckerliOne: require('../../assets/LeckerliOne-Regular.ttf'),
+        LeckerliOne: require('../../assets/fonts/LeckerliOne-Regular.ttf'),
+        'Avenir-Regular': require('../../assets/fonts/Avenir-Regular.otf'),
+        'Avenir-Medium': require('../../assets/fonts/Avenir-Medium.otf'),
+        'Avenir-Heavy': require('../../assets/fonts/Avenir-Heavy.otf'),
+        'Avenir-Black': require('../../assets/fonts/Avenir-Black.otf'),
     });
 
     const [ready, setReady] = useState(false);

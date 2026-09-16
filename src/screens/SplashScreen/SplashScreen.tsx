@@ -1,10 +1,12 @@
 import React from 'react';
 
-import { Image, Text, View } from 'react-native';
+import { Image, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { isLoaded } from 'expo-font';
 import { AstrobitLogo } from '../../components/Brand/Brand';
+import { Text } from '../../components/Text/Text';
 import { palette } from '../../theme/palette';
+import { fonts } from '../../theme/typography';
 
 import styles from './SplashScreen.styles';
 
@@ -19,7 +21,7 @@ export const SplashScreen: React.FC = () => (
             <Text
                 style={[
                     styles.wordmark,
-                    { fontFamily: isLoaded('LeckerliOne') ? 'LeckerliOne' : undefined },
+                    { fontFamily: isLoaded(fonts.title) ? fonts.title : undefined },
                 ]}
             >
                 Takya

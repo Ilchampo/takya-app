@@ -9,7 +9,6 @@ import {
     Pressable,
     ScrollView,
     StyleSheet,
-    Text,
     View,
 } from 'react-native';
 import { displayPlate, isValidPlate, normalizePlate } from '../../lib/utils/licensePlate.utils';
@@ -19,6 +18,7 @@ import { describeLookupAge } from '../../lib/utils/date.utils';
 import { Icon } from '../../components/Icon/Icon';
 import { PlateInput } from '../../components/PlateInput/PlateInput';
 import { QueryStatus } from '../../components/QueryStatus/QueryStatus';
+import { Text } from '../../components/Text/Text';
 import { TopBar } from '../../components/TopBar/TopBar';
 
 import config from '../../lib/configs/app.config';

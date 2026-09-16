@@ -4,8 +4,9 @@ import type { ReactNode } from 'react';
 import type { ButtonType } from '../../lib/types';
 import type { AppTheme } from '../../theme/theme';
 
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, View } from 'react-native';
 import { Icon } from '../Icon/Icon';
+import { Text } from '../Text/Text';
 
 import styles from './Button.styles';
 
