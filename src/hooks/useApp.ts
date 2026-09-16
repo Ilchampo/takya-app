@@ -35,6 +35,7 @@ export interface AppState {
     openLegal: VoidFunction;
     closeLegal: VoidFunction;
     toggleTheme: VoidFunction;
+    clearHistory: () => Promise<boolean>;
 }
 
 export const useApp = (): AppState => {
@@ -125,6 +126,19 @@ export const useApp = (): AppState => {
         setShowLegal(false);
     }, []);
 
+    const clearHistory = useCallback(async (): Promise<boolean> => {
+        cancelSearch();
+
+        try {
+            await dbService.clearLookupHistory();
+            setHistory([]);
+            return true;
+        } catch {
+            onStorageError();
+            return false;
+        }
+    }, [cancelSearch, onStorageError]);
+
     return {
         fontsLoaded,
         fontError,
@@ -149,5 +163,6 @@ export const useApp = (): AppState => {
         openLegal,
         closeLegal,
         toggleTheme,
+        clearHistory,
     };
 };

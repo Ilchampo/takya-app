@@ -21,6 +21,7 @@ interface Service {
     historyLimit: number;
     timeout: number;
     maxRetries: number;
+    maxResponseBytes: number;
     rateLimit: RateLimit;
 }
 

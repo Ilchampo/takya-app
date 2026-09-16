@@ -32,6 +32,7 @@ export default function App() {
         openLegal,
         closeLegal,
         toggleTheme,
+        clearHistory,
     } = useApp();
 
     return (
@@ -56,6 +57,7 @@ export default function App() {
                             onOpenHistory={(recentPlate) => void openHistory(recentPlate)}
                             onOpenLegal={openLegal}
                             onToggleTheme={toggleTheme}
+                            onClearHistory={clearHistory}
                         />
                     )}
                     {!showLegal && savedPlate && (

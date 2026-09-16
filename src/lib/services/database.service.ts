@@ -1,7 +1,7 @@
 import type * as types from '../types.ts';
 
 import { parseJson, stringifyJson } from '../utils/misc.utils.ts';
-import { sanitizeGovernmentData } from '../utils/privacy.utils.ts';
+import { projectFiscaliaData, projectVehicleData } from '../utils/privacy.utils.ts';
 
 import config from '../configs/app.config.ts';
 import * as SQLite from 'expo-sqlite';
@@ -29,8 +29,16 @@ const scrubCachedSensitiveData = async (database: SQLite.SQLiteDatabase): Promis
                 continue;
             }
 
-            const sanitizedSri = stringifyJson(sanitizeGovernmentData(sri.data));
-            const sanitizedFiscalia = stringifyJson(sanitizeGovernmentData(fiscalia.data));
+            const projectedSri = projectVehicleData(sri.data);
+            const projectedFiscalia = projectFiscaliaData(fiscalia.data);
+
+            if (!projectedSri || !projectedFiscalia) {
+                await database.runAsync('DELETE FROM lookups WHERE plate = ?', row.plate);
+                continue;
+            }
+
+            const sanitizedSri = stringifyJson(projectedSri);
+            const sanitizedFiscalia = stringifyJson(projectedFiscalia);
 
             if (sanitizedSri !== row.sri_json || sanitizedFiscalia !== row.fiscalia_json) {
                 await database.runAsync(
@@ -130,15 +138,23 @@ export const getCachedLookup = async (
         return null;
     }
 
+    const projectedSri = projectVehicleData(sri.data);
+    const projectedFiscalia = projectFiscaliaData(fiscalia.data);
+
+    if (!projectedSri || !projectedFiscalia) {
+        await database.runAsync('DELETE FROM lookups WHERE plate = ?', row.plate);
+        return null;
+    }
+
     return {
         plate: row.plate,
         sri: {
             status: 'success',
-            data: sanitizeGovernmentData(sri.data),
+            data: projectedSri,
         },
         fiscalia: {
             status: 'success',
-            data: sanitizeGovernmentData(fiscalia.data),
+            data: projectedFiscalia,
         },
         fetchedAt: row.fetched_at,
         fromCache: true,
@@ -150,8 +166,13 @@ export const saveLookup = async (result: types.LookupResult): Promise<void> => {
         return;
     }
 
-    const sriData = sanitizeGovernmentData(result.sri.data);
-    const fiscaliaData = sanitizeGovernmentData(result.fiscalia.data);
+    const sriData = projectVehicleData(result.sri.data);
+    const fiscaliaData = projectFiscaliaData(result.fiscalia.data);
+
+    if (!sriData || !fiscaliaData) {
+        return;
+    }
+
     const database = await getDatabase();
 
     await database.withTransactionAsync(async () => {
@@ -180,6 +201,12 @@ export const listLookupHistory = async (now = Date.now()): Promise<types.LookupH
         now - config.service.TTL,
         config.service.historyLimit,
     );
+};
+
+export const clearLookupHistory = async (): Promise<void> => {
+    const database = await getDatabase();
+
+    await database.runAsync('DELETE FROM lookups');
 };
 
 export const consumeLookupRateLimit = async (
