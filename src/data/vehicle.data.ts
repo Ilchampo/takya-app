@@ -1,6 +1,7 @@
 import type * as types from '../lib/types.ts';
 
 import { displayPlate } from '../lib/utils/licensePlate.utils.ts';
+import { asRecord, asText } from '../lib/utils/misc.utils.ts';
 
 const fields = [
     ['descripcionMarca', 'Marca'],
@@ -25,14 +26,20 @@ const displayValue = (value: unknown): string => {
     return 'No disponible';
 };
 
-export const vehicleDetails = (data: unknown): types.VehicleDetail[] | null => {
-    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+export const vehicleLookupNote = (data: unknown): string | null => {
+    const record = asRecord(data);
+
+    if (!record || record.sriVehicleNotFound !== true) {
         return null;
     }
 
-    const record = data as Record<string, unknown>;
+    return asText(record.mensaje) ?? 'El vehículo no existe';
+};
 
-    if (typeof record.numeroPlaca !== 'string' || !record.numeroPlaca.trim()) {
+export const vehicleDetails = (data: unknown): types.VehicleDetail[] | null => {
+    const record = asRecord(data);
+
+    if (!record || typeof record.numeroPlaca !== 'string' || !record.numeroPlaca.trim()) {
         return null;
     }
 

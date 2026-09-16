@@ -268,7 +268,7 @@ export const createPlateSearch = (dependencies: types.Dependencies) => {
             fetchedAt: Date.now(),
         };
 
-        if (sri.status === 'success' && fiscaliaResult.status === 'success') {
+        if (sri.status === 'success' || fiscaliaResult.status === 'success') {
             try {
                 await dependencies.saveLookup(result);
             } catch {

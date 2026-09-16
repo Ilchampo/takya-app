@@ -54,14 +54,17 @@ test('one source becomes readable while its sibling is still pending', async () 
     assert.equal(saved[0]?.fiscalia.status, 'success');
 });
 
-test('exhausts configured retries only for the failing source, then shows unavailable', async () => {
+test('exhausts configured retries only for the failing source, then caches the usable response', async () => {
     let sriCalls = 0;
     let fiscaliaCalls = 0;
     const attempts: number[] = [];
     const waits: number[] = [];
+    const saved: types.LookupResult[] = [];
     const search = createPlateSearch({
         getCachedLookup: async () => null,
-        saveLookup: async () => assert.fail('partial results must not be cached'),
+        saveLookup: async (result) => {
+            saved.push(result);
+        },
         vehicle: async (plate) => {
             sriCalls++;
             return reply(plate);
@@ -95,6 +98,46 @@ test('exhausts configured retries only for the failing source, then shows unavai
     );
     assert.equal(result.sri.status, 'success');
     assert.equal(result.fiscalia.status, 'error');
+    assert.equal(saved.length, 1);
+    assert.equal(saved[0]?.sri.status, 'success');
+    assert.equal(saved[0]?.fiscalia.status, 'error');
+});
+
+test('caches a Fiscalía response when SRI only reports that the vehicle does not exist', async () => {
+    const saved: types.LookupResult[] = [];
+    const search = createPlateSearch({
+        getCachedLookup: async () => null,
+        saveLookup: async (result) => {
+            saved.push(result);
+        },
+        vehicle: async () => ({
+            plate: 'PBC1234',
+            data: {
+                sriVehicleNotFound: true,
+                mensaje: 'El vehículo no existe',
+            },
+            diagnostics: {
+                stage: 'lookup' as const,
+                status: 200,
+                contentType: 'application/json',
+                elapsedMs: 1,
+            },
+        }),
+        fiscalia: async () => ({
+            plate: 'PBC1234',
+            data: { cabecera: [] },
+            diagnostics: {
+                stage: 'lookup' as const,
+                status: 200,
+                contentType: 'application/json',
+                elapsedMs: 1,
+            },
+        }),
+    });
+    const result = await search('PBC1234', { onUpdate: () => {} });
+    assert.equal(result.sri.status, 'success');
+    assert.equal(result.fiscalia.status, 'success');
+    assert.equal(saved.length, 1);
 });
 
 test('stops retries immediately after recovery', async () => {

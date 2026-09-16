@@ -75,6 +75,22 @@ test('Fiscalía lookup initializes its session and sends the captured form contr
     });
 });
 
+test('SRI treats an explicit vehicle-not-found payload as a usable response', async () => {
+    const result = await lookupVehicle('PBC1234', {
+        fetchImpl: async () =>
+            Response.json({
+                data: [],
+                objeto: null,
+                mensajeServidor: { texto: 'El vehículo no existe' },
+            }),
+    });
+
+    assert.deepEqual(result.data, {
+        sriVehicleNotFound: true,
+        mensaje: 'El vehículo no existe',
+    });
+});
+
 test('SRI pads an old plate and omits its display dash in the request', async () => {
     await lookupVehicle('ICP-327', {
         fetchImpl: async (url) => {

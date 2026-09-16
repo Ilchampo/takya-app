@@ -1,15 +1,150 @@
 import type * as types from '../types.ts';
 
-import { parseJson, stringifyJson } from '../utils/misc.utils.ts';
+import { asText, parseJson, stringifyJson } from '../utils/misc.utils.ts';
 import { tryNormalizePlate } from '../utils/licensePlate.utils.ts';
-import { projectFiscaliaData, projectVehicleData } from '../utils/privacy.utils.ts';
-
+import {
+    isVehicleNotFoundProjection,
+    projectFiscaliaData,
+    projectVehicleData,
+} from '../utils/privacy.utils.ts';
 import { Paths } from 'expo-file-system';
 import { Platform } from 'react-native';
+
 import config from '../configs/app.config.ts';
 import * as SQLite from 'expo-sqlite';
 
+const SOURCE_UNAVAILABLE_KEY = '__sourceUnavailable';
+
 let databasePromise: Promise<SQLite.SQLiteDatabase> | null = null;
+
+const unavailablePayload = (message?: string): Record<string, unknown> => ({
+    [SOURCE_UNAVAILABLE_KEY]: true,
+    ...(message ? { message } : {}),
+});
+
+const isUnavailablePayload = (data: Record<string, unknown>): boolean =>
+    data[SOURCE_UNAVAILABLE_KEY] === true;
+
+const matchesLookupPlate = (data: Record<string, unknown>, plate: string): boolean =>
+    isVehicleNotFoundProjection(data) || tryNormalizePlate(String(data.numeroPlaca)) === plate;
+
+const payloadForSri = (
+    result: types.SourceResult,
+    plate: string,
+): Record<string, unknown> | null => {
+    if (result.status !== 'success') {
+        return unavailablePayload(result.message);
+    }
+
+    const data = projectVehicleData(result.data);
+
+    if (!data || !matchesLookupPlate(data, plate)) {
+        return null;
+    }
+
+    return data;
+};
+
+const payloadForFiscalia = (result: types.SourceResult): Record<string, unknown> | null => {
+    if (result.status !== 'success') {
+        return unavailablePayload(result.message);
+    }
+
+    return projectFiscaliaData(result.data);
+};
+
+const sourceFromSriPayload = (
+    data: Record<string, unknown>,
+    plate: string,
+): types.SourceResult | null => {
+    if (isUnavailablePayload(data)) {
+        return {
+            status: 'error',
+            message: asText(data.message) || 'No disponible',
+        };
+    }
+
+    const projected = projectVehicleData(data);
+
+    if (!projected || !matchesLookupPlate(projected, plate)) {
+        return null;
+    }
+
+    return {
+        status: 'success',
+        data: projected,
+    };
+};
+
+const sourceFromFiscaliaPayload = (data: Record<string, unknown>): types.SourceResult | null => {
+    if (isUnavailablePayload(data)) {
+        return {
+            status: 'error',
+            message: asText(data.message) || 'No disponible',
+        };
+    }
+
+    const projected = projectFiscaliaData(data);
+
+    if (!projected) {
+        return null;
+    }
+
+    return {
+        status: 'success',
+        data: projected,
+    };
+};
+
+const persistableLookupPayloads = (
+    result: types.LookupResult,
+): { sri: Record<string, unknown>; fiscalia: Record<string, unknown> } | null => {
+    const sri = payloadForSri(result.sri, result.plate);
+    const fiscalia = payloadForFiscalia(result.fiscalia);
+
+    const sriUsable = result.sri.status === 'success' && sri !== null && !isUnavailablePayload(sri);
+
+    const fiscaliaUsable =
+        result.fiscalia.status === 'success' &&
+        fiscalia !== null &&
+        !isUnavailablePayload(fiscalia);
+
+    if (!sriUsable && !fiscaliaUsable) {
+        return null;
+    }
+
+    return {
+        sri: sri ?? unavailablePayload(),
+        fiscalia: fiscalia ?? unavailablePayload(),
+    };
+};
+
+const lookupFromCachedPayloads = (
+    plate: string,
+    sriData: Record<string, unknown> | null,
+    fiscaliaData: Record<string, unknown> | null,
+): { sri: types.SourceResult; fiscalia: types.SourceResult } | null => {
+    const sri = sriData ? sourceFromSriPayload(sriData, plate) : null;
+    const fiscalia = fiscaliaData ? sourceFromFiscaliaPayload(fiscaliaData) : null;
+
+    const sriUsable = sri?.status === 'success';
+    const fiscaliaUsable = fiscalia?.status === 'success';
+
+    if (!sriUsable && !fiscaliaUsable) {
+        return null;
+    }
+
+    return {
+        sri: sri ?? {
+            status: 'error',
+            message: 'No disponible',
+        },
+        fiscalia: fiscalia ?? {
+            status: 'error',
+            message: 'No disponible',
+        },
+    };
+};
 
 const openDatabase = async (): Promise<SQLite.SQLiteDatabase> => {
     if (Platform.OS === 'ios') {
@@ -36,25 +171,28 @@ const scrubCachedSensitiveData = async (database: SQLite.SQLiteDatabase): Promis
             const sri = parseJson(row.sri_json);
             const fiscalia = parseJson(row.fiscalia_json);
 
-            if (!sri.valid || !fiscalia.valid) {
+            const sources = lookupFromCachedPayloads(
+                row.plate,
+                sri.valid ? sri.data : null,
+                fiscalia.valid ? fiscalia.data : null,
+            );
+
+            if (!sources) {
                 await database.runAsync('DELETE FROM lookups WHERE plate = ?', row.plate);
                 continue;
             }
 
-            const projectedSri = projectVehicleData(sri.data);
-            const projectedFiscalia = projectFiscaliaData(fiscalia.data);
+            const sanitizedSri = stringifyJson(
+                sources.sri.status === 'success'
+                    ? sources.sri.data
+                    : unavailablePayload(sources.sri.message),
+            );
 
-            if (
-                !projectedSri ||
-                !projectedFiscalia ||
-                tryNormalizePlate(String(projectedSri.numeroPlaca)) !== row.plate
-            ) {
-                await database.runAsync('DELETE FROM lookups WHERE plate = ?', row.plate);
-                continue;
-            }
-
-            const sanitizedSri = stringifyJson(projectedSri);
-            const sanitizedFiscalia = stringifyJson(projectedFiscalia);
+            const sanitizedFiscalia = stringifyJson(
+                sources.fiscalia.status === 'success'
+                    ? sources.fiscalia.data
+                    : unavailablePayload(sources.fiscalia.message),
+            );
 
             if (sanitizedSri !== row.sri_json || sanitizedFiscalia !== row.fiscalia_json) {
                 await database.runAsync(
@@ -153,52 +291,30 @@ export const getCachedLookup = async (
 
     const sri = parseJson(row.sri_json);
     const fiscalia = parseJson(row.fiscalia_json);
+    const sources = lookupFromCachedPayloads(
+        row.plate,
+        sri.valid ? sri.data : null,
+        fiscalia.valid ? fiscalia.data : null,
+    );
 
-    if (!sri.valid || !fiscalia.valid) {
-        await database.runAsync('DELETE FROM lookups WHERE plate = ?', row.plate);
-        return null;
-    }
-
-    const projectedSri = projectVehicleData(sri.data);
-    const projectedFiscalia = projectFiscaliaData(fiscalia.data);
-
-    if (
-        !projectedSri ||
-        !projectedFiscalia ||
-        tryNormalizePlate(String(projectedSri.numeroPlaca)) !== row.plate
-    ) {
+    if (!sources) {
         await database.runAsync('DELETE FROM lookups WHERE plate = ?', row.plate);
         return null;
     }
 
     return {
         plate: row.plate,
-        sri: {
-            status: 'success',
-            data: projectedSri,
-        },
-        fiscalia: {
-            status: 'success',
-            data: projectedFiscalia,
-        },
+        sri: sources.sri,
+        fiscalia: sources.fiscalia,
         fetchedAt: row.fetched_at,
         fromCache: true,
     };
 };
 
 export const saveLookup = async (result: types.LookupResult): Promise<void> => {
-    if (result.sri.status !== 'success' || result.fiscalia.status !== 'success') {
-        return;
-    }
+    const payloads = persistableLookupPayloads(result);
 
-    const sriData = projectVehicleData(result.sri.data);
-    const fiscaliaData = projectFiscaliaData(result.fiscalia.data);
-
-    if (
-        !sriData ||
-        !fiscaliaData ||
-        tryNormalizePlate(String(sriData.numeroPlaca)) !== result.plate
-    ) {
+    if (!payloads) {
         return;
     }
 
@@ -213,8 +329,8 @@ export const saveLookup = async (result: types.LookupResult): Promise<void> => {
                     fiscalia_json = excluded.fiscalia_json,
                     fetched_at = excluded.fetched_at`,
             result.plate,
-            stringifyJson(sriData),
-            stringifyJson(fiscaliaData),
+            stringifyJson(payloads.sri),
+            stringifyJson(payloads.fiscalia),
             result.fetchedAt,
         );
 
