@@ -1,16 +1,17 @@
 import type { Config } from '../interfaces/config.interface';
 
 import { daysToMilliSeconds, secondsTomilliSeconds } from '../utils/date.utils';
+import { parsePositiveEnvInt, parseNonNegativeEnvInt } from '../utils/misc.utils';
 
 const TTL_DAYS = 3 as const;
 const TIMEOUT = 10 as const;
 const HISTORY_LIMIT = 5 as const;
 const MAX_RETRIES = 3 as const;
 
-const parseEnvInt = (value: string | undefined, fallback: number): number => {
-    const parsed = Number.parseInt(value ?? '', 10);
-    return Number.isFinite(parsed) ? parsed : fallback;
-};
+const ttlDays = parsePositiveEnvInt(process.env.EXPO_PUBLIC_APP_TTL_DAYS, TTL_DAYS);
+const historyLimit = parsePositiveEnvInt(process.env.EXPO_PUBLIC_APP_HISTORY_LIMIT, HISTORY_LIMIT);
+const timeoutSeconds = parsePositiveEnvInt(process.env.EXPO_PUBLIC_APP_TIMEOUT_SEC, TIMEOUT);
+const maxRetries = parseNonNegativeEnvInt(process.env.EXPO_PUBLIC_APP_MAX_RETRIES, MAX_RETRIES);
 
 const config: Config = {
     branding: {
@@ -23,12 +24,11 @@ const config: Config = {
         fiscaliaEntry: process.env.EXPO_PUBLIC_FISCALIA_ENTRY_URL ?? '',
     },
     service: {
-        TTL: daysToMilliSeconds(parseEnvInt(process.env.EXPO_PUBLIC_APP_TTL_DAYS, TTL_DAYS)),
-        historyLimit: parseEnvInt(process.env.EXPO_PUBLIC_APP_HISTORY_LIMIT, HISTORY_LIMIT),
-        timeout: secondsTomilliSeconds(
-            parseEnvInt(process.env.EXPO_PUBLIC_APP_TIMEOUT_SEC, TIMEOUT),
-        ),
-        maxRetries: parseEnvInt(process.env.EXPO_PUBLIC_APP_MAX_RETRIES, MAX_RETRIES),
+        ttlDays,
+        TTL: daysToMilliSeconds(ttlDays),
+        historyLimit,
+        timeout: secondsTomilliSeconds(timeoutSeconds),
+        maxRetries,
     },
 } as const;
 

@@ -1,7 +1,7 @@
 import type * as types from '../lib/types';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { normalizePlate } from '../lib/utils/licensePlate.utils';
+import { normalizePlate, tryNormalizePlate } from '../lib/utils/licensePlate.utils';
 
 import * as dbService from '../lib/services/database.service';
 import * as searchService from '../lib/services/search.service';
@@ -124,8 +124,18 @@ export const usePlateSearch = ({
     );
 
     const changePlate = useCallback((value: string): void => {
+        const normalized = tryNormalizePlate(value);
+        const active = activeSearch.current;
+
+        if (active && active.plate !== normalized) {
+            active.controller.abort();
+            activeSearch.current = null;
+            setLoading(false);
+        }
+
         setPlate(value);
         setError(null);
+        setResult((current) => (current?.plate === normalized ? current : null));
     }, []);
 
     return {

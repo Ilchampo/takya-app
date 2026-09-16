@@ -37,3 +37,11 @@ export const isValidPlate = (value: string): boolean => {
         return false;
     }
 };
+
+export const tryNormalizePlate = (value: string): string | null => {
+    try {
+        return normalizePlate(value);
+    } catch {
+        return null;
+    }
+};

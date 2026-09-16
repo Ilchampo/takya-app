@@ -20,6 +20,7 @@ import { PlateInput } from '../../components/PlateInput/PlateInput';
 import { QueryStatus } from '../../components/QueryStatus/QueryStatus';
 import { TopBar } from '../../components/TopBar/TopBar';
 
+import config from '../../lib/configs/app.config';
 import styles from './HomeScreen.styles';
 
 interface HomeScreenProps {
@@ -56,8 +57,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
     } = props;
 
     const valid = isValidPlate(plate);
+    const normalizedPlate = valid ? normalizePlate(plate) : null;
+    const visibleResult = result?.plate === normalizedPlate ? result : null;
 
-    const searchingThisPlate = valid && loading && result?.plate === normalizePlate(plate);
+    const searchingThisPlate = loading && visibleResult !== null;
 
     const submitDisabled = !valid || searchingThisPlate;
 
@@ -154,8 +157,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                             </Pressable>
                         </View>
 
-                        {result && (
-                            <QueryStatus result={result} theme={theme} onCancel={onCancel} />
+                        {visibleResult && (
+                            <QueryStatus result={visibleResult} theme={theme} onCancel={onCancel} />
                         )}
 
                         <View style={styles.recent}>
@@ -173,7 +176,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                                             { color: theme.colors.textMuted },
                                         ]}
                                     >
-                                        {history.length} de 5
+                                        {history.length} de {config.service.historyLimit}
                                     </Text>
                                 )}
                             </View>
@@ -212,7 +215,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                                             ]}
                                         >
                                             Aquí encontrarás tus últimas consultas, disponibles
-                                            durante 3 días.
+                                            durante {config.service.ttlDays}{' '}
+                                            {config.service.ttlDays === 1 ? 'día' : 'días'}.
                                         </Text>
                                     </View>
                                 </View>

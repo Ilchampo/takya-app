@@ -111,11 +111,14 @@ export const serviceWrapper = async <T>(
     options: types.ServiceWrapperOptions = {},
 ): Promise<T> => {
     const timeout = options.timeout === false ? false : (options.timeout ?? config.service.timeout);
-    const maxRetries = options.maxRetries ?? config.service.maxRetries;
+    const configuredRetries = options.maxRetries ?? config.service.maxRetries;
+
+    const maxRetries =
+        Number.isInteger(configuredRetries) && configuredRetries >= 0 ? configuredRetries : 0;
 
     const wait = options.wait ?? delay;
 
-    const { signal, onAttempt } = options;
+    const { signal, onAttempt, shouldRetry } = options;
 
     let lastError: unknown;
 
@@ -146,6 +149,10 @@ export const serviceWrapper = async <T>(
             }
 
             lastError = error;
+
+            if (attempt > maxRetries || (shouldRetry && !shouldRetry(error, attempt))) {
+                throw error;
+            }
         }
     }
 

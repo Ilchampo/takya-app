@@ -105,11 +105,11 @@ export const incidentRecords = (data: unknown): Incident[] | null => {
         const incident = toIncident(item);
 
         if (!incident) {
-            return null;
+            continue;
         }
 
         incidents.push(incident);
     }
 
-    return incidents;
+    return incidents.length > 0 || header.length === 0 ? incidents : null;
 };

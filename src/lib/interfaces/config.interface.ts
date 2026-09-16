@@ -10,6 +10,7 @@ interface Source {
 }
 
 interface Service {
+    ttlDays: number;
     TTL: number;
     historyLimit: number;
     timeout: number;

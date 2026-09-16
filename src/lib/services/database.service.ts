@@ -1,5 +1,6 @@
 import type * as types from '../types.ts';
 
+import { parseJson, stringifyJson } from '../utils/misc.utils.ts';
 import { sanitizeGovernmentData } from '../utils/privacy.utils.ts';
 
 import config from '../configs/app.config.ts';
@@ -13,18 +14,6 @@ const getDatabase = (): Promise<SQLite.SQLiteDatabase> => {
     return databasePromise;
 };
 
-const parseJson = (value: string): unknown => {
-    try {
-        return JSON.parse(value) as unknown;
-    } catch {
-        return null;
-    }
-};
-
-const stringifyJson = (value: unknown): string => {
-    return JSON.stringify(value) ?? 'null';
-};
-
 const scrubCachedSensitiveData = async (database: SQLite.SQLiteDatabase): Promise<void> => {
     const rows = await database.getAllAsync<
         Pick<types.LookupRow, 'plate' | 'sri_json' | 'fiscalia_json'>
@@ -32,10 +21,16 @@ const scrubCachedSensitiveData = async (database: SQLite.SQLiteDatabase): Promis
 
     await database.withTransactionAsync(async () => {
         for (const row of rows) {
-            const sanitizedSri = stringifyJson(sanitizeGovernmentData(parseJson(row.sri_json)));
-            const sanitizedFiscalia = stringifyJson(
-                sanitizeGovernmentData(parseJson(row.fiscalia_json)),
-            );
+            const sri = parseJson(row.sri_json);
+            const fiscalia = parseJson(row.fiscalia_json);
+
+            if (!sri.valid || !fiscalia.valid) {
+                await database.runAsync('DELETE FROM lookups WHERE plate = ?', row.plate);
+                continue;
+            }
+
+            const sanitizedSri = stringifyJson(sanitizeGovernmentData(sri.data));
+            const sanitizedFiscalia = stringifyJson(sanitizeGovernmentData(fiscalia.data));
 
             if (sanitizedSri !== row.sri_json || sanitizedFiscalia !== row.fiscalia_json) {
                 await database.runAsync(
@@ -108,15 +103,23 @@ export const getCachedLookup = async (
         return null;
     }
 
+    const sri = parseJson(row.sri_json);
+    const fiscalia = parseJson(row.fiscalia_json);
+
+    if (!sri.valid || !fiscalia.valid) {
+        await database.runAsync('DELETE FROM lookups WHERE plate = ?', row.plate);
+        return null;
+    }
+
     return {
         plate: row.plate,
         sri: {
             status: 'success',
-            data: sanitizeGovernmentData(parseJson(row.sri_json)),
+            data: sanitizeGovernmentData(sri.data),
         },
         fiscalia: {
             status: 'success',
-            data: sanitizeGovernmentData(parseJson(row.fiscalia_json)),
+            data: sanitizeGovernmentData(fiscalia.data),
         },
         fetchedAt: row.fetched_at,
         fromCache: true,
