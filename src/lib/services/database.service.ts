@@ -1,6 +1,6 @@
 import type * as types from '../types.ts';
 
-import { sanitizeFiscaliaForStorage } from '../utils/fiscalia.utils.ts';
+import { sanitizeGovernmentData } from '../utils/privacy.utils.ts';
 
 import config from '../configs/app.config.ts';
 import * as SQLite from 'expo-sqlite';
@@ -25,21 +25,23 @@ const stringifyJson = (value: unknown): string => {
     return JSON.stringify(value) ?? 'null';
 };
 
-const scrubCachedFiscalia = async (database: SQLite.SQLiteDatabase): Promise<void> => {
-    const rows = await database.getAllAsync<Pick<types.LookupRow, 'plate' | 'fiscalia_json'>>(
-        'SELECT plate, fiscalia_json FROM lookups',
-    );
+const scrubCachedSensitiveData = async (database: SQLite.SQLiteDatabase): Promise<void> => {
+    const rows = await database.getAllAsync<
+        Pick<types.LookupRow, 'plate' | 'sri_json' | 'fiscalia_json'>
+    >('SELECT plate, sri_json, fiscalia_json FROM lookups');
 
     await database.withTransactionAsync(async () => {
         for (const row of rows) {
-            const sanitized = stringifyJson(
-                sanitizeFiscaliaForStorage(parseJson(row.fiscalia_json)),
+            const sanitizedSri = stringifyJson(sanitizeGovernmentData(parseJson(row.sri_json)));
+            const sanitizedFiscalia = stringifyJson(
+                sanitizeGovernmentData(parseJson(row.fiscalia_json)),
             );
 
-            if (sanitized !== row.fiscalia_json) {
+            if (sanitizedSri !== row.sri_json || sanitizedFiscalia !== row.fiscalia_json) {
                 await database.runAsync(
-                    'UPDATE lookups SET fiscalia_json = ? WHERE plate = ?',
-                    sanitized,
+                    'UPDATE lookups SET sri_json = ?, fiscalia_json = ? WHERE plate = ?',
+                    sanitizedSri,
+                    sanitizedFiscalia,
                     row.plate,
                 );
             }
@@ -68,7 +70,7 @@ export const initializeDatabase = async (now = Date.now()): Promise<void> => {
   `);
 
     await deleteExpiredLookups(now);
-    await scrubCachedFiscalia(database);
+    await scrubCachedSensitiveData(database);
     await trimHistory();
 };
 
@@ -83,8 +85,8 @@ const trimHistory = async (): Promise<void> => {
 
     await database.runAsync(
         `DELETE FROM lookups
-     WHERE plate NOT IN (
-       SELECT plate FROM lookups ORDER BY fetched_at DESC LIMIT ?
+            WHERE plate NOT IN (
+            SELECT plate FROM lookups ORDER BY fetched_at DESC LIMIT ?
      )`,
         config.service.historyLimit,
     );
@@ -108,8 +110,14 @@ export const getCachedLookup = async (
 
     return {
         plate: row.plate,
-        sri: { status: 'success', data: parseJson(row.sri_json) },
-        fiscalia: { status: 'success', data: parseJson(row.fiscalia_json) },
+        sri: {
+            status: 'success',
+            data: sanitizeGovernmentData(parseJson(row.sri_json)),
+        },
+        fiscalia: {
+            status: 'success',
+            data: sanitizeGovernmentData(parseJson(row.fiscalia_json)),
+        },
         fetchedAt: row.fetched_at,
         fromCache: true,
     };
@@ -120,18 +128,18 @@ export const saveLookup = async (result: types.LookupResult): Promise<void> => {
         return;
     }
 
-    const sriData = result.sri.data;
-    const fiscaliaData = sanitizeFiscaliaForStorage(result.fiscalia.data);
+    const sriData = sanitizeGovernmentData(result.sri.data);
+    const fiscaliaData = sanitizeGovernmentData(result.fiscalia.data);
     const database = await getDatabase();
 
     await database.withTransactionAsync(async () => {
         await database.runAsync(
             `INSERT INTO lookups (plate, sri_json, fiscalia_json, fetched_at)
-       VALUES (?, ?, ?, ?)
-       ON CONFLICT(plate) DO UPDATE SET
-         sri_json = excluded.sri_json,
-         fiscalia_json = excluded.fiscalia_json,
-         fetched_at = excluded.fetched_at`,
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(plate) DO UPDATE SET
+                    sri_json = excluded.sri_json,
+                    fiscalia_json = excluded.fiscalia_json,
+                    fetched_at = excluded.fetched_at`,
             result.plate,
             stringifyJson(sriData),
             stringifyJson(fiscaliaData),
@@ -167,7 +175,7 @@ export const setThemeMode = async (mode: types.ThemeMode): Promise<void> => {
 
     await database.runAsync(
         `INSERT INTO settings (key, value) VALUES ('theme', ?)
-     ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
         mode,
     );
 };

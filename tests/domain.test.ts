@@ -11,7 +11,7 @@ import {
     isValidPlate,
     normalizePlate,
 } from '../src/lib/utils/licensePlate.utils.ts';
-import { sanitizeFiscaliaForStorage } from '../src/lib/utils/fiscalia.utils.ts';
+import { sanitizeGovernmentData } from '../src/lib/utils/privacy.utils.ts';
 
 test('plate input formatting is friendly but service normalization remains strict', () => {
     assert.equal(formatPlateInput(' abc-1234 '), 'ABC-1234');
@@ -147,9 +147,10 @@ test('incident parser keeps flagged people without exposing identity documents',
     );
 });
 
-test('Fiscalía cache sanitizer removes identity documents and their positional aliases', () => {
+test('government data sanitizer removes identity documents and Fiscalía positional aliases', () => {
     const response = {
         0: 'response metadata',
+        cedulaPropietario: '9999999999',
         cabecera: [
             {
                 0: 'incident identifier',
@@ -166,9 +167,13 @@ test('Fiscalía cache sanitizer removes identity documents and their positional 
                 vehiculos: [{ 0: 'CHEVROLET', placa: 'PBC1234' }],
             },
         ],
+        propietario: {
+            CÉDULA: '9999999999',
+            nombre: 'NOMBRE CONSERVADO',
+        },
     };
 
-    assert.deepEqual(sanitizeFiscaliaForStorage(response), {
+    assert.deepEqual(sanitizeGovernmentData(response), {
         0: 'response metadata',
         cabecera: [
             {
@@ -184,8 +189,12 @@ test('Fiscalía cache sanitizer removes identity documents and their positional 
                 vehiculos: [{ 0: 'CHEVROLET', placa: 'PBC1234' }],
             },
         ],
+        propietario: {
+            nombre: 'NOMBRE CONSERVADO',
+        },
     });
     assert.equal(response.cabecera[0]?.sujetos[0]?.cedula, '0123456789');
+    assert.equal(response.cedulaPropietario, '9999999999');
 });
 
 test('incident parser accepts real Fiscalía mock payloads', async () => {
