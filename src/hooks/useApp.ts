@@ -5,12 +5,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { BackHandler } from 'react-native';
 import { useFonts } from 'expo-font';
 
+import { validateGovernmentApiConfig } from '../lib/services/governementApi.service';
 import { useAppTheme } from './useAppTheme';
 import { usePlateSearch } from './usePlateSearch';
 import { useSavedLookup } from './useSavedLookup';
 
 import * as dbService from '../lib/services/database.service';
-import { validateGovernmentApiConfig } from '../lib/services/governementApi.service';
 
 export interface AppState {
     fontsLoaded: boolean;
