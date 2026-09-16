@@ -6,6 +6,22 @@ import { normalizePlate } from '../utils/licensePlate.utils.ts';
 
 import { lookupFiscalia, lookupVehicle } from './governementApi.service.ts';
 
+const retryableHttpStatuses = new Set([408, 425, 429]);
+
+const isRetryableSourceError = (error: unknown): boolean => {
+    if (!(error instanceof GovernmentApiError)) {
+        return true;
+    }
+
+    if (!error.retryable) {
+        return false;
+    }
+
+    const status = error.diagnostics?.status;
+
+    return status === undefined || status >= 500 || retryableHttpStatuses.has(status);
+};
+
 export const createPlateSearch = (dependencies: types.Dependencies) => {
     const vehicle = dependencies.vehicle ?? lookupVehicle;
     const fiscalia = dependencies.fiscalia ?? lookupFiscalia;
@@ -72,6 +88,7 @@ export const createPlateSearch = (dependencies: types.Dependencies) => {
                         signal,
                         timeout: false,
                         wait: dependencies.wait,
+                        shouldRetry: isRetryableSourceError,
                         onAttempt: (attempt) => {
                             if (attempt > 1) {
                                 publish(service, { status: 'loading', attempt });
@@ -96,7 +113,10 @@ export const createPlateSearch = (dependencies: types.Dependencies) => {
 
                 const source: types.SourceResult = {
                     status: 'error',
-                    message: 'Servicio no disponible por el momento. Intenta más tarde.',
+                    message:
+                        reason instanceof GovernmentApiError && !reason.retryable
+                            ? reason.message
+                            : 'Servicio no disponible por el momento. Intenta más tarde.',
                     diagnostics:
                         reason instanceof GovernmentApiError ? reason.diagnostics : undefined,
                 };

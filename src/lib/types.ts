@@ -60,6 +60,7 @@ export type ServiceWrapperOptions = {
     signal?: AbortSignal;
     onAttempt?: (attempt: number) => void | Promise<void>;
     wait?: (ms: number, signal?: AbortSignal) => Promise<void>;
+    shouldRetry?: (error: unknown, attempt: number) => boolean;
 };
 
 export type SourceTone = 'idle' | 'loading' | 'success' | 'error';
@@ -152,3 +153,5 @@ export type RequestResult = {
     data: unknown;
     diagnostics: Diagnostics;
 };
+
+export type ParsedCacheJson = { valid: true; data: Record<string, unknown> } | { valid: false };

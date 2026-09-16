@@ -10,6 +10,26 @@ import config from '../configs/app.config.ts';
 const isAbortError = (error: unknown): boolean =>
     error instanceof Error && error.name === 'AbortError';
 
+const configuredSourceUrl = (value: string, source: string): string => {
+    const configuredValue = value.trim();
+
+    try {
+        const url = new URL(configuredValue);
+
+        if (url.protocol !== 'https:' || !url.hostname) {
+            throw new Error('Invalid source URL');
+        }
+
+        return configuredValue;
+    } catch {
+        throw new GovernmentApiError(
+            `El servicio ${source} no está configurado correctamente.`,
+            undefined,
+            false,
+        );
+    }
+};
+
 const request = async (
     url: string,
     init: RequestInit,
@@ -96,8 +116,10 @@ const request = async (
 
 export const lookupVehicle = async (value: string, options: types.RequestOptions = {}) => {
     const plate = normalizePlate(value);
+    const endpoint = configuredSourceUrl(config.source.SRI, 'SRI');
+
     const result = await request(
-        `${config.source.SRI}?numeroPlacaCampvCpn=${encodeURIComponent(plate)}`,
+        `${endpoint}?numeroPlacaCampvCpn=${encodeURIComponent(plate)}`,
         { method: 'GET', headers: { Accept: 'application/json' } },
         options,
         'lookup',
@@ -112,13 +134,16 @@ export const lookupVehicle = async (value: string, options: types.RequestOptions
 
 export const lookupFiscalia = async (value: string, options: types.FiscaliaOptions = {}) => {
     const plate = normalizePlate(value);
+    const lookupEndpoint = configuredSourceUrl(config.source.fiscaliaLookup, 'Fiscalía');
 
     if (options.initializeSession) {
-        await request(config.source.fiscaliaEntry, { credentials: 'include' }, options, 'session');
+        const entryEndpoint = configuredSourceUrl(config.source.fiscaliaEntry, 'Fiscalía');
+
+        await request(entryEndpoint, { credentials: 'include' }, options, 'session');
     }
 
     const result = await request(
-        config.source.fiscaliaLookup,
+        lookupEndpoint,
         {
             method: 'POST',
             credentials: 'include',

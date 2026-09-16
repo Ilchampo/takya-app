@@ -9,10 +9,12 @@ export class ServiceTimeoutError extends Error {
 
 export class GovernmentApiError extends Error {
     diagnostics?: types.Diagnostics;
+    retryable: boolean;
 
-    constructor(message: string, diagnostics?: types.Diagnostics) {
+    constructor(message: string, diagnostics?: types.Diagnostics, retryable = true) {
         super(message);
         this.name = 'GovernmentApiError';
         this.diagnostics = diagnostics;
+        this.retryable = retryable;
     }
 }
