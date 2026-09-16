@@ -3,6 +3,7 @@ import type * as types from '../types.ts';
 import { GovernmentApiError } from '../errors/service.errors.ts';
 import { abortError, serviceWrapper } from '../utils/service.utils.ts';
 import { normalizePlate } from '../utils/licensePlate.utils.ts';
+import { sanitizeGovernmentData } from '../utils/privacy.utils.ts';
 
 import config from '../configs/app.config.ts';
 
@@ -102,7 +103,11 @@ export const lookupVehicle = async (value: string, options: types.RequestOptions
         'lookup',
     );
 
-    return { plate, ...result };
+    return {
+        plate,
+        ...result,
+        data: sanitizeGovernmentData(result.data),
+    };
 };
 
 export const lookupFiscalia = async (value: string, options: types.FiscaliaOptions = {}) => {
@@ -127,5 +132,9 @@ export const lookupFiscalia = async (value: string, options: types.FiscaliaOptio
         'lookup',
     );
 
-    return { plate, ...result };
+    return {
+        plate,
+        ...result,
+        data: sanitizeGovernmentData(result.data),
+    };
 };

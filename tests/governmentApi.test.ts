@@ -15,7 +15,10 @@ test('SRI lookup uses a normalized encoded plate and a GET request', async () =>
             assert.equal(init?.method, 'GET');
             assert.equal(init?.body, undefined);
             assert.deepEqual(init?.headers, { Accept: 'application/json' });
-            return Response.json({ numeroPlaca: 'PBC1234' });
+            return Response.json({
+                numeroPlaca: 'PBC1234',
+                cedulaPropietario: '0123456789',
+            });
         },
     });
     assert.equal(calls, 1);
@@ -41,11 +44,35 @@ test('Fiscalía lookup initializes its session and sends the captured form contr
                 (init?.headers as Record<string, string>)['Content-Type'],
                 'application/x-www-form-urlencoded',
             );
-            return Response.json({ cabecera: [] });
+            return Response.json({
+                cabecera: [
+                    {
+                        sujetos: [
+                            {
+                                0: '0123456789',
+                                cedula: '0123456789',
+                                persona: 'CRESPO GARCIA JONNY MANOLO',
+                                tipo: 'SOSPECHOSO',
+                            },
+                        ],
+                    },
+                ],
+            });
         },
     });
     assert.deepEqual(urls, [config.source.fiscaliaEntry, config.source.fiscaliaLookup]);
-    assert.deepEqual(result.data, { cabecera: [] });
+    assert.deepEqual(result.data, {
+        cabecera: [
+            {
+                sujetos: [
+                    {
+                        persona: 'CRESPO GARCIA JONNY MANOLO',
+                        tipo: 'SOSPECHOSO',
+                    },
+                ],
+            },
+        ],
+    });
 });
 
 test('SRI pads an old plate and omits its display dash in the request', async () => {

@@ -4,6 +4,8 @@ const normalizedKey = (key: string): string =>
         .replace(/[\u0300-\u036f]/g, '')
         .toLowerCase();
 
+const isCedulaKey = (key: string): boolean => normalizedKey(key).includes('cedula');
+
 const sanitizeValue = (value: unknown, insideSubjects = false): unknown => {
     if (Array.isArray(value)) {
         return value.map((item) => sanitizeValue(item, insideSubjects));
@@ -16,16 +18,16 @@ const sanitizeValue = (value: unknown, insideSubjects = false): unknown => {
     const sanitized: Record<string, unknown> = {};
 
     for (const [key, item] of Object.entries(value)) {
-        if (normalizedKey(key) === 'cedula' || (insideSubjects && key === '0')) {
+        if (isCedulaKey(key) || (insideSubjects && key === '0')) {
             continue;
         }
 
         const isSubjectsField = normalizedKey(key) === 'sujetos';
 
-        sanitized[key] = sanitizeValue(item, insideSubjects ?? isSubjectsField);
+        sanitized[key] = sanitizeValue(item, insideSubjects || isSubjectsField);
     }
 
     return sanitized;
 };
 
-export const sanitizeFiscaliaForStorage = (data: unknown): unknown => sanitizeValue(data);
+export const sanitizeGovernmentData = (data: unknown): unknown => sanitizeValue(data);
