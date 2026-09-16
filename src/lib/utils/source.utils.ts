@@ -48,7 +48,10 @@ export const sourcePresentation = (source?: types.SourceProgress): types.SourceP
     }
 };
 
-export const toneColors = (tone: types.SourceTone, theme: AppTheme): Record<string, string> => {
+export const toneColors = (
+    tone: types.SourceTone,
+    theme: AppTheme,
+): { color: string; background: string } => {
     switch (tone) {
         case 'success':
             return {
@@ -62,7 +65,7 @@ export const toneColors = (tone: types.SourceTone, theme: AppTheme): Record<stri
             };
         default:
             return {
-                color: theme.colors.orangePressed,
+                color: theme.colors.primaryPressed,
                 background: theme.colors.surfaceMuted,
             };
     }

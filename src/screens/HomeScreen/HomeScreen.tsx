@@ -102,7 +102,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
 
     return (
         <SafeAreaView
-            style={[styles.safe, { backgroundColor: theme.colors.orange }]}
+            style={[styles.safe, { backgroundColor: theme.colors.primary }]}
             edges={['top', 'bottom', 'left', 'right']}
         >
             <KeyboardAvoidingView
@@ -114,21 +114,29 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                     contentContainerStyle={styles.content}
                     showsVerticalScrollIndicator={false}
                 >
-                    <View style={[styles.hero, { backgroundColor: theme.colors.orange }]}>
-                        <TopBar theme={theme} onToggleTheme={onToggleTheme} onOrange />
+                    <View style={[styles.hero, { backgroundColor: theme.colors.primary }]}>
+                        <TopBar theme={theme} onToggleTheme={onToggleTheme} onPrimary />
                         <Text
                             accessibilityRole="header"
-                            style={[styles.title, { color: theme.colors.onOrange }]}
+                            style={[styles.title, { color: theme.colors.onPrimary }]}
                         >
                             Una placa.{'\n'}Más información.
                         </Text>
-                        <Text style={[styles.subtitle, { color: theme.colors.onOrange }]}>
+                        <Text style={[styles.subtitle, { color: theme.colors.onPrimary }]}>
                             Consulta tu vehículo, sin complicaciones.
                         </Text>
                     </View>
 
                     <View style={styles.main}>
-                        <View style={[styles.form, { backgroundColor: theme.colors.surface }]}>
+                        <View
+                            style={[
+                                styles.form,
+                                {
+                                    backgroundColor: theme.colors.surface,
+                                    shadowColor: theme.colors.shadow,
+                                },
+                            ]}
+                        >
                             <Text
                                 accessibilityRole="header"
                                 style={[styles.formTitle, { color: theme.colors.text }]}
@@ -159,7 +167,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                                     {
                                         backgroundColor: submitDisabled
                                             ? theme.colors.surfaceStrong
-                                            : theme.colors.orange,
+                                            : theme.colors.primary,
                                         opacity: pressed ? 0.75 : 1,
                                     },
                                 ]}
@@ -170,7 +178,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                                     color={
                                         submitDisabled
                                             ? theme.colors.textMuted
-                                            : theme.colors.onOrange
+                                            : theme.colors.onPrimary
                                     }
                                 />
                                 <Text
@@ -179,7 +187,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                                         {
                                             color: submitDisabled
                                                 ? theme.colors.textMuted
-                                                : theme.colors.onOrange,
+                                                : theme.colors.onPrimary,
                                         },
                                     ]}
                                 >
@@ -255,7 +263,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                                         <Icon
                                             name="clock"
                                             size={25}
-                                            color={theme.colors.orangePressed}
+                                            color={theme.colors.primaryPressed}
                                         />
                                     </View>
                                     <View style={styles.emptyCopy}>
@@ -320,7 +328,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                                                 <Icon
                                                     name="car"
                                                     size={23}
-                                                    color={theme.colors.orangePressed}
+                                                    color={theme.colors.primaryPressed}
                                                 />
                                             </View>
                                             <View style={styles.historyCopy}>
@@ -345,7 +353,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                                             <Icon
                                                 name="chevron"
                                                 size={18}
-                                                color={theme.colors.orangePressed}
+                                                color={theme.colors.primaryPressed}
                                             />
                                         </Pressable>
                                     ))}
@@ -364,7 +372,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                                 onPress={onOpenLegal}
                                 style={styles.privacyLink}
                             >
-                                <Icon name="shield" size={17} color={theme.colors.orangePressed} />
+                                <Icon name="shield" size={17} color={theme.colors.primaryPressed} />
                                 <Text style={[styles.smallText, { color: theme.colors.textMuted }]}>
                                     Privacidad y uso responsable
                                 </Text>

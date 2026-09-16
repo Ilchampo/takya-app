@@ -12,11 +12,11 @@ interface TopBarProps {
     theme: AppTheme;
     onToggleTheme: VoidFunction;
     onBack?: VoidFunction;
-    onOrange?: boolean;
+    onPrimary?: boolean;
 }
 
 export const TopBar: React.FC<TopBarProps> = (props) => {
-    const { theme, onToggleTheme, onBack, onOrange = false } = props;
+    const { theme, onToggleTheme, onBack, onPrimary = false } = props;
 
     return (
         <View style={styles.row}>
@@ -37,7 +37,7 @@ export const TopBar: React.FC<TopBarProps> = (props) => {
                     <Icon name="back" color={theme.colors.text} />
                 </Pressable>
             ) : (
-                <TakyaBrand theme={theme} onOrange={onOrange} />
+                <TakyaBrand theme={theme} onPrimary={onPrimary} />
             )}
             <Pressable
                 accessibilityRole="button"
@@ -47,14 +47,16 @@ export const TopBar: React.FC<TopBarProps> = (props) => {
                 style={[
                     styles.iconButton,
                     {
-                        backgroundColor: onOrange ? '#FFFFFF55' : theme.colors.surface,
+                        backgroundColor: onPrimary
+                            ? theme.colors.onPrimaryOverlay
+                            : theme.colors.surface,
                         borderColor: theme.colors.border,
                     },
                 ]}
             >
                 <Icon
                     name={theme.dark ? 'sun' : 'moon'}
-                    color={onOrange ? theme.colors.onOrange : theme.colors.text}
+                    color={onPrimary ? theme.colors.onPrimary : theme.colors.text}
                 />
             </Pressable>
         </View>

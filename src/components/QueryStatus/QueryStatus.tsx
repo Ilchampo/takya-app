@@ -62,7 +62,7 @@ export const QueryStatus: React.FC<QueryStatusProps> = (props) => {
                     onPress={onCancel}
                     style={styles.cancel}
                 >
-                    <Text style={[styles.meta, { color: theme.colors.orangePressed }]}>
+                    <Text style={[styles.meta, { color: theme.colors.primaryPressed }]}>
                         Cancelar consulta
                     </Text>
                 </Pressable>
@@ -79,7 +79,7 @@ export const QueryStatus: React.FC<QueryStatusProps> = (props) => {
                             onPress={onRefresh}
                             style={styles.cancel}
                         >
-                            <Text style={[styles.meta, { color: theme.colors.orangePressed }]}>
+                            <Text style={[styles.meta, { color: theme.colors.primaryPressed }]}>
                                 Consultar de nuevo
                             </Text>
                         </Pressable>

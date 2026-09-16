@@ -1,8 +1,3 @@
-interface Branding {
-    primary: string;
-    secondary: string;
-}
-
 interface Source {
     SRI: string;
     fiscaliaLookup: string;
@@ -27,7 +22,6 @@ interface Service {
 }
 
 export interface Config {
-    branding: Branding;
     source: Source;
     service: Service;
 }
