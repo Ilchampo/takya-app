@@ -10,11 +10,13 @@ import { usePlateSearch } from './usePlateSearch';
 import { useSavedLookup } from './useSavedLookup';
 
 import * as dbService from '../lib/services/database.service';
+import { validateGovernmentApiConfig } from '../lib/services/governementApi.service';
 
 export interface AppState {
     fontsLoaded: boolean;
     fontError: Error | null;
     ready: boolean;
+    configurationError: string | null;
     storageAvailable: boolean;
     theme: AppTheme;
     showLegal: boolean;
@@ -44,6 +46,7 @@ export const useApp = (): AppState => {
     });
 
     const [ready, setReady] = useState(false);
+    const [configurationError] = useState(validateGovernmentApiConfig);
     const [storageAvailable, setStorageAvailable] = useState(true);
     const [history, setHistory] = useState<types.LookupHistoryItem[]>([]);
     const [showLegal, setShowLegal] = useState(false);
@@ -61,16 +64,26 @@ export const useApp = (): AppState => {
         onStorageError,
     });
 
-    const { savedPlate, savedResult, savedLoading, savedError, openHistory, closeHistory } =
-        useSavedLookup({
-            onHistoryChange: setHistory,
-        });
+    const {
+        savedPlate,
+        savedResult,
+        savedLoading,
+        savedError,
+        openHistory: openSavedHistory,
+        closeHistory,
+    } = useSavedLookup({
+        onHistoryChange: setHistory,
+    });
 
     useEffect(() => {
         let active = true;
 
         const prepare = async (): Promise<void> => {
             try {
+                if (configurationError) {
+                    return;
+                }
+
                 await dbService.initializeDatabase();
 
                 const [savedTheme, recentLookups] = await Promise.all([
@@ -98,7 +111,7 @@ export const useApp = (): AppState => {
         return () => {
             active = false;
         };
-    }, [hydrateTheme]);
+    }, [configurationError, hydrateTheme]);
 
     useEffect(() => {
         if (!showLegal && !savedPlate) {
@@ -118,9 +131,18 @@ export const useApp = (): AppState => {
         return () => subscription.remove();
     }, [showLegal, savedPlate, closeHistory]);
 
+    const openHistory = useCallback(
+        async (key: string): Promise<void> => {
+            cancelSearch();
+            await openSavedHistory(key);
+        },
+        [cancelSearch, openSavedHistory],
+    );
+
     const openLegal = useCallback((): void => {
+        cancelSearch();
         setShowLegal(true);
-    }, []);
+    }, [cancelSearch]);
 
     const closeLegal = useCallback((): void => {
         setShowLegal(false);
@@ -143,6 +165,7 @@ export const useApp = (): AppState => {
         fontsLoaded,
         fontError,
         ready,
+        configurationError,
         storageAvailable,
         theme,
         showLegal,

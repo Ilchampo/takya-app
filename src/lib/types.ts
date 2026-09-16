@@ -156,6 +156,7 @@ export type RequestOptions = {
 
 export type FiscaliaOptions = RequestOptions & {
     initializeSession?: boolean;
+    onSessionInitialized?: VoidFunction;
 };
 
 export type RequestResult = {

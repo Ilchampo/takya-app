@@ -48,7 +48,11 @@ const Header: React.FC<HeaderProps> = (props) => {
             </View>
             <View style={[styles.statusIcon, { backgroundColor: colors.background }]}>
                 {presentation.tone === 'loading' ? (
-                    <ActivityIndicator size="small" color={colors.color} />
+                    <ActivityIndicator
+                        accessibilityLabel={`${title}: ${presentation.label}`}
+                        size="small"
+                        color={colors.color}
+                    />
                 ) : (
                     <Icon name={presentation.icon} size={22} color={colors.color} />
                 )}

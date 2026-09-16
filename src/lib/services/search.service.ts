@@ -7,7 +7,7 @@ import config from '../configs/app.config.ts';
 
 import { lookupFiscalia, lookupVehicle } from './governementApi.service.ts';
 
-const retryableHttpStatuses = new Set([408, 425, 429]);
+const retryableHttpStatuses = new Set([408, 425]);
 
 const describeWait = (milliseconds: number): string => {
     const seconds = Math.max(1, Math.ceil(milliseconds / 1_000));
@@ -21,6 +21,18 @@ const retryAfterForError = (error: unknown): number | undefined => {
     }
 
     return error.diagnostics.retryAfterMs ?? config.service.rateLimit.defaultCooldown;
+};
+
+const sourceErrorMessage = (error: unknown, retryAfterMs?: number): string => {
+    if (retryAfterMs !== undefined) {
+        return `Esta fuente solicitó una pausa. Intenta nuevamente en ${describeWait(retryAfterMs)}.`;
+    }
+
+    if (error instanceof GovernmentApiError && !error.retryable) {
+        return error.message;
+    }
+
+    return 'Servicio no disponible por el momento. Intenta más tarde.';
 };
 
 const isRetryableSourceError = (error: unknown): boolean => {
@@ -40,6 +52,31 @@ const isRetryableSourceError = (error: unknown): boolean => {
 export const createPlateSearch = (dependencies: types.Dependencies) => {
     const vehicle = dependencies.vehicle ?? lookupVehicle;
     const fiscalia = dependencies.fiscalia ?? lookupFiscalia;
+    let memoryRateEvents: number[] = [];
+    const memoryCooldowns: Partial<Record<types.ServiceId, number>> = {};
+
+    const consumeMemoryRateLimit = (now = Date.now()): types.RateLimitDecision => {
+        const windowStartedAt = now - config.service.rateLimit.window;
+
+        memoryRateEvents = memoryRateEvents.filter(
+            (requestedAt) => requestedAt > windowStartedAt && requestedAt <= now,
+        );
+
+        if (memoryRateEvents.length >= config.service.rateLimit.maxRequests) {
+            const oldestRequest = memoryRateEvents[0] ?? now;
+
+            return {
+                allowed: false,
+                retryAfterMs: Math.max(
+                    1_000,
+                    oldestRequest + config.service.rateLimit.window - now,
+                ),
+            };
+        }
+
+        memoryRateEvents.push(now);
+        return { allowed: true };
+    };
 
     return async (
         value: string,
@@ -62,6 +99,7 @@ export const createPlateSearch = (dependencies: types.Dependencies) => {
             sri: { status: 'loading', attempt: 1 },
             fiscalia: { status: 'loading', attempt: 1 },
         };
+        let fiscaliaSessionInitialized = false;
 
         let cached: types.LookupResult | null = null;
 
@@ -77,6 +115,14 @@ export const createPlateSearch = (dependencies: types.Dependencies) => {
             onUpdate(cached);
 
             return cached;
+        }
+
+        const memoryDecision = consumeMemoryRateLimit();
+
+        if (!memoryDecision.allowed) {
+            throw new Error(
+                `Has alcanzado el límite de consultas. Intenta nuevamente en ${describeWait(memoryDecision.retryAfterMs)}.`,
+            );
         }
 
         if (dependencies.consumeLookupRateLimit) {
@@ -108,11 +154,15 @@ export const createPlateSearch = (dependencies: types.Dependencies) => {
         };
 
         const query = async (service: types.ServiceId): Promise<types.SourceResult> => {
-            let cooldownMs = 0;
+            const now = Date.now();
+            let cooldownMs = Math.max(0, (memoryCooldowns[service] ?? 0) - now);
 
             if (dependencies.getSourceCooldown) {
                 try {
-                    cooldownMs = await dependencies.getSourceCooldown(service);
+                    cooldownMs = Math.max(
+                        cooldownMs,
+                        await dependencies.getSourceCooldown(service, now),
+                    );
                 } catch {
                     console.info('Continue without persisted source cooldown');
                 }
@@ -131,12 +181,19 @@ export const createPlateSearch = (dependencies: types.Dependencies) => {
             }
 
             const persistCooldown = async (error: unknown, delayMs: number): Promise<void> => {
-                if (retryAfterForError(error) === undefined || !dependencies.setSourceCooldown) {
+                if (retryAfterForError(error) === undefined) {
+                    return;
+                }
+
+                const cooldownUntil = Date.now() + delayMs;
+                memoryCooldowns[service] = cooldownUntil;
+
+                if (!dependencies.setSourceCooldown) {
                     return;
                 }
 
                 try {
-                    await dependencies.setSourceCooldown(service, Date.now() + delayMs);
+                    await dependencies.setSourceCooldown(service, cooldownUntil);
                 } catch {
                     console.info('Continue without saving source cooldown');
                 }
@@ -149,15 +206,16 @@ export const createPlateSearch = (dependencies: types.Dependencies) => {
                             ? vehicle(plate, { signal: attemptSignal })
                             : fiscalia(plate, {
                                   signal: attemptSignal,
-                                  initializeSession: true,
+                                  initializeSession: !fiscaliaSessionInitialized,
+                                  onSessionInitialized: () => {
+                                      fiscaliaSessionInitialized = true;
+                                  },
                               }),
                     {
                         signal,
                         timeout: false,
                         wait: dependencies.wait,
                         shouldRetry: isRetryableSourceError,
-                        retryDelay: (error) => retryAfterForError(error),
-                        onRetry: persistCooldown,
                         onAttempt: (attempt) => {
                             if (attempt > 1) {
                                 publish(service, { status: 'loading', attempt });
@@ -188,10 +246,7 @@ export const createPlateSearch = (dependencies: types.Dependencies) => {
 
                 const source: types.SourceResult = {
                     status: 'error',
-                    message:
-                        reason instanceof GovernmentApiError && !reason.retryable
-                            ? reason.message
-                            : 'Servicio no disponible por el momento. Intenta más tarde.',
+                    message: sourceErrorMessage(reason, retryAfterMs),
                     diagnostics:
                         reason instanceof GovernmentApiError ? reason.diagnostics : undefined,
                 };
@@ -210,6 +265,7 @@ export const createPlateSearch = (dependencies: types.Dependencies) => {
             ...snapshot,
             sri,
             fiscalia: fiscaliaResult,
+            fetchedAt: Date.now(),
         };
 
         if (sri.status === 'success' && fiscaliaResult.status === 'success') {

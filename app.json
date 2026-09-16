@@ -28,6 +28,7 @@
         "android": {
             "package": "com.astrobit.takya",
             "allowBackup": false,
+            "softwareKeyboardLayoutMode": "resize",
             "adaptiveIcon": {
                 "foregroundImage": "./assets/icon.png",
                 "backgroundColor": "#FD7F3B"

@@ -2,7 +2,7 @@ import type * as types from '../types.ts';
 
 import { GovernmentApiError } from '../errors/service.errors.ts';
 import { abortError, serviceWrapper } from '../utils/service.utils.ts';
-import { normalizePlate } from '../utils/licensePlate.utils.ts';
+import { normalizePlate, tryNormalizePlate } from '../utils/licensePlate.utils.ts';
 import { projectFiscaliaData, projectVehicleData } from '../utils/privacy.utils.ts';
 
 import config from '../configs/app.config.ts';
@@ -78,6 +78,20 @@ const configuredSourceUrl = (value: string, source: SourceName): string => {
             undefined,
             false,
         );
+    }
+};
+
+export const validateGovernmentApiConfig = (): string | null => {
+    try {
+        configuredSourceUrl(config.source.SRI, 'SRI');
+        configuredSourceUrl(config.source.fiscaliaEntry, 'Fiscalía');
+        configuredSourceUrl(config.source.fiscaliaLookup, 'Fiscalía');
+
+        return null;
+    } catch (error) {
+        return error instanceof Error
+            ? error.message
+            : 'Los servicios públicos no están configurados correctamente.';
     }
 };
 
@@ -202,9 +216,9 @@ export const lookupVehicle = async (value: string, options: types.RequestOptions
     );
     const data = projectVehicleData(result.data);
 
-    if (!data) {
+    if (!data || tryNormalizePlate(String(data.numeroPlaca)) !== plate) {
         throw new GovernmentApiError(
-            'La fuente no devolvió una ficha vehicular válida.',
+            'La fuente no devolvió una ficha vehicular válida para esta placa.',
             result.diagnostics,
             false,
         );
@@ -225,6 +239,7 @@ export const lookupFiscalia = async (value: string, options: types.FiscaliaOptio
         const entryEndpoint = configuredSourceUrl(config.source.fiscaliaEntry, 'Fiscalía');
 
         await request(entryEndpoint, { credentials: 'include' }, options, 'session');
+        options.onSessionInitialized?.();
     }
 
     const result = await request(

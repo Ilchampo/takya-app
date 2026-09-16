@@ -2,16 +2,19 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useApp } from './src/hooks/useApp';
 
+import { ErrorBoundary } from './src/components/ErrorBoundary/ErrorBoundary';
+import { ErrorScreen } from './src/screens/ErrorScreen/ErrorScreen';
 import { HistoryScreen } from './src/screens/HistoryScreen/HistoryScreen';
 import { HomeScreen } from './src/screens/HomeScreen/HomeScreen';
 import { LegalScreen } from './src/screens/LegalScreen/LegalScreen';
 import { SplashScreen } from './src/screens/SplashScreen/SplashScreen';
 
-export default function App() {
+const AppContent = () => {
     const {
         fontsLoaded,
         fontError,
         ready,
+        configurationError,
         storageAvailable,
         theme,
         showLegal,
@@ -36,10 +39,15 @@ export default function App() {
     } = useApp();
 
     return (
-        <SafeAreaProvider>
+        <>
             <StatusBar style={(!showLegal && !savedPlate) || !theme.dark ? 'dark' : 'light'} />
             {!ready || (!fontsLoaded && !fontError) ? (
                 <SplashScreen />
+            ) : configurationError ? (
+                <ErrorScreen
+                    title="Esta instalación no puede consultar"
+                    message={configurationError}
+                />
             ) : (
                 <>
                     {!showLegal && !savedPlate && (
@@ -81,6 +89,16 @@ export default function App() {
                     )}
                 </>
             )}
+        </>
+    );
+};
+
+export default function App() {
+    return (
+        <SafeAreaProvider>
+            <ErrorBoundary>
+                <AppContent />
+            </ErrorBoundary>
         </SafeAreaProvider>
     );
 }

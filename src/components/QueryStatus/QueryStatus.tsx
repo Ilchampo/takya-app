@@ -22,6 +22,7 @@ export const QueryStatus: React.FC<QueryStatusProps> = (props) => {
     const { sri, fiscalia } = result;
 
     const loading = sri.status === 'loading' || fiscalia.status === 'loading';
+    const hasSuccessfulSource = sri.status === 'success' || fiscalia.status === 'success';
 
     return (
         <View style={styles.wrapper}>
@@ -52,14 +53,20 @@ export const QueryStatus: React.FC<QueryStatusProps> = (props) => {
                 initiallyExpanded={expanded}
             />
             {loading && onCancel ? (
-                <Pressable accessibilityRole="button" onPress={onCancel} style={styles.cancel}>
+                <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel="Cancelar consulta en curso"
+                    onPress={onCancel}
+                    style={styles.cancel}
+                >
                     <Text style={[styles.meta, { color: theme.colors.orangePressed }]}>
                         Cancelar consulta
                     </Text>
                 </Pressable>
             ) : (
                 <Text style={[styles.date, { color: theme.colors.textMuted }]}>
-                    Consultado el {formatLookupDate(result.fetchedAt)}
+                    {hasSuccessfulSource ? 'Consultado' : 'Intento realizado'} el{' '}
+                    {formatLookupDate(result.fetchedAt)}
                 </Text>
             )}
         </View>

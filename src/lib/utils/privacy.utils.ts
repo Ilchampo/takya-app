@@ -1,6 +1,12 @@
 import { incidentRecords } from '../../data/incidents.data.ts';
 import { asRecord } from './misc.utils.ts';
 
+const MAX_VEHICLE_FIELD_LENGTH = 120;
+const MAX_INCIDENTS = 100;
+const MAX_INCIDENT_PEOPLE = 100;
+const MAX_INCIDENT_FIELD_LENGTH = 500;
+const MAX_PERSON_NAME_LENGTH = 160;
+
 const normalizedKey = (key: string): string =>
     key
         .normalize('NFD')
@@ -37,7 +43,7 @@ export const sanitizeGovernmentData = (data: unknown): unknown => sanitizeValue(
 
 const safeVehicleValue = (value: unknown): string | number | boolean | null => {
     if (typeof value === 'string') {
-        return value.trim();
+        return value.trim().slice(0, MAX_VEHICLE_FIELD_LENGTH);
     }
 
     if (typeof value === 'number' && Number.isFinite(value)) {
@@ -55,7 +61,7 @@ export const projectVehicleData = (data: unknown): Record<string, unknown> | nul
     }
 
     const projected: Record<string, unknown> = {
-        numeroPlaca: record.numeroPlaca.trim(),
+        numeroPlaca: record.numeroPlaca.trim().slice(0, MAX_VEHICLE_FIELD_LENGTH),
     };
 
     for (const key of ['descripcionMarca', 'descripcionModelo', 'colorVehiculo1']) {
@@ -74,16 +80,27 @@ export const projectFiscaliaData = (data: unknown): Record<string, unknown> | nu
         return null;
     }
 
+    let remainingPeople = MAX_INCIDENT_PEOPLE;
+
     return {
-        cabecera: incidents.map((incident) => ({
-            ciudad: incident.ciudad,
-            fecha: incident.fecha,
-            hora: incident.hora,
-            gen_delito_tipopenal: incident.gen_delito_tipopenal,
-            sujetos: incident.personasSenaladas.map((person) => ({
-                persona: person.nombreCompleto,
+        cabecera: incidents.slice(0, MAX_INCIDENTS).map((incident) => {
+            const people = incident.personasSenaladas.slice(0, remainingPeople).map((person) => ({
+                persona: person.nombreCompleto.slice(0, MAX_PERSON_NAME_LENGTH),
                 tipo: person.estado,
-            })),
-        })),
+            }));
+
+            remainingPeople -= people.length;
+
+            return {
+                ciudad: incident.ciudad.slice(0, MAX_INCIDENT_FIELD_LENGTH),
+                fecha: incident.fecha.slice(0, MAX_INCIDENT_FIELD_LENGTH),
+                hora: incident.hora.slice(0, MAX_INCIDENT_FIELD_LENGTH),
+                gen_delito_tipopenal: incident.gen_delito_tipopenal.slice(
+                    0,
+                    MAX_INCIDENT_FIELD_LENGTH,
+                ),
+                sujetos: people,
+            };
+        }),
     };
 };

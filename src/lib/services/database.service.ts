@@ -1,15 +1,27 @@
 import type * as types from '../types.ts';
 
 import { parseJson, stringifyJson } from '../utils/misc.utils.ts';
+import { tryNormalizePlate } from '../utils/licensePlate.utils.ts';
 import { projectFiscaliaData, projectVehicleData } from '../utils/privacy.utils.ts';
 
+import { Paths } from 'expo-file-system';
+import { Platform } from 'react-native';
 import config from '../configs/app.config.ts';
 import * as SQLite from 'expo-sqlite';
 
 let databasePromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
+const openDatabase = async (): Promise<SQLite.SQLiteDatabase> => {
+    if (Platform.OS === 'ios') {
+        await SQLite.deleteDatabaseAsync('takya.db').catch(() => undefined);
+        return SQLite.openDatabaseAsync('takya.db', {}, Paths.cache.uri);
+    }
+
+    return SQLite.openDatabaseAsync('takya.db');
+};
+
 const getDatabase = (): Promise<SQLite.SQLiteDatabase> => {
-    databasePromise ??= SQLite.openDatabaseAsync('takya.db');
+    databasePromise ??= openDatabase();
 
     return databasePromise;
 };
@@ -32,7 +44,11 @@ const scrubCachedSensitiveData = async (database: SQLite.SQLiteDatabase): Promis
             const projectedSri = projectVehicleData(sri.data);
             const projectedFiscalia = projectFiscaliaData(fiscalia.data);
 
-            if (!projectedSri || !projectedFiscalia) {
+            if (
+                !projectedSri ||
+                !projectedFiscalia ||
+                tryNormalizePlate(String(projectedSri.numeroPlaca)) !== row.plate
+            ) {
                 await database.runAsync('DELETE FROM lookups WHERE plate = ?', row.plate);
                 continue;
             }
@@ -57,6 +73,7 @@ export const initializeDatabase = async (now = Date.now()): Promise<void> => {
 
     await database.execAsync(`
     PRAGMA journal_mode = WAL;
+    PRAGMA secure_delete = ON;
     
     CREATE TABLE IF NOT EXISTS lookups (
       plate TEXT PRIMARY KEY NOT NULL,
@@ -82,6 +99,8 @@ export const initializeDatabase = async (now = Date.now()): Promise<void> => {
       source TEXT PRIMARY KEY NOT NULL,
       cooldown_until INTEGER NOT NULL
     );
+
+    PRAGMA user_version = 1;
   `);
 
     await deleteExpiredLookups(now);
@@ -89,11 +108,13 @@ export const initializeDatabase = async (now = Date.now()): Promise<void> => {
     await trimHistory();
 
     await database.runAsync(
-        'DELETE FROM lookup_rate_events WHERE requested_at <= ?',
+        'DELETE FROM lookup_rate_events WHERE requested_at <= ? OR requested_at > ?',
         now - config.service.rateLimit.window,
+        now,
     );
 
     await database.runAsync('DELETE FROM source_cooldowns WHERE cooldown_until <= ?', now);
+    await database.execAsync('PRAGMA wal_checkpoint(TRUNCATE);');
 };
 
 export const deleteExpiredLookups = async (now = Date.now()): Promise<void> => {
@@ -141,7 +162,11 @@ export const getCachedLookup = async (
     const projectedSri = projectVehicleData(sri.data);
     const projectedFiscalia = projectFiscaliaData(fiscalia.data);
 
-    if (!projectedSri || !projectedFiscalia) {
+    if (
+        !projectedSri ||
+        !projectedFiscalia ||
+        tryNormalizePlate(String(projectedSri.numeroPlaca)) !== row.plate
+    ) {
         await database.runAsync('DELETE FROM lookups WHERE plate = ?', row.plate);
         return null;
     }
@@ -169,7 +194,11 @@ export const saveLookup = async (result: types.LookupResult): Promise<void> => {
     const sriData = projectVehicleData(result.sri.data);
     const fiscaliaData = projectFiscaliaData(result.fiscalia.data);
 
-    if (!sriData || !fiscaliaData) {
+    if (
+        !sriData ||
+        !fiscaliaData ||
+        tryNormalizePlate(String(sriData.numeroPlaca)) !== result.plate
+    ) {
         return;
     }
 
@@ -206,7 +235,13 @@ export const listLookupHistory = async (now = Date.now()): Promise<types.LookupH
 export const clearLookupHistory = async (): Promise<void> => {
     const database = await getDatabase();
 
-    await database.runAsync('DELETE FROM lookups');
+    await database.execAsync(`
+      PRAGMA secure_delete = ON;
+      DELETE FROM lookups;
+      PRAGMA wal_checkpoint(TRUNCATE);
+      VACUUM;
+      PRAGMA wal_checkpoint(TRUNCATE);
+    `);
 };
 
 export const consumeLookupRateLimit = async (
@@ -222,8 +257,9 @@ export const consumeLookupRateLimit = async (
 
     await database.withTransactionAsync(async () => {
         await database.runAsync(
-            'DELETE FROM lookup_rate_events WHERE requested_at <= ?',
+            'DELETE FROM lookup_rate_events WHERE requested_at <= ? OR requested_at > ?',
             windowStartedAt,
+            now,
         );
 
         const state = await database.getFirstAsync<{

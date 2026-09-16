@@ -79,7 +79,7 @@ const toIncident = (value: unknown): Incident | null => {
     const hora = asText(row.hora);
     const gen_delito_tipopenal = asText(row.gen_delito_tipopenal);
 
-    if (!ciudad && !fecha && !hora && !gen_delito_tipopenal) {
+    if (!ciudad || !fecha || !hora || !gen_delito_tipopenal) {
         return null;
     }
 

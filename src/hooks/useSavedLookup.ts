@@ -24,6 +24,8 @@ export const useSavedLookup = ({ onHistoryChange }: types.UseSavedLookupOptions)
 
         setSavedPlate(null);
         setSavedResult(null);
+        setSavedLoading(false);
+        setSavedError(null);
     }, []);
 
     const openHistory = useCallback(
