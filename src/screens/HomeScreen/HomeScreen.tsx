@@ -2,6 +2,7 @@ import type { AppTheme } from '../../theme/theme';
 import type * as types from '../../lib/types';
 
 import {
+    Alert,
     Keyboard,
     KeyboardAvoidingView,
     Platform,
@@ -37,6 +38,7 @@ interface HomeScreenProps {
     onOpenHistory: (plate: string) => void;
     onOpenLegal: VoidFunction;
     onToggleTheme: VoidFunction;
+    onClearHistory: () => Promise<boolean>;
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
@@ -54,6 +56,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
         onOpenHistory,
         onOpenLegal,
         onToggleTheme,
+        onClearHistory,
     } = props;
 
     const valid = isValidPlate(plate);
@@ -67,6 +70,32 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
     const submit = () => {
         Keyboard.dismiss();
         onSubmit();
+    };
+
+    const clearHistory = async (): Promise<void> => {
+        const cleared = await onClearHistory();
+
+        if (!cleared) {
+            Alert.alert(
+                'No se pudo borrar el historial',
+                'Intenta nuevamente o elimina los datos de Takya desde los ajustes del dispositivo.',
+            );
+        }
+    };
+
+    const confirmClearHistory = (): void => {
+        Alert.alert(
+            'Borrar historial',
+            'Se eliminarán permanentemente todas las consultas guardadas en este dispositivo.',
+            [
+                { text: 'Cancelar', style: 'cancel' },
+                {
+                    text: 'Borrar',
+                    style: 'destructive',
+                    onPress: () => void clearHistory(),
+                },
+            ],
+        );
     };
 
     return (
@@ -170,14 +199,37 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                                     Recientes
                                 </Text>
                                 {history.length > 0 && (
-                                    <Text
-                                        style={[
-                                            styles.historyCount,
-                                            { color: theme.colors.textMuted },
-                                        ]}
-                                    >
-                                        {history.length} de {config.service.historyLimit}
-                                    </Text>
+                                    <View style={styles.recentActions}>
+                                        <Text
+                                            style={[
+                                                styles.historyCount,
+                                                { color: theme.colors.textMuted },
+                                            ]}
+                                        >
+                                            {history.length} de {config.service.historyLimit}
+                                        </Text>
+                                        <Pressable
+                                            accessibilityRole="button"
+                                            accessibilityLabel="Borrar historial de consultas"
+                                            accessibilityState={{ disabled: loading }}
+                                            disabled={loading}
+                                            hitSlop={8}
+                                            onPress={confirmClearHistory}
+                                            style={({ pressed }) => [
+                                                { opacity: loading ? 0.4 : 1 },
+                                                pressed && !loading && { opacity: 0.6 },
+                                            ]}
+                                        >
+                                            <Text
+                                                style={[
+                                                    styles.clearHistory,
+                                                    { color: theme.colors.danger },
+                                                ]}
+                                            >
+                                                Borrar
+                                            </Text>
+                                        </Pressable>
+                                    </View>
                                 )}
                             </View>
                             {history.length === 0 ? (

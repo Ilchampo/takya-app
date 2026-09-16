@@ -3,9 +3,16 @@ import type * as types from '../types.ts';
 import { GovernmentApiError } from '../errors/service.errors.ts';
 import { abortError, serviceWrapper } from '../utils/service.utils.ts';
 import { normalizePlate } from '../utils/licensePlate.utils.ts';
-import { sanitizeGovernmentData } from '../utils/privacy.utils.ts';
+import { projectFiscaliaData, projectVehicleData } from '../utils/privacy.utils.ts';
 
 import config from '../configs/app.config.ts';
+
+const allowedSourceHosts = {
+    SRI: 'srienlinea.sri.gob.ec',
+    Fiscalía: 'www.gestiondefiscalias.gob.ec',
+} as const;
+
+type SourceName = keyof typeof allowedSourceHosts;
 
 const isAbortError = (error: unknown): boolean =>
     error instanceof Error && error.name === 'AbortError';
@@ -26,13 +33,41 @@ const parseRetryAfterMs = (value: string | null, now = Date.now()): number | und
     return Number.isFinite(date) ? Math.max(0, date - now) : undefined;
 };
 
-const configuredSourceUrl = (value: string, source: string): string => {
+const utf8ByteLength = (value: string): number => {
+    let bytes = 0;
+
+    for (let index = 0; index < value.length; index++) {
+        const code = value.charCodeAt(index);
+
+        if (code <= 0x7f) {
+            bytes += 1;
+        } else if (code <= 0x7ff) {
+            bytes += 2;
+        } else if (
+            code >= 0xd800 &&
+            code <= 0xdbff &&
+            index + 1 < value.length &&
+            value.charCodeAt(index + 1) >= 0xdc00 &&
+            value.charCodeAt(index + 1) <= 0xdfff
+        ) {
+            bytes += 4;
+            index += 1;
+        } else {
+            bytes += 3;
+        }
+    }
+
+    return bytes;
+};
+
+const configuredSourceUrl = (value: string, source: SourceName): string => {
     const configuredValue = value.trim();
 
     try {
         const url = new URL(configuredValue);
+        const allowedHost = allowedSourceHosts[source];
 
-        if (url.protocol !== 'https:' || !url.hostname) {
+        if (url.protocol !== 'https:' || url.hostname.toLowerCase() !== allowedHost) {
             throw new Error('Invalid source URL');
         }
 
@@ -91,10 +126,31 @@ const request = async (
                     );
                 }
 
+                const contentLength = Number(response.headers.get('content-length'));
+
+                if (
+                    Number.isFinite(contentLength) &&
+                    contentLength > config.service.maxResponseBytes
+                ) {
+                    throw new GovernmentApiError(
+                        'La fuente devolvió una respuesta demasiado grande.',
+                        diagnostics,
+                        false,
+                    );
+                }
+
                 const body = await response.text();
 
                 if (signal.aborted) {
                     throw abortError();
+                }
+
+                if (utf8ByteLength(body) > config.service.maxResponseBytes) {
+                    throw new GovernmentApiError(
+                        'La fuente devolvió una respuesta demasiado grande.',
+                        diagnostics,
+                        false,
+                    );
                 }
 
                 if (stage === 'session') {
@@ -144,11 +200,20 @@ export const lookupVehicle = async (value: string, options: types.RequestOptions
         options,
         'lookup',
     );
+    const data = projectVehicleData(result.data);
+
+    if (!data) {
+        throw new GovernmentApiError(
+            'La fuente no devolvió una ficha vehicular válida.',
+            result.diagnostics,
+            false,
+        );
+    }
 
     return {
         plate,
         ...result,
-        data: sanitizeGovernmentData(result.data),
+        data,
     };
 };
 
@@ -177,9 +242,19 @@ export const lookupFiscalia = async (value: string, options: types.FiscaliaOptio
         'lookup',
     );
 
+    const data = projectFiscaliaData(result.data);
+
+    if (!data) {
+        throw new GovernmentApiError(
+            'La fuente no devolvió registros de Fiscalía válidos.',
+            result.diagnostics,
+            false,
+        );
+    }
+
     return {
         plate,
         ...result,
-        data: sanitizeGovernmentData(result.data),
+        data,
     };
 };

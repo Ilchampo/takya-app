@@ -64,6 +64,8 @@ const styles = StyleSheet.create({
         letterSpacing: -0.6,
     },
     historyCount: { fontSize: 14 },
+    recentActions: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+    clearHistory: { fontSize: 14, lineHeight: 21, fontWeight: '600' },
     empty: {
         borderRadius: 22,
         padding: 20,
