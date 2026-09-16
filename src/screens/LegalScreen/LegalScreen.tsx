@@ -19,7 +19,7 @@ export const LegalScreen: React.FC<LegalScreenProps> = (props) => {
     return (
         <SafeAreaView
             style={[styles.safe, { backgroundColor: theme.colors.background }]}
-            edges={['top', 'left', 'right']}
+            edges={['top', 'bottom', 'left', 'right']}
         >
             <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
                 <TopBar theme={theme} onBack={onBack} onToggleTheme={onToggleTheme} />

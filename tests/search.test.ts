@@ -54,14 +54,17 @@ test('one source becomes readable while its sibling is still pending', async () 
     assert.equal(saved[0]?.fiscalia.status, 'success');
 });
 
-test('exhausts configured retries only for the failing source, then shows unavailable', async () => {
+test('exhausts configured retries only for the failing source, then caches the usable response', async () => {
     let sriCalls = 0;
     let fiscaliaCalls = 0;
     const attempts: number[] = [];
     const waits: number[] = [];
+    const saved: types.LookupResult[] = [];
     const search = createPlateSearch({
         getCachedLookup: async () => null,
-        saveLookup: async () => assert.fail('partial results must not be cached'),
+        saveLookup: async (result) => {
+            saved.push(result);
+        },
         vehicle: async (plate) => {
             sriCalls++;
             return reply(plate);
@@ -95,6 +98,46 @@ test('exhausts configured retries only for the failing source, then shows unavai
     );
     assert.equal(result.sri.status, 'success');
     assert.equal(result.fiscalia.status, 'error');
+    assert.equal(saved.length, 1);
+    assert.equal(saved[0]?.sri.status, 'success');
+    assert.equal(saved[0]?.fiscalia.status, 'error');
+});
+
+test('caches a Fiscalía response when SRI only reports that the vehicle does not exist', async () => {
+    const saved: types.LookupResult[] = [];
+    const search = createPlateSearch({
+        getCachedLookup: async () => null,
+        saveLookup: async (result) => {
+            saved.push(result);
+        },
+        vehicle: async () => ({
+            plate: 'PBC1234',
+            data: {
+                sriVehicleNotFound: true,
+                mensaje: 'El vehículo no existe',
+            },
+            diagnostics: {
+                stage: 'lookup' as const,
+                status: 200,
+                contentType: 'application/json',
+                elapsedMs: 1,
+            },
+        }),
+        fiscalia: async () => ({
+            plate: 'PBC1234',
+            data: { cabecera: [] },
+            diagnostics: {
+                stage: 'lookup' as const,
+                status: 200,
+                contentType: 'application/json',
+                elapsedMs: 1,
+            },
+        }),
+    });
+    const result = await search('PBC1234', { onUpdate: () => {} });
+    assert.equal(result.sri.status, 'success');
+    assert.equal(result.fiscalia.status, 'success');
+    assert.equal(saved.length, 1);
 });
 
 test('stops retries immediately after recovery', async () => {
@@ -112,6 +155,73 @@ test('stops retries immediately after recovery', async () => {
     const result = await search('PBC1234', { onUpdate: () => {} });
     assert.equal(calls, 3);
     assert.equal(result.fiscalia.status, 'success');
+});
+
+test('partial cache keeps the successful source and only fetches the missing one', async () => {
+    let fiscaliaCalls = 0;
+    const saved: types.LookupResult[] = [];
+    const search = createPlateSearch({
+        getCachedLookup: async () => ({
+            plate: 'PBC1234',
+            fromCache: true,
+            fetchedAt: 123,
+            sri: { status: 'success', data: { numeroPlaca: 'PBC1234' } },
+            fiscalia: {
+                status: 'error',
+                message: 'Sin respuesta guardada para esta fuente.',
+            },
+        }),
+        saveLookup: async (result) => {
+            saved.push(result);
+        },
+        consumeLookupRateLimit: async () => assert.fail('partial refetch must not consume quota'),
+        vehicle: async () => assert.fail('must not refetch a cached SRI result'),
+        fiscalia: async (plate) => {
+            fiscaliaCalls++;
+            return { plate, data: { cabecera: [] }, diagnostics: reply(plate).diagnostics };
+        },
+    });
+    const updates: types.LookupProgress[] = [];
+    const result = await search('PBC1234', { onUpdate: (state) => updates.push(state) });
+    assert.equal(fiscaliaCalls, 1);
+    assert.equal(updates[0]?.sri.status, 'success');
+    assert.equal(updates[0]?.fiscalia.status, 'loading');
+    assert.equal(result.sri.status, 'success');
+    assert.equal(result.fiscalia.status, 'success');
+    assert.equal(saved.length, 1);
+});
+
+test('refresh ignores a complete cache and queries both sources again', async () => {
+    let sriCalls = 0;
+    let fiscaliaCalls = 0;
+    let limiterCalls = 0;
+    const search = createPlateSearch({
+        getCachedLookup: async () => ({
+            plate: 'PBC1234',
+            fromCache: true,
+            fetchedAt: 123,
+            sri: { status: 'success', data: { numeroPlaca: 'PBC1234' } },
+            fiscalia: { status: 'success', data: { cabecera: [] } },
+        }),
+        saveLookup: async () => {},
+        consumeLookupRateLimit: async () => {
+            limiterCalls++;
+            return { allowed: true };
+        },
+        vehicle: async (plate) => {
+            sriCalls++;
+            return reply(plate);
+        },
+        fiscalia: async (plate) => {
+            fiscaliaCalls++;
+            return { plate, data: { cabecera: [] }, diagnostics: reply(plate).diagnostics };
+        },
+    });
+    const result = await search('PBC1234', { refresh: true, onUpdate: () => {} });
+    assert.equal(sriCalls, 1);
+    assert.equal(fiscaliaCalls, 1);
+    assert.equal(limiterCalls, 1);
+    assert.equal(result.fromCache, false);
 });
 
 test('cache hits publish both sources without making requests', async () => {

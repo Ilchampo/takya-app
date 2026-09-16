@@ -34,6 +34,7 @@ interface HomeScreenProps {
     storageAvailable: boolean;
     onPlateChange: (value: string) => void;
     onSubmit: VoidFunction;
+    onRefresh: VoidFunction;
     onCancel: VoidFunction;
     onOpenHistory: (plate: string) => void;
     onOpenLegal: VoidFunction;
@@ -52,6 +53,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
         storageAvailable,
         onPlateChange,
         onSubmit,
+        onRefresh,
         onCancel,
         onOpenHistory,
         onOpenLegal,
@@ -63,7 +65,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
     const normalizedPlate = valid ? normalizePlate(plate) : null;
     const visibleResult = result?.plate === normalizedPlate ? result : null;
 
-    const searchingThisPlate = loading && visibleResult !== null;
+    const searchingThisPlate = loading;
 
     const submitDisabled = !valid || searchingThisPlate;
 
@@ -101,7 +103,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
     return (
         <SafeAreaView
             style={[styles.safe, { backgroundColor: theme.colors.orange }]}
-            edges={['top', 'left', 'right']}
+            edges={['top', 'bottom', 'left', 'right']}
         >
             <KeyboardAvoidingView
                 style={[styles.safe, { backgroundColor: theme.colors.background }]}
@@ -187,7 +189,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                         </View>
 
                         {visibleResult && (
-                            <QueryStatus result={visibleResult} theme={theme} onCancel={onCancel} />
+                            <QueryStatus
+                                result={visibleResult}
+                                theme={theme}
+                                onCancel={onCancel}
+                                onRefresh={onRefresh}
+                            />
                         )}
 
                         <View style={styles.recent}>
@@ -258,7 +265,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                                                 { color: theme.colors.text },
                                             ]}
                                         >
-                                            Tu próxima consulta empieza aquí
+                                            {storageAvailable
+                                                ? 'Tu próxima consulta empieza aquí'
+                                                : 'Historial no disponible'}
                                         </Text>
                                         <Text
                                             style={[
@@ -266,9 +275,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                                                 { color: theme.colors.textMuted },
                                             ]}
                                         >
-                                            Aquí encontrarás tus últimas consultas, disponibles
-                                            durante {config.service.ttlDays}{' '}
-                                            {config.service.ttlDays === 1 ? 'día' : 'días'}.
+                                            {storageAvailable
+                                                ? `Aquí encontrarás tus últimas consultas, disponibles durante ${config.service.ttlDays} ${
+                                                      config.service.ttlDays === 1 ? 'día' : 'días'
+                                                  }.`
+                                                : 'Las consultas funcionan, pero no se guardarán en este dispositivo.'}
                                         </Text>
                                     </View>
                                 </View>
@@ -283,6 +294,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                                         <Pressable
                                             accessibilityRole="button"
                                             accessibilityLabel={`Abrir resumen de ${displayPlate(item.plate)}`}
+                                            accessibilityState={{ disabled: loading }}
+                                            disabled={loading}
                                             key={item.plate}
                                             onPress={() => {
                                                 Keyboard.dismiss();
@@ -294,7 +307,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                                                     borderTopWidth:
                                                         index > 0 ? StyleSheet.hairlineWidth : 0,
                                                     borderTopColor: theme.colors.border,
-                                                    opacity: pressed ? 0.5 : 1,
+                                                    opacity: loading || pressed ? 0.5 : 1,
                                                 },
                                             ]}
                                         >

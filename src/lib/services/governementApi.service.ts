@@ -2,8 +2,13 @@ import type * as types from '../types.ts';
 
 import { GovernmentApiError } from '../errors/service.errors.ts';
 import { abortError, serviceWrapper } from '../utils/service.utils.ts';
-import { normalizePlate } from '../utils/licensePlate.utils.ts';
-import { projectFiscaliaData, projectVehicleData } from '../utils/privacy.utils.ts';
+import { normalizePlate, tryNormalizePlate } from '../utils/licensePlate.utils.ts';
+import { asRecord } from '../utils/misc.utils.ts';
+import {
+    isVehicleNotFoundProjection,
+    projectFiscaliaData,
+    projectVehicleData,
+} from '../utils/privacy.utils.ts';
 
 import config from '../configs/app.config.ts';
 
@@ -81,13 +86,43 @@ const configuredSourceUrl = (value: string, source: SourceName): string => {
     }
 };
 
-const request = async (
+export const validateGovernmentApiConfig = (): string | null => {
+    try {
+        configuredSourceUrl(config.source.SRI, 'SRI');
+        configuredSourceUrl(config.source.fiscaliaEntry, 'Fiscalía');
+        configuredSourceUrl(config.source.fiscaliaLookup, 'Fiscalía');
+
+        return null;
+    } catch (error) {
+        return error instanceof Error
+            ? error.message
+            : 'Los servicios públicos no están configurados correctamente.';
+    }
+};
+
+type LookupProjector = (data: unknown) => unknown;
+
+function request(
+    url: string,
+    init: RequestInit,
+    options: types.RequestOptions,
+    stage: 'session',
+): Promise<types.RequestResult>;
+function request(
+    url: string,
+    init: RequestInit,
+    options: types.RequestOptions,
+    stage: 'lookup',
+    project: LookupProjector,
+): Promise<types.RequestResult>;
+function request(
     url: string,
     init: RequestInit,
     options: types.RequestOptions,
     stage: types.Diagnostics['stage'],
-): Promise<types.RequestResult> =>
-    serviceWrapper(
+    project?: LookupProjector,
+): Promise<types.RequestResult> {
+    return serviceWrapper(
         async (signal) => {
             const startedAt = Date.now();
             let diagnostics: types.Diagnostics | undefined;
@@ -153,24 +188,28 @@ const request = async (
                     );
                 }
 
-                if (stage === 'session') {
+                if (stage === 'session' || !project) {
                     return { data: null, diagnostics };
                 }
 
+                let parsed: unknown;
+
                 try {
-                    return {
-                        data: JSON.parse(body) as unknown,
-                        diagnostics: {
-                            ...diagnostics,
-                            elapsedMs: Date.now() - startedAt,
-                        },
-                    };
+                    parsed = JSON.parse(body) as unknown;
                 } catch {
                     throw new GovernmentApiError(
                         'La fuente devolvió una respuesta que no se pudo interpretar.',
                         diagnostics,
                     );
                 }
+
+                return {
+                    data: project(parsed),
+                    diagnostics: {
+                        ...diagnostics,
+                        elapsedMs: Date.now() - startedAt,
+                    },
+                };
             } catch (error) {
                 if (signal.aborted || isAbortError(error)) {
                     throw abortError();
@@ -189,31 +228,38 @@ const request = async (
             maxRetries: 0,
         },
     );
+}
 
 export const lookupVehicle = async (value: string, options: types.RequestOptions = {}) => {
     const plate = normalizePlate(value);
     const endpoint = configuredSourceUrl(config.source.SRI, 'SRI');
 
-    const result = await request(
+    const { data, diagnostics } = await request(
         `${endpoint}?numeroPlacaCampvCpn=${encodeURIComponent(plate)}`,
         { method: 'GET', headers: { Accept: 'application/json' } },
         options,
         'lookup',
+        projectVehicleData,
     );
-    const data = projectVehicleData(result.data);
 
-    if (!data) {
+    const projected = asRecord(data);
+
+    if (
+        !projected ||
+        (!isVehicleNotFoundProjection(projected) &&
+            tryNormalizePlate(String(projected.numeroPlaca)) !== plate)
+    ) {
         throw new GovernmentApiError(
-            'La fuente no devolvió una ficha vehicular válida.',
-            result.diagnostics,
+            'La fuente no devolvió una ficha vehicular válida para esta placa.',
+            diagnostics,
             false,
         );
     }
 
     return {
         plate,
-        ...result,
-        data,
+        data: projected,
+        diagnostics,
     };
 };
 
@@ -225,9 +271,10 @@ export const lookupFiscalia = async (value: string, options: types.FiscaliaOptio
         const entryEndpoint = configuredSourceUrl(config.source.fiscaliaEntry, 'Fiscalía');
 
         await request(entryEndpoint, { credentials: 'include' }, options, 'session');
+        options.onSessionInitialized?.();
     }
 
-    const result = await request(
+    const { data, diagnostics } = await request(
         lookupEndpoint,
         {
             method: 'POST',
@@ -240,21 +287,21 @@ export const lookupFiscalia = async (value: string, options: types.FiscaliaOptio
         },
         options,
         'lookup',
+        (raw) => projectFiscaliaData(raw, Date.now(), config.service.incidentMonths),
     );
+    const projected = asRecord(data);
 
-    const data = projectFiscaliaData(result.data);
-
-    if (!data) {
+    if (!projected) {
         throw new GovernmentApiError(
             'La fuente no devolvió registros de Fiscalía válidos.',
-            result.diagnostics,
+            diagnostics,
             false,
         );
     }
 
     return {
         plate,
-        ...result,
-        data,
+        data: projected,
+        diagnostics,
     };
 };

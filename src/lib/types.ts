@@ -101,6 +101,7 @@ export type ServiceId = 'sri' | 'fiscalia';
 export type SuccessBodyProps = {
     data: unknown;
     theme: AppTheme;
+    fetchedAt: number;
 };
 
 export type ServiceConfig = {
@@ -146,6 +147,7 @@ export type Dependencies = {
 export type SearchOptions = {
     signal?: AbortSignal;
     onUpdate: (result: LookupProgress) => void;
+    refresh?: boolean;
 };
 
 export type RequestOptions = {
@@ -156,6 +158,7 @@ export type RequestOptions = {
 
 export type FiscaliaOptions = RequestOptions & {
     initializeSession?: boolean;
+    onSessionInitialized?: VoidFunction;
 };
 
 export type RequestResult = {

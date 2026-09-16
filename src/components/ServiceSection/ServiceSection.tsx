@@ -15,6 +15,7 @@ interface ServiceSectionProps {
     theme: AppTheme;
     source?: types.SourceProgress;
     initiallyExpanded?: boolean;
+    fetchedAt: number;
 }
 
 interface HeaderProps {
@@ -48,7 +49,11 @@ const Header: React.FC<HeaderProps> = (props) => {
             </View>
             <View style={[styles.statusIcon, { backgroundColor: colors.background }]}>
                 {presentation.tone === 'loading' ? (
-                    <ActivityIndicator size="small" color={colors.color} />
+                    <ActivityIndicator
+                        accessibilityLabel={`${title}: ${presentation.label}`}
+                        size="small"
+                        color={colors.color}
+                    />
                 ) : (
                     <Icon name={presentation.icon} size={22} color={colors.color} />
                 )}
@@ -61,7 +66,7 @@ const Header: React.FC<HeaderProps> = (props) => {
 };
 
 export const ServiceSection: React.FC<ServiceSectionProps> = (props) => {
-    const { service, theme, source, initiallyExpanded = false } = props;
+    const { service, theme, source, initiallyExpanded = false, fetchedAt } = props;
     const { title, subtitle, icon, Success } = getServiceConfig(service);
 
     const [expanded, setExpanded] = useState(initiallyExpanded);
@@ -87,7 +92,7 @@ export const ServiceSection: React.FC<ServiceSectionProps> = (props) => {
             {expanded && (
                 <View style={[styles.body, { borderTopColor: theme.colors.border }]}>
                     {presentation.tone === 'success' && source?.status === 'success' ? (
-                        <Success data={source.data} theme={theme} />
+                        <Success data={source.data} theme={theme} fetchedAt={fetchedAt} />
                     ) : presentation.note ? (
                         <Text style={[styles.note, { color: theme.colors.textMuted }]}>
                             {presentation.note}

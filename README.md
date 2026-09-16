@@ -13,3 +13,11 @@ never be included in telemetry or logs.
 
 Only the fields required by the current user interface may be retained locally. Cached lookup data
 expires automatically and can be deleted at any time from the application.
+
+## Store builds
+
+`eas.json` injects the official SRI and Fiscalía HTTPS endpoints, plus app defaults including
+`EXPO_PUBLIC_APP_INCIDENT_MONTHS`. Native versioning is stored remotely by EAS
+(`appVersionSource: "remote"`). Production builds auto-increment `ios.buildNumber` and
+`android.versionCode` on Expo's servers, so those values do not need to be committed after each
+upload.

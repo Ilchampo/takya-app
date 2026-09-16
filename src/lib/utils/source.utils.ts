@@ -41,7 +41,7 @@ export const sourcePresentation = (source?: types.SourceProgress): types.SourceP
         default:
             return {
                 tone: 'error',
-                label: 'Case Desconocido',
+                label: 'Estado desconocido',
                 icon: 'info',
                 note: 'Encontramos un estado desconocido.',
             };
