@@ -1,6 +1,6 @@
 import type * as types from '../types.ts';
 
-import { asText, parseJson, stringifyJson } from '../utils/misc.utils.ts';
+import { parseJson, stringifyJson } from '../utils/misc.utils.ts';
 import { tryNormalizePlate } from '../utils/licensePlate.utils.ts';
 import {
     isVehicleNotFoundProjection,
@@ -15,11 +15,15 @@ import * as SQLite from 'expo-sqlite';
 
 const SOURCE_UNAVAILABLE_KEY = '__sourceUnavailable';
 
+const MISSING_CACHED_SOURCE: types.FailedSource = {
+    status: 'error',
+    message: 'Sin respuesta guardada para esta fuente.',
+};
+
 let databasePromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
-const unavailablePayload = (message?: string): Record<string, unknown> => ({
+const unavailablePayload = (): Record<string, unknown> => ({
     [SOURCE_UNAVAILABLE_KEY]: true,
-    ...(message ? { message } : {}),
 });
 
 const isUnavailablePayload = (data: Record<string, unknown>): boolean =>
@@ -33,7 +37,7 @@ const payloadForSri = (
     plate: string,
 ): Record<string, unknown> | null => {
     if (result.status !== 'success') {
-        return unavailablePayload(result.message);
+        return null;
     }
 
     const data = projectVehicleData(result.data);
@@ -50,7 +54,7 @@ const payloadForFiscalia = (
     endDate: number,
 ): Record<string, unknown> | null => {
     if (result.status !== 'success') {
-        return unavailablePayload(result.message);
+        return null;
     }
 
     return projectFiscaliaData(result.data, endDate, config.service.incidentMonths);
@@ -59,12 +63,9 @@ const payloadForFiscalia = (
 const sourceFromSriPayload = (
     data: Record<string, unknown>,
     plate: string,
-): types.SourceResult | null => {
+): types.SuccessfulSource | null => {
     if (isUnavailablePayload(data)) {
-        return {
-            status: 'error',
-            message: asText(data.message) || 'No disponible',
-        };
+        return null;
     }
 
     const projected = projectVehicleData(data);
@@ -82,12 +83,9 @@ const sourceFromSriPayload = (
 const sourceFromFiscaliaPayload = (
     data: Record<string, unknown>,
     endDate: number,
-): types.SourceResult | null => {
+): types.SuccessfulSource | null => {
     if (isUnavailablePayload(data)) {
-        return {
-            status: 'error',
-            message: asText(data.message) || 'No disponible',
-        };
+        return null;
     }
 
     const projected = projectFiscaliaData(data, endDate, config.service.incidentMonths);
@@ -108,14 +106,7 @@ const persistableLookupPayloads = (
     const sri = payloadForSri(result.sri, result.plate);
     const fiscalia = payloadForFiscalia(result.fiscalia, result.fetchedAt);
 
-    const sriUsable = result.sri.status === 'success' && sri !== null && !isUnavailablePayload(sri);
-
-    const fiscaliaUsable =
-        result.fiscalia.status === 'success' &&
-        fiscalia !== null &&
-        !isUnavailablePayload(fiscalia);
-
-    if (!sriUsable && !fiscaliaUsable) {
+    if (!sri && !fiscalia) {
         return null;
     }
 
@@ -130,28 +121,19 @@ const lookupFromCachedPayloads = (
     sriData: Record<string, unknown> | null,
     fiscaliaData: Record<string, unknown> | null,
     endDate: number,
-): { sri: types.SourceResult; fiscalia: types.SourceResult } | null => {
+): { sri: types.SuccessfulSource | null; fiscalia: types.SuccessfulSource | null } | null => {
     const sri = sriData ? sourceFromSriPayload(sriData, plate) : null;
     const fiscalia = fiscaliaData ? sourceFromFiscaliaPayload(fiscaliaData, endDate) : null;
 
-    const sriUsable = sri?.status === 'success';
-    const fiscaliaUsable = fiscalia?.status === 'success';
-
-    if (!sriUsable && !fiscaliaUsable) {
+    if (!sri && !fiscalia) {
         return null;
     }
 
-    return {
-        sri: sri ?? {
-            status: 'error',
-            message: 'No disponible',
-        },
-        fiscalia: fiscalia ?? {
-            status: 'error',
-            message: 'No disponible',
-        },
-    };
+    return { sri, fiscalia };
 };
+
+const cachedSourceResult = (source: types.SuccessfulSource | null): types.SourceResult =>
+    source ?? MISSING_CACHED_SOURCE;
 
 const openDatabase = async (): Promise<SQLite.SQLiteDatabase> => {
     if (Platform.OS === 'ios') {
@@ -191,15 +173,11 @@ const scrubCachedSensitiveData = async (database: SQLite.SQLiteDatabase): Promis
             }
 
             const sanitizedSri = stringifyJson(
-                sources.sri.status === 'success'
-                    ? sources.sri.data
-                    : unavailablePayload(sources.sri.message),
+                sources.sri ? sources.sri.data : unavailablePayload(),
             );
 
             const sanitizedFiscalia = stringifyJson(
-                sources.fiscalia.status === 'success'
-                    ? sources.fiscalia.data
-                    : unavailablePayload(sources.fiscalia.message),
+                sources.fiscalia ? sources.fiscalia.data : unavailablePayload(),
             );
 
             if (sanitizedSri !== row.sri_json || sanitizedFiscalia !== row.fiscalia_json) {
@@ -313,8 +291,8 @@ export const getCachedLookup = async (
 
     return {
         plate: row.plate,
-        sri: sources.sri,
-        fiscalia: sources.fiscalia,
+        sri: cachedSourceResult(sources.sri),
+        fiscalia: cachedSourceResult(sources.fiscalia),
         fetchedAt: row.fetched_at,
         fromCache: true,
     };

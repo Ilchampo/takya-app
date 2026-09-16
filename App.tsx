@@ -61,6 +61,7 @@ const AppContent = () => {
                             storageAvailable={storageAvailable}
                             onPlateChange={changePlate}
                             onSubmit={() => void runSearch(plate)}
+                            onRefresh={() => void runSearch(plate, { refresh: true })}
                             onCancel={cancelSearch}
                             onOpenHistory={(recentPlate) => void openHistory(recentPlate)}
                             onOpenLegal={openLegal}

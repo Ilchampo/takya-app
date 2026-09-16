@@ -3,9 +3,9 @@ import type * as types from '../types.ts';
 import { GovernmentApiError } from '../errors/service.errors.ts';
 import { abortError, serviceWrapper } from '../utils/service.utils.ts';
 import { normalizePlate } from '../utils/licensePlate.utils.ts';
-import config from '../configs/app.config.ts';
-
 import { lookupFiscalia, lookupVehicle } from './governementApi.service.ts';
+
+import config from '../configs/app.config.ts';
 
 const retryableHttpStatuses = new Set([408, 425]);
 
@@ -49,6 +49,9 @@ const isRetryableSourceError = (error: unknown): boolean => {
     return status === undefined || status >= 500 || retryableHttpStatuses.has(status);
 };
 
+const isCachedSuccess = (source?: types.SourceResult): source is types.SuccessfulSource =>
+    source?.status === 'success';
+
 export const createPlateSearch = (dependencies: types.Dependencies) => {
     const vehicle = dependencies.vehicle ?? lookupVehicle;
     const fiscalia = dependencies.fiscalia ?? lookupFiscalia;
@@ -78,9 +81,37 @@ export const createPlateSearch = (dependencies: types.Dependencies) => {
         return { allowed: true };
     };
 
+    const assertRateLimit = async (): Promise<void> => {
+        const memoryDecision = consumeMemoryRateLimit();
+
+        if (!memoryDecision.allowed) {
+            throw new Error(
+                `Has alcanzado el límite de consultas. Intenta nuevamente en ${describeWait(memoryDecision.retryAfterMs)}.`,
+            );
+        }
+
+        if (!dependencies.consumeLookupRateLimit) {
+            return;
+        }
+
+        let decision: types.RateLimitDecision | null = null;
+
+        try {
+            decision = await dependencies.consumeLookupRateLimit();
+        } catch {
+            console.info('Continue without persisted rate limit');
+        }
+
+        if (decision && !decision.allowed) {
+            throw new Error(
+                `Has alcanzado el límite de consultas. Intenta nuevamente en ${describeWait(decision.retryAfterMs)}.`,
+            );
+        }
+    };
+
     return async (
         value: string,
-        { signal, onUpdate }: types.SearchOptions,
+        { signal, onUpdate, refresh = false }: types.SearchOptions,
     ): Promise<types.LookupResult> => {
         const plate = normalizePlate(value);
 
@@ -92,15 +123,6 @@ export const createPlateSearch = (dependencies: types.Dependencies) => {
 
         checkCancelled();
 
-        let snapshot: types.LookupProgress = {
-            plate,
-            fetchedAt: Date.now(),
-            fromCache: false,
-            sri: { status: 'loading', attempt: 1 },
-            fiscalia: { status: 'loading', attempt: 1 },
-        };
-        let fiscaliaSessionInitialized = false;
-
         let cached: types.LookupResult | null = null;
 
         try {
@@ -111,37 +133,28 @@ export const createPlateSearch = (dependencies: types.Dependencies) => {
 
         checkCancelled();
 
-        if (cached) {
+        const cachedSri = !refresh && cached && isCachedSuccess(cached.sri) ? cached.sri : null;
+        const cachedFiscalia =
+            !refresh && cached && isCachedSuccess(cached.fiscalia) ? cached.fiscalia : null;
+
+        if (cached && cachedSri && cachedFiscalia) {
             onUpdate(cached);
 
             return cached;
         }
 
-        const memoryDecision = consumeMemoryRateLimit();
+        await assertRateLimit();
+        checkCancelled();
 
-        if (!memoryDecision.allowed) {
-            throw new Error(
-                `Has alcanzado el límite de consultas. Intenta nuevamente en ${describeWait(memoryDecision.retryAfterMs)}.`,
-            );
-        }
+        let snapshot: types.LookupProgress = {
+            plate,
+            fetchedAt: Date.now(),
+            fromCache: Boolean(cachedSri || cachedFiscalia),
+            sri: cachedSri ?? { status: 'loading', attempt: 1 },
+            fiscalia: cachedFiscalia ?? { status: 'loading', attempt: 1 },
+        };
 
-        if (dependencies.consumeLookupRateLimit) {
-            let decision: types.RateLimitDecision | null = null;
-
-            try {
-                decision = await dependencies.consumeLookupRateLimit();
-            } catch {
-                console.info('Continue without persisted rate limit');
-            }
-
-            checkCancelled();
-
-            if (decision && !decision.allowed) {
-                throw new Error(
-                    `Has alcanzado el límite de consultas. Intenta nuevamente en ${describeWait(decision.retryAfterMs)}.`,
-                );
-            }
-        }
+        let fiscaliaSessionInitialized = false;
 
         onUpdate(snapshot);
 
@@ -257,7 +270,10 @@ export const createPlateSearch = (dependencies: types.Dependencies) => {
             }
         };
 
-        const [sri, fiscaliaResult] = await Promise.all([query('sri'), query('fiscalia')]);
+        const [sri, fiscaliaResult] = await Promise.all([
+            cachedSri ? Promise.resolve(cachedSri) : query('sri'),
+            cachedFiscalia ? Promise.resolve(cachedFiscalia) : query('fiscalia'),
+        ]);
 
         checkCancelled();
 
@@ -266,6 +282,7 @@ export const createPlateSearch = (dependencies: types.Dependencies) => {
             sri,
             fiscalia: fiscaliaResult,
             fetchedAt: Date.now(),
+            fromCache: false,
         };
 
         if (sri.status === 'success' || fiscaliaResult.status === 'success') {

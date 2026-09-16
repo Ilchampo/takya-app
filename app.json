@@ -19,7 +19,9 @@
         "ios": {
             "supportsTablet": false,
             "bundleIdentifier": "com.astrobit.takya",
+            "buildNumber": "1",
             "infoPlist": {
+                "ITSAppUsesNonExemptEncryption": false,
                 "NSAppTransportSecurity": {
                     "NSAllowsArbitraryLoads": false
                 }
@@ -27,6 +29,7 @@
         },
         "android": {
             "package": "com.astrobit.takya",
+            "versionCode": 1,
             "allowBackup": false,
             "softwareKeyboardLayoutMode": "resize",
             "adaptiveIcon": {

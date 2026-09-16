@@ -59,7 +59,7 @@ export const usePlateSearch = ({
     }, []);
 
     const runSearch = useCallback(
-        async (value: string): Promise<void> => {
+        async (value: string, options?: { refresh?: boolean }): Promise<void> => {
             let normalized: string;
 
             try {
@@ -69,7 +69,7 @@ export const usePlateSearch = ({
                 return;
             }
 
-            if (activeSearch.current?.plate === normalized) {
+            if (activeSearch.current?.plate === normalized && !options?.refresh) {
                 return;
             }
 
@@ -89,6 +89,7 @@ export const usePlateSearch = ({
             try {
                 await searchPlate(normalized, {
                     signal: controller.signal,
+                    refresh: options?.refresh,
                     onUpdate: (next) => {
                         if (isCurrent()) {
                             setResult(next);
