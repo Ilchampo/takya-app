@@ -265,7 +265,7 @@ export const lookupFiscalia = async (value: string, options: types.FiscaliaOptio
         'lookup',
     );
 
-    const data = projectFiscaliaData(result.data);
+    const data = projectFiscaliaData(result.data, Date.now(), config.service.incidentMonths);
 
     if (!data) {
         throw new GovernmentApiError(

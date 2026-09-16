@@ -11,6 +11,7 @@ const MAX_RESPONSE_KB = 1_024 as const;
 const RATE_LIMIT_MAX_REQUESTS = 5 as const;
 const RATE_LIMIT_WINDOW_SECONDS = 60 as const;
 const RATE_LIMIT_DEFAULT_COOLDOWN_SECONDS = 60 as const;
+const INCIDENT_MONTHS = 24 as const;
 
 const ttlDays = parsePositiveEnvInt(process.env.EXPO_PUBLIC_APP_TTL_DAYS, TTL_DAYS);
 const historyLimit = parsePositiveEnvInt(process.env.EXPO_PUBLIC_APP_HISTORY_LIMIT, HISTORY_LIMIT);
@@ -31,6 +32,10 @@ const rateLimitWindowSeconds = parsePositiveEnvInt(
 const rateLimitDefaultCooldownSeconds = parsePositiveEnvInt(
     process.env.EXPO_PUBLIC_APP_RATE_LIMIT_DEFAULT_COOLDOWN_SEC,
     RATE_LIMIT_DEFAULT_COOLDOWN_SECONDS,
+);
+const incidentMonths = parsePositiveEnvInt(
+    process.env.EXPO_PUBLIC_APP_INCIDENT_MONTHS,
+    INCIDENT_MONTHS,
 );
 
 const config: Config = {
@@ -55,6 +60,7 @@ const config: Config = {
             window: secondsTomilliSeconds(rateLimitWindowSeconds),
             defaultCooldown: secondsTomilliSeconds(rateLimitDefaultCooldownSeconds),
         },
+        incidentMonths,
     },
 } as const;
 

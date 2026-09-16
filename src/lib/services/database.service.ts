@@ -49,12 +49,15 @@ const payloadForSri = (
     return data;
 };
 
-const payloadForFiscalia = (result: types.SourceResult): Record<string, unknown> | null => {
+const payloadForFiscalia = (
+    result: types.SourceResult,
+    endDate: number,
+): Record<string, unknown> | null => {
     if (result.status !== 'success') {
         return null;
     }
 
-    return projectFiscaliaData(result.data);
+    return projectFiscaliaData(result.data, endDate, config.service.incidentMonths);
 };
 
 const sourceFromSriPayload = (
@@ -79,12 +82,13 @@ const sourceFromSriPayload = (
 
 const sourceFromFiscaliaPayload = (
     data: Record<string, unknown>,
+    endDate: number,
 ): types.SuccessfulSource | null => {
     if (isUnavailablePayload(data)) {
         return null;
     }
 
-    const projected = projectFiscaliaData(data);
+    const projected = projectFiscaliaData(data, endDate, config.service.incidentMonths);
 
     if (!projected) {
         return null;
@@ -100,7 +104,7 @@ const persistableLookupPayloads = (
     result: types.LookupResult,
 ): { sri: Record<string, unknown>; fiscalia: Record<string, unknown> } | null => {
     const sri = payloadForSri(result.sri, result.plate);
-    const fiscalia = payloadForFiscalia(result.fiscalia);
+    const fiscalia = payloadForFiscalia(result.fiscalia, result.fetchedAt);
 
     if (!sri && !fiscalia) {
         return null;
@@ -116,9 +120,10 @@ const lookupFromCachedPayloads = (
     plate: string,
     sriData: Record<string, unknown> | null,
     fiscaliaData: Record<string, unknown> | null,
+    endDate: number,
 ): { sri: types.SuccessfulSource | null; fiscalia: types.SuccessfulSource | null } | null => {
     const sri = sriData ? sourceFromSriPayload(sriData, plate) : null;
-    const fiscalia = fiscaliaData ? sourceFromFiscaliaPayload(fiscaliaData) : null;
+    const fiscalia = fiscaliaData ? sourceFromFiscaliaPayload(fiscaliaData, endDate) : null;
 
     if (!sri && !fiscalia) {
         return null;
@@ -147,8 +152,8 @@ const getDatabase = (): Promise<SQLite.SQLiteDatabase> => {
 
 const scrubCachedSensitiveData = async (database: SQLite.SQLiteDatabase): Promise<void> => {
     const rows = await database.getAllAsync<
-        Pick<types.LookupRow, 'plate' | 'sri_json' | 'fiscalia_json'>
-    >('SELECT plate, sri_json, fiscalia_json FROM lookups');
+        Pick<types.LookupRow, 'plate' | 'sri_json' | 'fiscalia_json' | 'fetched_at'>
+    >('SELECT plate, sri_json, fiscalia_json, fetched_at FROM lookups');
 
     await database.withTransactionAsync(async () => {
         for (const row of rows) {
@@ -159,6 +164,7 @@ const scrubCachedSensitiveData = async (database: SQLite.SQLiteDatabase): Promis
                 row.plate,
                 sri.valid ? sri.data : null,
                 fiscalia.valid ? fiscalia.data : null,
+                row.fetched_at,
             );
 
             if (!sources) {
@@ -275,6 +281,7 @@ export const getCachedLookup = async (
         row.plate,
         sri.valid ? sri.data : null,
         fiscalia.valid ? fiscalia.data : null,
+        row.fetched_at,
     );
 
     if (!sources) {

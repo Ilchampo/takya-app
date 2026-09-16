@@ -101,6 +101,7 @@ export type ServiceId = 'sri' | 'fiscalia';
 export type SuccessBodyProps = {
     data: unknown;
     theme: AppTheme;
+    fetchedAt: number;
 };
 
 export type ServiceConfig = {
