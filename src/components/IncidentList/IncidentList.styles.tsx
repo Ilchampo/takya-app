@@ -18,6 +18,26 @@ const styles = StyleSheet.create({
         textAlign: 'right',
         fontWeight: '500',
     },
+    people: {
+        marginTop: 8,
+        marginHorizontal: -4,
+        padding: 12,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderRadius: 12,
+        gap: 8,
+    },
+    peopleTitle: { fontSize: 15, lineHeight: 21, fontWeight: '600' },
+    peopleNotice: { fontSize: 13, lineHeight: 19 },
+    person: {
+        borderWidth: StyleSheet.hairlineWidth,
+        borderRadius: 10,
+        padding: 12,
+        gap: 4,
+    },
+    personName: { fontSize: 15, lineHeight: 21, fontWeight: '600' },
+    personStatus: { fontSize: 12, lineHeight: 18, fontWeight: '600' },
+    surnameHint: { fontSize: 12, lineHeight: 18 },
+    noPeople: { fontSize: 13, lineHeight: 19, paddingVertical: 4 },
 });
 
 export default styles;

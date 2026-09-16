@@ -11,6 +11,7 @@ import {
     isValidPlate,
     normalizePlate,
 } from '../src/lib/utils/licensePlate.utils.ts';
+import { sanitizeFiscaliaForStorage } from '../src/lib/utils/fiscalia.utils.ts';
 
 test('plate input formatting is friendly but service normalization remains strict', () => {
     assert.equal(formatPlateInput(' abc-1234 '), 'ABC-1234');
@@ -88,9 +89,103 @@ test('incident parser keeps only general Fiscalía fields and ignores the rest',
                 fecha: '2026-09-14',
                 hora: '11:01:05',
                 gen_delito_tipopenal: 'Registro de prueba',
+                personasSenaladas: [],
             },
         ],
     );
+});
+
+test('incident parser keeps flagged people without exposing identity documents', () => {
+    assert.deepEqual(
+        incidentRecords({
+            cabecera: [
+                {
+                    fecha: '2026-09-14',
+                    hora: '11:01:05',
+                    gen_delito_tipopenal: 'Registro de prueba',
+                    ciudad: 'Quito',
+                    sujetos: [
+                        {
+                            cedula: '0123456789',
+                            persona: '  CRESPO GARCIA JONNY MANOLO ; VELEZ MARCO  ',
+                            tipo: ' sospechoso ',
+                        },
+                        {
+                            cedula: '0000000000',
+                            persona: 'DESCONOCIDO',
+                            tipo: 'SOSPECHOSO NO RECONOCIDO',
+                        },
+                        {
+                            cedula: '1111111111',
+                            persona: 'CRESPO GARCIA JONNY MANOLO',
+                            tipo: 'VICTIMA',
+                        },
+                    ],
+                },
+            ],
+        }),
+        [
+            {
+                ciudad: 'Quito',
+                fecha: '2026-09-14',
+                hora: '11:01:05',
+                gen_delito_tipopenal: 'Registro de prueba',
+                personasSenaladas: [
+                    {
+                        nombreCompleto: 'CRESPO GARCIA JONNY MANOLO',
+                        primerApellido: 'CRESPO',
+                        estado: 'SOSPECHOSO',
+                    },
+                    {
+                        nombreCompleto: 'VELEZ MARCO',
+                        primerApellido: 'VELEZ',
+                        estado: 'SOSPECHOSO',
+                    },
+                ],
+            },
+        ],
+    );
+});
+
+test('Fiscalía cache sanitizer removes identity documents and their positional aliases', () => {
+    const response = {
+        0: 'response metadata',
+        cabecera: [
+            {
+                0: 'incident identifier',
+                sujetos: [
+                    {
+                        0: '0123456789',
+                        1: 'CRESPO GARCIA JONNY MANOLO',
+                        2: 'SOSPECHOSO',
+                        cedula: '0123456789',
+                        persona: 'CRESPO GARCIA JONNY MANOLO',
+                        tipo: 'SOSPECHOSO',
+                    },
+                ],
+                vehiculos: [{ 0: 'CHEVROLET', placa: 'PBC1234' }],
+            },
+        ],
+    };
+
+    assert.deepEqual(sanitizeFiscaliaForStorage(response), {
+        0: 'response metadata',
+        cabecera: [
+            {
+                0: 'incident identifier',
+                sujetos: [
+                    {
+                        1: 'CRESPO GARCIA JONNY MANOLO',
+                        2: 'SOSPECHOSO',
+                        persona: 'CRESPO GARCIA JONNY MANOLO',
+                        tipo: 'SOSPECHOSO',
+                    },
+                ],
+                vehiculos: [{ 0: 'CHEVROLET', placa: 'PBC1234' }],
+            },
+        ],
+    });
+    assert.equal(response.cabecera[0]?.sujetos[0]?.cedula, '0123456789');
 });
 
 test('incident parser accepts real Fiscalía mock payloads', async () => {
@@ -104,6 +199,7 @@ test('incident parser accepts real Fiscalía mock payloads', async () => {
             fecha: '2011-11-09',
             hora: '11:01:05',
             gen_delito_tipopenal: 'ACCIDENTE DE TRANSITO CON SOLO DANOS MATERIALES INDETERMINADOS.',
+            personasSenaladas: [],
         },
     ]);
 });

@@ -13,7 +13,12 @@ interface IncidentListProps {
     theme: AppTheme;
 }
 
-const fields: { key: keyof Incident; label: string }[] = [
+type GeneralIncidentField = keyof Pick<
+    Incident,
+    'gen_delito_tipopenal' | 'ciudad' | 'fecha' | 'hora'
+>;
+
+const fields: { key: GeneralIncidentField; label: string }[] = [
     { key: 'gen_delito_tipopenal', label: 'Delito' },
     { key: 'ciudad', label: 'Ciudad' },
     { key: 'fecha', label: 'Fecha' },
@@ -65,6 +70,64 @@ export const IncidentList: React.FC<IncidentListProps> = (props) => {
                             </Text>
                         </View>
                     ))}
+                    <View
+                        style={[
+                            styles.people,
+                            {
+                                borderTopColor: theme.colors.border,
+                                backgroundColor: theme.colors.surfaceMuted,
+                            },
+                        ]}
+                    >
+                        <Text style={[styles.peopleTitle, { color: theme.colors.text }]}>
+                            Personas señaladas en el registro
+                        </Text>
+                        <Text style={[styles.peopleNotice, { color: theme.colors.textMuted }]}>
+                            Estos estados no confirman culpabilidad ni que la persona sea
+                            propietaria o conductora del vehículo.
+                        </Text>
+                        {incident.personasSenaladas.length > 0 ? (
+                            incident.personasSenaladas.map((person) => (
+                                <View
+                                    key={`${person.estado}-${person.nombreCompleto}`}
+                                    style={[
+                                        styles.person,
+                                        {
+                                            backgroundColor: theme.colors.surface,
+                                            borderColor: theme.colors.border,
+                                        },
+                                    ]}
+                                >
+                                    <Text
+                                        selectable
+                                        style={[styles.personName, { color: theme.colors.text }]}
+                                    >
+                                        {person.nombreCompleto}
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            styles.personStatus,
+                                            { color: theme.colors.orangePressed },
+                                        ]}
+                                    >
+                                        Estado registrado: {person.estado}
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            styles.surnameHint,
+                                            { color: theme.colors.textMuted },
+                                        ]}
+                                    >
+                                        Primer apellido para comparar: {person.primerApellido}
+                                    </Text>
+                                </View>
+                            ))
+                        ) : (
+                            <Text style={[styles.noPeople, { color: theme.colors.textMuted }]}>
+                                No hay nombres válidos con los estados seleccionados.
+                            </Text>
+                        )}
+                    </View>
                 </View>
             ))}
         </View>
