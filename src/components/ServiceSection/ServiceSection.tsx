@@ -41,7 +41,7 @@ const Header: React.FC<HeaderProps> = (props) => {
             style={({ pressed }) => [styles.header, { opacity: pressed ? 0.6 : 1 }]}
         >
             <View style={[styles.serviceIcon, { backgroundColor: theme.colors.surfaceMuted }]}>
-                <Icon name={icon} size={23} color={theme.colors.orangePressed} />
+                <Icon name={icon} size={23} color={theme.colors.primaryPressed} />
             </View>
             <View style={styles.heading}>
                 <Text style={[styles.title, { color: theme.colors.text }]}>{title}</Text>

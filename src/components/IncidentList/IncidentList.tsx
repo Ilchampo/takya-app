@@ -112,7 +112,7 @@ export const IncidentList: React.FC<types.SuccessBodyProps> = (props) => {
                                         <Text
                                             style={[
                                                 styles.personStatus,
-                                                { color: theme.colors.orangePressed },
+                                                { color: theme.colors.primaryPressed },
                                             ]}
                                         >
                                             Estado registrado: {person.estado}

@@ -4,6 +4,7 @@ import { Image, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { isLoaded } from 'expo-font';
 import { AstrobitLogo } from '../../components/Brand/Brand';
+import { palette } from '../../theme/palette';
 
 import styles from './SplashScreen.styles';
 
@@ -27,7 +28,7 @@ export const SplashScreen: React.FC = () => (
         </View>
         <View style={styles.madeBy}>
             <Text style={styles.created}>CREADO POR</Text>
-            <AstrobitLogo color="#2B160E" />
+            <AstrobitLogo color={palette.light.onPrimary} />
         </View>
     </SafeAreaView>
 );

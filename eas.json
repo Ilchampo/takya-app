@@ -17,8 +17,6 @@
                 "EXPO_PUBLIC_APP_RATE_LIMIT_WINDOW_SEC": "60",
                 "EXPO_PUBLIC_APP_RATE_LIMIT_DEFAULT_COOLDOWN_SEC": "60",
                 "EXPO_PUBLIC_APP_INCIDENT_MONTHS": "24",
-                "EXPO_PUBLIC_BRANDING_PRIMARY": "FD7F3B",
-                "EXPO_PUBLIC_BRANDING_SECONDARY": "FCF5E6",
                 "EXPO_PUBLIC_SRI_URL": "https://srienlinea.sri.gob.ec/sri-matriculacion-vehicular-recaudacion-servicio-internet/rest/BaseVehiculo/obtenerPorNumeroPlacaOPorNumeroCampvOPorNumeroCpn",
                 "EXPO_PUBLIC_FISCALIA_LOOKUP_URL": "https://www.gestiondefiscalias.gob.ec/siaf/sitio/consulta_ndd_ext/AJX_consulta_noticiasdelito.php",
                 "EXPO_PUBLIC_FISCALIA_ENTRY_URL": "https://www.gestiondefiscalias.gob.ec/siaf/sitio/consulta_ndd_ext/redirect.php?data=L3Zhci93d3cvaHRtbC9zaWFmL2luZm9ybWFjaW9uL3dlYi9ub3RpY2lhc2RlbGl0by8uLi8uLi8uLi9zaXRpby9jb25zdWx0YV9uZGRfZXh0L2NvbnN1bHRhX2NpdWRhZGFuYS5waHA%3D"
@@ -39,8 +37,6 @@
                 "EXPO_PUBLIC_APP_RATE_LIMIT_WINDOW_SEC": "60",
                 "EXPO_PUBLIC_APP_RATE_LIMIT_DEFAULT_COOLDOWN_SEC": "60",
                 "EXPO_PUBLIC_APP_INCIDENT_MONTHS": "24",
-                "EXPO_PUBLIC_BRANDING_PRIMARY": "FD7F3B",
-                "EXPO_PUBLIC_BRANDING_SECONDARY": "FCF5E6",
                 "EXPO_PUBLIC_SRI_URL": "https://srienlinea.sri.gob.ec/sri-matriculacion-vehicular-recaudacion-servicio-internet/rest/BaseVehiculo/obtenerPorNumeroPlacaOPorNumeroCampvOPorNumeroCpn",
                 "EXPO_PUBLIC_FISCALIA_LOOKUP_URL": "https://www.gestiondefiscalias.gob.ec/siaf/sitio/consulta_ndd_ext/AJX_consulta_noticiasdelito.php",
                 "EXPO_PUBLIC_FISCALIA_ENTRY_URL": "https://www.gestiondefiscalias.gob.ec/siaf/sitio/consulta_ndd_ext/redirect.php?data=L3Zhci93d3cvaHRtbC9zaWFmL2luZm9ybWFjaW9uL3dlYi9ub3RpY2lhc2RlbGl0by8uLi8uLi8uLi9zaXRpby9jb25zdWx0YV9uZGRfZXh0L2NvbnN1bHRhX2NpdWRhZGFuYS5waHA%3D"
@@ -58,8 +54,6 @@
                 "EXPO_PUBLIC_APP_RATE_LIMIT_WINDOW_SEC": "60",
                 "EXPO_PUBLIC_APP_RATE_LIMIT_DEFAULT_COOLDOWN_SEC": "60",
                 "EXPO_PUBLIC_APP_INCIDENT_MONTHS": "24",
-                "EXPO_PUBLIC_BRANDING_PRIMARY": "FD7F3B",
-                "EXPO_PUBLIC_BRANDING_SECONDARY": "FCF5E6",
                 "EXPO_PUBLIC_SRI_URL": "https://srienlinea.sri.gob.ec/sri-matriculacion-vehicular-recaudacion-servicio-internet/rest/BaseVehiculo/obtenerPorNumeroPlacaOPorNumeroCampvOPorNumeroCpn",
                 "EXPO_PUBLIC_FISCALIA_LOOKUP_URL": "https://www.gestiondefiscalias.gob.ec/siaf/sitio/consulta_ndd_ext/AJX_consulta_noticiasdelito.php",
                 "EXPO_PUBLIC_FISCALIA_ENTRY_URL": "https://www.gestiondefiscalias.gob.ec/siaf/sitio/consulta_ndd_ext/redirect.php?data=L3Zhci93d3cvaHRtbC9zaWFmL2luZm9ybWFjaW9uL3dlYi9ub3RpY2lhc2RlbGl0by8uLi8uLi8uLi9zaXRpby9jb25zdWx0YV9uZGRfZXh0L2NvbnN1bHRhX2NpdWRhZGFuYS5waHA%3D"

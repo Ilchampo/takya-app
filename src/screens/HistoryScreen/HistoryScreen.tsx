@@ -33,21 +33,21 @@ export const HistoryScreen: React.FC<HistoryScreenProps> = (props) => {
         >
             <ScrollView contentContainerStyle={styles.content}>
                 <TopBar theme={theme} onBack={onBack} onToggleTheme={onToggleTheme} />
-                <View style={[styles.ticket, { backgroundColor: theme.colors.orange }]}>
-                    <Text style={[styles.eyebrow, { color: theme.colors.onOrange }]}>
+                <View style={[styles.ticket, { backgroundColor: theme.colors.primary }]}>
+                    <Text style={[styles.eyebrow, { color: theme.colors.onPrimary }]}>
                         CONSULTA GUARDADA
                     </Text>
-                    <Text selectable style={[styles.plate, { color: theme.colors.onOrange }]}>
+                    <Text selectable style={[styles.plate, { color: theme.colors.onPrimary }]}>
                         {displayPlate(plate)}
                     </Text>
-                    <Text style={[styles.description, { color: theme.colors.onOrange }]}>
+                    <Text style={[styles.description, { color: theme.colors.onPrimary }]}>
                         El resumen de tu consulta, en un solo lugar.
                     </Text>
                 </View>
                 {loading && (
                     <ActivityIndicator
                         accessibilityLabel="Abriendo consulta guardada"
-                        color={theme.colors.orangePressed}
+                        color={theme.colors.primaryPressed}
                     />
                 )}
                 {error && (

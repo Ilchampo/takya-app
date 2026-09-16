@@ -25,7 +25,7 @@ export const LegalScreen: React.FC<LegalScreenProps> = (props) => {
                 <TopBar theme={theme} onBack={onBack} onToggleTheme={onToggleTheme} />
                 <View style={styles.heading}>
                     <View style={[styles.icon, { backgroundColor: theme.colors.surfaceMuted }]}>
-                        <Icon name="shield" size={26} color={theme.colors.orangePressed} />
+                        <Icon name="shield" size={26} color={theme.colors.primaryPressed} />
                     </View>
                     <Text style={[styles.title, { color: theme.colors.text }]}>
                         Privacidad y uso responsable
@@ -54,7 +54,7 @@ export const LegalScreen: React.FC<LegalScreenProps> = (props) => {
                         recolectar, vender o analizar tus búsquedas.
                     </Text>
                     <View style={[styles.fact, { borderTopColor: theme.colors.border }]}>
-                        <Icon name="database" size={20} color={theme.colors.orangePressed} />
+                        <Icon name="database" size={20} color={theme.colors.primaryPressed} />
                         <Text style={[styles.factText, { color: theme.colors.text }]}>
                             El historial local guarda hasta 5 consultas y elimina cada registro
                             después de 3 días.
@@ -63,7 +63,7 @@ export const LegalScreen: React.FC<LegalScreenProps> = (props) => {
                 </View>
 
                 <View style={[styles.notice, { backgroundColor: theme.colors.surfaceMuted }]}>
-                    <Icon name="info" size={22} color={theme.colors.orangePressed} />
+                    <Icon name="info" size={22} color={theme.colors.primaryPressed} />
                     <Text style={[styles.noticeText, { color: theme.colors.text }]}>
                         La presencia o ausencia de registros no prueba culpabilidad, inocencia, ni
                         que un vehículo sea seguro o inseguro. Contrasta siempre la información con
@@ -72,7 +72,7 @@ export const LegalScreen: React.FC<LegalScreenProps> = (props) => {
                 </View>
 
                 <View style={styles.disclaimer}>
-                    <Text style={[styles.kicker, { color: theme.colors.orangePressed }]}>
+                    <Text style={[styles.kicker, { color: theme.colors.primaryPressed }]}>
                         AVISO DE LA FISCALÍA GENERAL DEL ESTADO
                     </Text>
                     <Text selectable style={[styles.body, { color: theme.colors.textMuted }]}>

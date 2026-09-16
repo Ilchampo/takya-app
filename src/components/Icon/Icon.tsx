@@ -6,8 +6,8 @@ import Svg, { Circle, Path } from 'react-native-svg';
 
 interface IconProps {
     name: types.IconName;
+    color: string;
     size?: number;
-    color?: string;
 }
 
 const getIconPath = (name: string, color?: string) => {
@@ -131,7 +131,7 @@ const getIconPath = (name: string, color?: string) => {
 };
 
 export const Icon: React.FC<IconProps> = (props) => {
-    const { name, size = 22, color = '#211B18' } = props;
+    const { name, size = 22, color } = props;
 
     return (
         <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" accessibilityElementsHidden>

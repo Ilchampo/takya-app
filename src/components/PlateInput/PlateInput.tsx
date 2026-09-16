@@ -60,7 +60,7 @@ export const PlateInput: React.FC<PlateInputProps> = (props) => {
                     styles.plate,
                     {
                         backgroundColor: theme.colors.background,
-                        borderColor: focused ? theme.colors.orange : theme.colors.border,
+                        borderColor: focused ? theme.colors.primary : theme.colors.border,
                     },
                 ]}
             >
@@ -87,7 +87,7 @@ export const PlateInput: React.FC<PlateInputProps> = (props) => {
                         onSubmitEditing={() => numbersRef.current?.focus()}
                         returnKeyType="next"
                         selectTextOnFocus
-                        selectionColor={theme.colors.orange}
+                        selectionColor={theme.colors.primary}
                         style={[styles.letters, styles.input, { color: theme.colors.text }]}
                     />
                     <Text
@@ -116,7 +116,7 @@ export const PlateInput: React.FC<PlateInputProps> = (props) => {
                         onSubmitEditing={() => valid && onSubmit()}
                         returnKeyType="search"
                         selectTextOnFocus
-                        selectionColor={theme.colors.orange}
+                        selectionColor={theme.colors.primary}
                         style={[styles.numbers, styles.input, { color: theme.colors.text }]}
                     />
                 </View>

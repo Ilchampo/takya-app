@@ -10,17 +10,17 @@ import styles from './Brand.styles';
 
 interface TakyaBrandProps {
     theme: AppTheme;
-    onOrange?: boolean;
+    onPrimary?: boolean;
 }
 
 interface AstrobitLogoProps {
-    color?: string;
+    color: string;
 }
 
 export const TakyaBrand: React.FC<TakyaBrandProps> = (props) => {
-    const { theme, onOrange = false } = props;
+    const { theme, onPrimary = false } = props;
 
-    const color = onOrange ? theme.colors.onOrange : theme.colors.text;
+    const color = onPrimary ? theme.colors.onPrimary : theme.colors.text;
 
     return (
         <View style={styles.takyaRow} accessibilityLabel="Takya">
@@ -45,7 +45,7 @@ export const TakyaBrand: React.FC<TakyaBrandProps> = (props) => {
 };
 
 export const AstrobitLogo: React.FC<AstrobitLogoProps> = (props) => {
-    const { color = '#211B18' } = props;
+    const { color } = props;
 
     return (
         <View style={styles.astrobitRow} accessibilityLabel="Astrobit">

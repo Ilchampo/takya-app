@@ -39,10 +39,6 @@ const incidentMonths = parsePositiveEnvInt(
 );
 
 const config: Config = {
-    branding: {
-        primary: `#${process.env.EXPO_PUBLIC_BRANDING_PRIMARY ?? 'FD7F3B'}`,
-        secondary: `#${process.env.EXPO_PUBLIC_BRANDING_SECONDARY ?? 'FCF5E6'}`,
-    },
     source: {
         SRI: process.env.EXPO_PUBLIC_SRI_URL ?? '',
         fiscaliaLookup: process.env.EXPO_PUBLIC_FISCALIA_LOOKUP_URL ?? '',

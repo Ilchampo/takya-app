@@ -45,6 +45,7 @@ const AppContent = () => {
                 <SplashScreen />
             ) : configurationError ? (
                 <ErrorScreen
+                    theme={theme}
                     title="Esta instalación no puede consultar"
                     message={configurationError}
                 />
