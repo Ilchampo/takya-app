@@ -1,32 +1,32 @@
-import type * as types from "../types.ts";
+import type * as types from '../types.ts';
 
-import config from "../configs/app.config.ts";
-import * as SQLite from "expo-sqlite";
+import config from '../configs/app.config.ts';
+import * as SQLite from 'expo-sqlite';
 
 let databasePromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
 const getDatabase = (): Promise<SQLite.SQLiteDatabase> => {
-  databasePromise ??= SQLite.openDatabaseAsync("takya.db");
+    databasePromise ??= SQLite.openDatabaseAsync('takya.db');
 
-  return databasePromise;
+    return databasePromise;
 };
 
 const parseJson = (value: string): unknown => {
-  try {
-    return JSON.parse(value) as unknown;
-  } catch {
-    return null;
-  }
+    try {
+        return JSON.parse(value) as unknown;
+    } catch {
+        return null;
+    }
 };
 
 const stringifyJson = (value: unknown): string => {
-  return JSON.stringify(value) ?? "null";
+    return JSON.stringify(value) ?? 'null';
 };
 
 export const initializeDatabase = async (now = Date.now()): Promise<void> => {
-  const database = await getDatabase();
+    const database = await getDatabase();
 
-  await database.execAsync(`
+    await database.execAsync(`
     PRAGMA journal_mode = WAL;
     
     CREATE TABLE IF NOT EXISTS lookups (
@@ -43,111 +43,106 @@ export const initializeDatabase = async (now = Date.now()): Promise<void> => {
     );
   `);
 
-  await deleteExpiredLookups(now);
-  await trimHistory();
+    await deleteExpiredLookups(now);
+    await trimHistory();
 };
 
 export const deleteExpiredLookups = async (now = Date.now()): Promise<void> => {
-  const database = await getDatabase();
+    const database = await getDatabase();
 
-  await database.runAsync(
-    "DELETE FROM lookups WHERE fetched_at <= ?",
-    now - config.service.TTL,
-  );
+    await database.runAsync('DELETE FROM lookups WHERE fetched_at <= ?', now - config.service.TTL);
 };
 
 const trimHistory = async (): Promise<void> => {
-  const database = await getDatabase();
+    const database = await getDatabase();
 
-  await database.runAsync(
-    `DELETE FROM lookups
+    await database.runAsync(
+        `DELETE FROM lookups
      WHERE plate NOT IN (
        SELECT plate FROM lookups ORDER BY fetched_at DESC LIMIT ?
      )`,
-    config.service.historyLimit,
-  );
+        config.service.historyLimit,
+    );
 };
 
 export const getCachedLookup = async (
-  plate: string,
-  now = Date.now(),
+    plate: string,
+    now = Date.now(),
 ): Promise<types.LookupResult | null> => {
-  const database = await getDatabase();
+    const database = await getDatabase();
 
-  const row = await database.getFirstAsync<types.LookupRow>(
-    "SELECT plate, sri_json, fiscalia_json, fetched_at FROM lookups WHERE plate = ? AND fetched_at > ?",
-    plate,
-    now - config.service.TTL,
-  );
+    const row = await database.getFirstAsync<types.LookupRow>(
+        'SELECT plate, sri_json, fiscalia_json, fetched_at FROM lookups WHERE plate = ? AND fetched_at > ?',
+        plate,
+        now - config.service.TTL,
+    );
 
-  if (!row) {
-    return null;
-  }
+    if (!row) {
+        return null;
+    }
 
-  return {
-    plate: row.plate,
-    sri: { status: "success", data: parseJson(row.sri_json) },
-    fiscalia: { status: "success", data: parseJson(row.fiscalia_json) },
-    fetchedAt: row.fetched_at,
-    fromCache: true,
-  };
+    return {
+        plate: row.plate,
+        sri: { status: 'success', data: parseJson(row.sri_json) },
+        fiscalia: { status: 'success', data: parseJson(row.fiscalia_json) },
+        fetchedAt: row.fetched_at,
+        fromCache: true,
+    };
 };
 
 export const saveLookup = async (result: types.LookupResult): Promise<void> => {
-  if (result.sri.status !== "success" || result.fiscalia.status !== "success") {
-    return;
-  }
+    if (result.sri.status !== 'success' || result.fiscalia.status !== 'success') {
+        return;
+    }
 
-  const sriData = result.sri.data;
-  const fiscaliaData = result.fiscalia.data;
-  const database = await getDatabase();
+    const sriData = result.sri.data;
+    const fiscaliaData = result.fiscalia.data;
+    const database = await getDatabase();
 
-  await database.withTransactionAsync(async () => {
-    await database.runAsync(
-      `INSERT INTO lookups (plate, sri_json, fiscalia_json, fetched_at)
+    await database.withTransactionAsync(async () => {
+        await database.runAsync(
+            `INSERT INTO lookups (plate, sri_json, fiscalia_json, fetched_at)
        VALUES (?, ?, ?, ?)
        ON CONFLICT(plate) DO UPDATE SET
          sri_json = excluded.sri_json,
          fiscalia_json = excluded.fiscalia_json,
          fetched_at = excluded.fetched_at`,
-      result.plate,
-      stringifyJson(sriData),
-      stringifyJson(fiscaliaData),
-      result.fetchedAt,
-    );
+            result.plate,
+            stringifyJson(sriData),
+            stringifyJson(fiscaliaData),
+            result.fetchedAt,
+        );
 
-    await trimHistory();
-  });
+        await trimHistory();
+    });
 };
 
-export const listLookupHistory = async (
-  now = Date.now(),
-): Promise<types.LookupHistoryItem[]> => {
-  const database = await getDatabase();
+export const listLookupHistory = async (now = Date.now()): Promise<types.LookupHistoryItem[]> => {
+    const database = await getDatabase();
 
-  return database.getAllAsync<types.LookupHistoryItem>(
-    "SELECT plate, fetched_at AS fetchedAt FROM lookups WHERE fetched_at > ? ORDER BY fetched_at DESC LIMIT ?",
-    now - config.service.TTL,
-    config.service.historyLimit,
-  );
+    return database.getAllAsync<types.LookupHistoryItem>(
+        'SELECT plate, fetched_at AS fetchedAt FROM lookups WHERE fetched_at > ? ORDER BY fetched_at DESC LIMIT ?',
+        now - config.service.TTL,
+        config.service.historyLimit,
+    );
 };
 
 export const getThemeMode = async (): Promise<types.ThemeMode | null> => {
-  const database = await getDatabase();
+    const database = await getDatabase();
 
-  const row = await database.getFirstAsync<{ value: string }>(
-    "SELECT value FROM settings WHERE key = 'theme'",
-  );
+    const row = await database.getFirstAsync<{ value: string }>(
+        "SELECT value FROM settings WHERE key = 'theme'",
+    );
 
-  return row?.value === "light" || row?.value === "dark" ? row.value : null;
+    return row?.value === 'light' || row?.value === 'dark' ? row.value : null;
 };
 
 export const setThemeMode = async (mode: types.ThemeMode): Promise<void> => {
-  const database = await getDatabase();
+    const database = await getDatabase();
 
-  await database.runAsync(
-    `INSERT INTO settings (key, value) VALUES ('theme', ?)
+    await database.runAsync(
+        `INSERT INTO settings (key, value) VALUES ('theme', ?)
      ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
-    mode,
-  );
+        mode,
+    );
 };

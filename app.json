@@ -1,53 +1,53 @@
 {
-  "expo": {
-    "name": "Takya",
-    "slug": "takya",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#FD7F3B",
-      "dark": {
-        "image": "./assets/splash-icon.png",
-        "backgroundColor": "#FD7F3B"
-      }
-    },
-    "ios": {
-      "supportsTablet": false,
-      "bundleIdentifier": "com.astrobit.takya",
-      "infoPlist": {
-        "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": false
-        }
-      }
-    },
-    "android": {
-      "package": "com.astrobit.takya",
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#FD7F3B"
-      },
-      "predictiveBackGestureEnabled": true
-    },
-    "plugins": [
-      "expo-sqlite",
-      [
-        "expo-splash-screen",
-        {
-          "backgroundColor": "#FD7F3B",
-          "image": "./assets/splash-icon.png",
-          "imageWidth": 220,
-          "resizeMode": "contain",
-          "dark": {
+    "expo": {
+        "name": "Takya",
+        "slug": "takya",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "icon": "./assets/icon.png",
+        "userInterfaceStyle": "automatic",
+        "newArchEnabled": true,
+        "splash": {
+            "image": "./assets/splash-icon.png",
+            "resizeMode": "contain",
             "backgroundColor": "#FD7F3B",
-            "image": "./assets/splash-icon.png"
-          }
-        }
-      ]
-    ]
-  }
+            "dark": {
+                "image": "./assets/splash-icon.png",
+                "backgroundColor": "#FD7F3B"
+            }
+        },
+        "ios": {
+            "supportsTablet": false,
+            "bundleIdentifier": "com.astrobit.takya",
+            "infoPlist": {
+                "NSAppTransportSecurity": {
+                    "NSAllowsArbitraryLoads": false
+                }
+            }
+        },
+        "android": {
+            "package": "com.astrobit.takya",
+            "adaptiveIcon": {
+                "foregroundImage": "./assets/icon.png",
+                "backgroundColor": "#FD7F3B"
+            },
+            "predictiveBackGestureEnabled": true
+        },
+        "plugins": [
+            "expo-sqlite",
+            [
+                "expo-splash-screen",
+                {
+                    "backgroundColor": "#FD7F3B",
+                    "image": "./assets/splash-icon.png",
+                    "imageWidth": 220,
+                    "resizeMode": "contain",
+                    "dark": {
+                        "backgroundColor": "#FD7F3B",
+                        "image": "./assets/splash-icon.png"
+                    }
+                }
+            ]
+        ]
+    }
 }

@@ -1,71 +1,67 @@
-import React from "react";
+import React from 'react';
 
-import type { AppTheme } from "../../theme/theme";
-import type * as types from "../../lib/types";
+import type { AppTheme } from '../../theme/theme';
+import type * as types from '../../lib/types';
 
-import { Pressable, Text, View } from "react-native";
-import { displayPlate } from "../../lib/utils/licensePlate.utils";
-import { formatLookupDate } from "../../lib/utils/date.utils";
-import { ServiceSection } from "../ServiceSection/ServiceSection";
+import { Pressable, Text, View } from 'react-native';
+import { displayPlate } from '../../lib/utils/licensePlate.utils';
+import { formatLookupDate } from '../../lib/utils/date.utils';
+import { ServiceSection } from '../ServiceSection/ServiceSection';
 
-import styles from "./QueryStatus.styles";
+import styles from './QueryStatus.styles';
 
 interface QueryStatusProps {
-  result: types.LookupProgress;
-  theme: AppTheme;
-  onCancel?: VoidFunction;
-  expanded?: boolean;
+    result: types.LookupProgress;
+    theme: AppTheme;
+    onCancel?: VoidFunction;
+    expanded?: boolean;
 }
 
 export const QueryStatus: React.FC<QueryStatusProps> = (props) => {
-  const { result, theme, onCancel, expanded = false } = props;
-  const { sri, fiscalia } = result;
+    const { result, theme, onCancel, expanded = false } = props;
+    const { sri, fiscalia } = result;
 
-  const loading = sri.status === "loading" || fiscalia.status === "loading";
+    const loading = sri.status === 'loading' || fiscalia.status === 'loading';
 
-  return (
-    <View style={styles.wrapper}>
-      <View style={styles.heading}>
-        <Text
-          accessibilityRole="header"
-          style={[styles.title, { color: theme.colors.text }]}
-        >
-          Estado de Consulta
-        </Text>
-        <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
-          {displayPlate(result.plate)}
-          {result.fromCache ? " · Guardado" : ""}
-        </Text>
-      </View>
-      <ServiceSection
-        key={`sri-${result.plate}`}
-        service="sri"
-        source={sri}
-        theme={theme}
-        initiallyExpanded={expanded}
-      />
-      <ServiceSection
-        key={`fiscalia-${result.plate}`}
-        service="fiscalia"
-        source={fiscalia}
-        theme={theme}
-        initiallyExpanded={expanded}
-      />
-      {loading && onCancel ? (
-        <Pressable
-          accessibilityRole="button"
-          onPress={onCancel}
-          style={styles.cancel}
-        >
-          <Text style={[styles.meta, { color: theme.colors.orangePressed }]}>
-            Cancelar consulta
-          </Text>
-        </Pressable>
-      ) : (
-        <Text style={[styles.date, { color: theme.colors.textMuted }]}>
-          Consultado el {formatLookupDate(result.fetchedAt)}
-        </Text>
-      )}
-    </View>
-  );
+    return (
+        <View style={styles.wrapper}>
+            <View style={styles.heading}>
+                <Text
+                    accessibilityRole="header"
+                    style={[styles.title, { color: theme.colors.text }]}
+                >
+                    Estado de Consulta
+                </Text>
+                <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
+                    {displayPlate(result.plate)}
+                    {result.fromCache ? ' · Guardado' : ''}
+                </Text>
+            </View>
+            <ServiceSection
+                key={`sri-${result.plate}`}
+                service="sri"
+                source={sri}
+                theme={theme}
+                initiallyExpanded={expanded}
+            />
+            <ServiceSection
+                key={`fiscalia-${result.plate}`}
+                service="fiscalia"
+                source={fiscalia}
+                theme={theme}
+                initiallyExpanded={expanded}
+            />
+            {loading && onCancel ? (
+                <Pressable accessibilityRole="button" onPress={onCancel} style={styles.cancel}>
+                    <Text style={[styles.meta, { color: theme.colors.orangePressed }]}>
+                        Cancelar consulta
+                    </Text>
+                </Pressable>
+            ) : (
+                <Text style={[styles.date, { color: theme.colors.textMuted }]}>
+                    Consultado el {formatLookupDate(result.fetchedAt)}
+                </Text>
+            )}
+        </View>
+    );
 };
