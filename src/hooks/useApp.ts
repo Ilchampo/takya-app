@@ -30,7 +30,7 @@ export interface AppState {
     savedLoading: boolean;
     savedError: string | null;
     changePlate: (value: string) => void;
-    runSearch: (value: string) => Promise<void>;
+    runSearch: (value: string, options?: { refresh?: boolean }) => Promise<void>;
     cancelSearch: VoidFunction;
     openHistory: (key: string) => Promise<void>;
     closeHistory: VoidFunction;

@@ -13,3 +13,10 @@ never be included in telemetry or logs.
 
 Only the fields required by the current user interface may be retained locally. Cached lookup data
 expires automatically and can be deleted at any time from the application.
+
+## Store builds
+
+Set `EXPO_PUBLIC_SRI_URL`, `EXPO_PUBLIC_FISCALIA_LOOKUP_URL`, and `EXPO_PUBLIC_FISCALIA_ENTRY_URL`
+as EAS environment variables or secrets before running `eas build`. Native versioning uses
+`ios.buildNumber` and `android.versionCode` in `app.json`; production builds auto-increment those
+values locally.

@@ -14,11 +14,12 @@ interface QueryStatusProps {
     result: types.LookupProgress;
     theme: AppTheme;
     onCancel?: VoidFunction;
+    onRefresh?: VoidFunction;
     expanded?: boolean;
 }
 
 export const QueryStatus: React.FC<QueryStatusProps> = (props) => {
-    const { result, theme, onCancel, expanded = false } = props;
+    const { result, theme, onCancel, onRefresh, expanded = false } = props;
     const { sri, fiscalia } = result;
 
     const loading = sri.status === 'loading' || fiscalia.status === 'loading';
@@ -64,10 +65,24 @@ export const QueryStatus: React.FC<QueryStatusProps> = (props) => {
                     </Text>
                 </Pressable>
             ) : (
-                <Text style={[styles.date, { color: theme.colors.textMuted }]}>
-                    {hasSuccessfulSource ? 'Consultado' : 'Intento realizado'} el{' '}
-                    {formatLookupDate(result.fetchedAt)}
-                </Text>
+                <>
+                    <Text style={[styles.date, { color: theme.colors.textMuted }]}>
+                        {hasSuccessfulSource ? 'Consultado' : 'Intento realizado'} el{' '}
+                        {formatLookupDate(result.fetchedAt)}
+                    </Text>
+                    {onRefresh ? (
+                        <Pressable
+                            accessibilityRole="button"
+                            accessibilityLabel="Volver a consultar esta placa"
+                            onPress={onRefresh}
+                            style={styles.cancel}
+                        >
+                            <Text style={[styles.meta, { color: theme.colors.orangePressed }]}>
+                                Consultar de nuevo
+                            </Text>
+                        </Pressable>
+                    ) : null}
+                </>
             )}
         </View>
     );
