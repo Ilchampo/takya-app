@@ -1,5 +1,7 @@
 import type * as types from '../types.ts';
 
+import { sanitizeFiscaliaForStorage } from '../utils/fiscalia.utils.ts';
+
 import config from '../configs/app.config.ts';
 import * as SQLite from 'expo-sqlite';
 
@@ -23,6 +25,28 @@ const stringifyJson = (value: unknown): string => {
     return JSON.stringify(value) ?? 'null';
 };
 
+const scrubCachedFiscalia = async (database: SQLite.SQLiteDatabase): Promise<void> => {
+    const rows = await database.getAllAsync<Pick<types.LookupRow, 'plate' | 'fiscalia_json'>>(
+        'SELECT plate, fiscalia_json FROM lookups',
+    );
+
+    await database.withTransactionAsync(async () => {
+        for (const row of rows) {
+            const sanitized = stringifyJson(
+                sanitizeFiscaliaForStorage(parseJson(row.fiscalia_json)),
+            );
+
+            if (sanitized !== row.fiscalia_json) {
+                await database.runAsync(
+                    'UPDATE lookups SET fiscalia_json = ? WHERE plate = ?',
+                    sanitized,
+                    row.plate,
+                );
+            }
+        }
+    });
+};
+
 export const initializeDatabase = async (now = Date.now()): Promise<void> => {
     const database = await getDatabase();
 
@@ -44,6 +68,7 @@ export const initializeDatabase = async (now = Date.now()): Promise<void> => {
   `);
 
     await deleteExpiredLookups(now);
+    await scrubCachedFiscalia(database);
     await trimHistory();
 };
 
@@ -96,7 +121,7 @@ export const saveLookup = async (result: types.LookupResult): Promise<void> => {
     }
 
     const sriData = result.sri.data;
-    const fiscaliaData = result.fiscalia.data;
+    const fiscaliaData = sanitizeFiscaliaForStorage(result.fiscalia.data);
     const database = await getDatabase();
 
     await database.withTransactionAsync(async () => {

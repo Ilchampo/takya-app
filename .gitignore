@@ -6,3 +6,4 @@ ios/
 *.log
 .DS_Store
 .env
+__mocks__/

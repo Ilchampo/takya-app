@@ -94,9 +94,6 @@ const request = async (
     );
 
 export const lookupVehicle = async (value: string, options: types.RequestOptions = {}) => {
-    console.log(config.source.fiscaliaEntry, config.source.fiscaliaLookup);
-    console.error(config.source.fiscaliaEntry, config.source.fiscaliaLookup);
-
     const plate = normalizePlate(value);
     const result = await request(
         `${config.source.SRI}?numeroPlacaCampvCpn=${encodeURIComponent(plate)}`,
@@ -110,9 +107,6 @@ export const lookupVehicle = async (value: string, options: types.RequestOptions
 
 export const lookupFiscalia = async (value: string, options: types.FiscaliaOptions = {}) => {
     const plate = normalizePlate(value);
-
-    console.log(config.source.fiscaliaEntry, config.source.fiscaliaLookup);
-    console.error(config.source.fiscaliaEntry, config.source.fiscaliaLookup);
 
     if (options.initializeSession) {
         await request(config.source.fiscaliaEntry, { credentials: 'include' }, options, 'session');

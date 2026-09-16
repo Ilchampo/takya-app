@@ -1,39 +1,114 @@
-import type * as types from '../lib/types';
+import type {
+    FlaggedPerson,
+    FlaggedPersonStatus,
+    Incident,
+} from '../lib/interfaces/incident.interface.ts';
 
-import { asRecord, asText } from '../lib/utils/misc.utils';
+import { asRecord, asText } from '../lib/utils/misc.utils.ts';
 
-export const incidentRecords = (data: unknown, plate: string): types.Incident[] | null => {
+const flaggedStatuses = new Set<FlaggedPersonStatus>([
+    'SOSPECHOSO',
+    'APREHENDIDO',
+    'SOSPECHOSO NO RECONOCIDO',
+    'PROCESADO',
+]);
+
+const normalizeWhitespace = (value: string): string => value.trim().replace(/\s+/g, ' ');
+
+const flaggedStatus = (value: unknown): FlaggedPersonStatus | null => {
+    const status = normalizeWhitespace(asText(value)).toUpperCase() as FlaggedPersonStatus;
+
+    return flaggedStatuses.has(status) ? status : null;
+};
+
+const splitReportedNames = (value: unknown): string[] =>
+    asText(value)
+        .split(';')
+        .map(normalizeWhitespace)
+        .filter((name) => name.split(' ').length >= 2);
+
+const flaggedPeople = (value: unknown): FlaggedPerson[] => {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+
+    const people: FlaggedPerson[] = [];
+    const seen = new Set<string>();
+
+    for (const item of value) {
+        const subject = asRecord(item);
+        const estado = flaggedStatus(asText(subject?.tipo) || asText(subject?.estado));
+
+        if (!subject || !estado) {
+            continue;
+        }
+
+        const names = splitReportedNames(
+            asText(subject.persona) || asText(subject.nombres_completos),
+        );
+
+        for (const nombreCompleto of names) {
+            const key = `${estado}:${nombreCompleto.toLocaleUpperCase('es-EC')}`;
+
+            if (seen.has(key)) {
+                continue;
+            }
+
+            seen.add(key);
+
+            people.push({
+                nombreCompleto,
+                primerApellido: nombreCompleto.split(' ')[0]!,
+                estado,
+            });
+        }
+    }
+
+    return people;
+};
+
+const toIncident = (value: unknown): Incident | null => {
+    const row = asRecord(value);
+
+    if (!row) {
+        return null;
+    }
+
+    const ciudad = asText(row.ciudad);
+    const fecha = asText(row.fecha);
+    const hora = asText(row.hora);
+    const gen_delito_tipopenal = asText(row.gen_delito_tipopenal);
+
+    if (!ciudad && !fecha && !hora && !gen_delito_tipopenal) {
+        return null;
+    }
+
+    return {
+        ciudad,
+        fecha,
+        hora,
+        gen_delito_tipopenal,
+        personasSenaladas: flaggedPeople(row.sujetos),
+    };
+};
+
+export const incidentRecords = (data: unknown): Incident[] | null => {
     const header = asRecord(data)?.cabecera;
 
     if (!Array.isArray(header)) {
         return null;
     }
 
-    const incidents: types.Incident[] = [];
+    const incidents: Incident[] = [];
 
     for (const item of header) {
-        const row = asRecord(item);
+        const incident = toIncident(item);
 
-        if (!row || !asText(row.ndd)) {
+        if (!incident) {
             return null;
         }
 
-        const plates = Array.isArray(row.vehiculos)
-            ? row.vehiculos
-                  .map((vehicle) => asText(asRecord(vehicle)?.placa).toUpperCase())
-                  .filter(Boolean)
-            : [];
-
-        incidents.push({
-            id: asText(row.ndd),
-            date: asText(row.fecha),
-            title: asText(row.gen_delito_tipopenal) ?? 'Registro de Fiscalía',
-            city: asText(row.ciudad),
-            province: asText(row.pro_descripcion),
-            unit: asText(row.unidad),
-            plates,
-            matchesPlate: plates.includes(plate.trim().toUpperCase()),
-        });
+        incidents.push(incident);
     }
 
     return incidents;
