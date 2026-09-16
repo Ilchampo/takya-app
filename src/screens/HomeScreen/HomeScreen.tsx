@@ -34,6 +34,7 @@ interface HomeScreenProps {
     storageAvailable: boolean;
     onPlateChange: (value: string) => void;
     onSubmit: VoidFunction;
+    onRefresh: VoidFunction;
     onCancel: VoidFunction;
     onOpenHistory: (plate: string) => void;
     onOpenLegal: VoidFunction;
@@ -52,6 +53,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
         storageAvailable,
         onPlateChange,
         onSubmit,
+        onRefresh,
         onCancel,
         onOpenHistory,
         onOpenLegal,
@@ -187,7 +189,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                         </View>
 
                         {visibleResult && (
-                            <QueryStatus result={visibleResult} theme={theme} onCancel={onCancel} />
+                            <QueryStatus
+                                result={visibleResult}
+                                theme={theme}
+                                onCancel={onCancel}
+                                onRefresh={onRefresh}
+                            />
                         )}
 
                         <View style={styles.recent}>

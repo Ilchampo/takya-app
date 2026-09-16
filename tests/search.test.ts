@@ -157,6 +157,66 @@ test('stops retries immediately after recovery', async () => {
     assert.equal(result.fiscalia.status, 'success');
 });
 
+test('partial cache keeps the successful source and only fetches the missing one', async () => {
+    let fiscaliaCalls = 0;
+    const saved: types.LookupResult[] = [];
+    const search = createPlateSearch({
+        getCachedLookup: async () => ({
+            plate: 'PBC1234',
+            fromCache: true,
+            fetchedAt: 123,
+            sri: { status: 'success', data: { numeroPlaca: 'PBC1234' } },
+            fiscalia: {
+                status: 'error',
+                message: 'Sin respuesta guardada para esta fuente.',
+            },
+        }),
+        saveLookup: async (result) => {
+            saved.push(result);
+        },
+        vehicle: async () => assert.fail('must not refetch a cached SRI result'),
+        fiscalia: async (plate) => {
+            fiscaliaCalls++;
+            return { plate, data: { cabecera: [] }, diagnostics: reply(plate).diagnostics };
+        },
+    });
+    const updates: types.LookupProgress[] = [];
+    const result = await search('PBC1234', { onUpdate: (state) => updates.push(state) });
+    assert.equal(fiscaliaCalls, 1);
+    assert.equal(updates[0]?.sri.status, 'success');
+    assert.equal(updates[0]?.fiscalia.status, 'loading');
+    assert.equal(result.sri.status, 'success');
+    assert.equal(result.fiscalia.status, 'success');
+    assert.equal(saved.length, 1);
+});
+
+test('refresh ignores a complete cache and queries both sources again', async () => {
+    let sriCalls = 0;
+    let fiscaliaCalls = 0;
+    const search = createPlateSearch({
+        getCachedLookup: async () => ({
+            plate: 'PBC1234',
+            fromCache: true,
+            fetchedAt: 123,
+            sri: { status: 'success', data: { numeroPlaca: 'PBC1234' } },
+            fiscalia: { status: 'success', data: { cabecera: [] } },
+        }),
+        saveLookup: async () => {},
+        vehicle: async (plate) => {
+            sriCalls++;
+            return reply(plate);
+        },
+        fiscalia: async (plate) => {
+            fiscaliaCalls++;
+            return { plate, data: { cabecera: [] }, diagnostics: reply(plate).diagnostics };
+        },
+    });
+    const result = await search('PBC1234', { refresh: true, onUpdate: () => {} });
+    assert.equal(sriCalls, 1);
+    assert.equal(fiscaliaCalls, 1);
+    assert.equal(result.fromCache, false);
+});
+
 test('cache hits publish both sources without making requests', async () => {
     const cached: types.LookupResult = {
         plate: 'PBC1234',

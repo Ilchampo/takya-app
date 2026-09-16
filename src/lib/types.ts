@@ -146,6 +146,7 @@ export type Dependencies = {
 export type SearchOptions = {
     signal?: AbortSignal;
     onUpdate: (result: LookupProgress) => void;
+    refresh?: boolean;
 };
 
 export type RequestOptions = {
