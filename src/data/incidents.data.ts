@@ -4,6 +4,7 @@ import type {
     Incident,
 } from '../lib/interfaces/incident.interface.ts';
 
+import { isWithinLookback, parseCalendarDate } from '../lib/utils/date.utils.ts';
 import { asRecord, asText } from '../lib/utils/misc.utils.ts';
 
 const flaggedStatuses = new Set<FlaggedPersonStatus>([
@@ -92,7 +93,22 @@ const toIncident = (value: unknown): Incident | null => {
     };
 };
 
-export const incidentRecords = (data: unknown): Incident[] | null => {
+const compareIncidents = (left: Incident, right: Incident): number => {
+    const leftTime = parseCalendarDate(left.fecha)?.getTime() ?? 0;
+    const rightTime = parseCalendarDate(right.fecha)?.getTime() ?? 0;
+
+    if (rightTime !== leftTime) {
+        return rightTime - leftTime;
+    }
+
+    return right.hora.localeCompare(left.hora);
+};
+
+export const incidentRecords = (
+    data: unknown,
+    endDate = Date.now(),
+    months = 24,
+): Incident[] | null => {
     const header = asRecord(data)?.cabecera;
 
     if (!Array.isArray(header)) {
@@ -111,5 +127,11 @@ export const incidentRecords = (data: unknown): Incident[] | null => {
         incidents.push(incident);
     }
 
-    return incidents.length > 0 || header.length === 0 ? incidents : null;
+    if (incidents.length === 0) {
+        return header.length === 0 ? incidents : null;
+    }
+
+    return incidents
+        .filter((incident) => isWithinLookback(incident.fecha, endDate, months))
+        .sort(compareIncidents);
 };

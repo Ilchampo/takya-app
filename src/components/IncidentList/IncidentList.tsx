@@ -1,17 +1,13 @@
 import React from 'react';
 
-import type { AppTheme } from '../../theme/theme';
 import type { Incident } from '../../lib/interfaces/incident.interface';
+import type * as types from '../../lib/types';
 
 import { StyleSheet, Text, View } from 'react-native';
 import { incidentRecords } from '../../data/incidents.data';
 
+import config from '../../lib/configs/app.config';
 import styles from './IncidentList.styles';
-
-interface IncidentListProps {
-    data: unknown;
-    theme: AppTheme;
-}
 
 type GeneralIncidentField = keyof Pick<
     Incident,
@@ -27,9 +23,11 @@ const fields: { key: GeneralIncidentField; label: string }[] = [
 
 const displayValue = (value: string): string => (value.trim() ? value.trim() : 'No disponible');
 
-export const IncidentList: React.FC<IncidentListProps> = (props) => {
-    const { data, theme } = props;
-    const incidents = incidentRecords(data);
+export const IncidentList: React.FC<types.SuccessBodyProps> = (props) => {
+    const { data, theme, fetchedAt } = props;
+
+    const incidents = incidentRecords(data, fetchedAt, config.service.incidentMonths);
+    const months = config.service.incidentMonths;
 
     if (!incidents) {
         return (
@@ -42,7 +40,8 @@ export const IncidentList: React.FC<IncidentListProps> = (props) => {
     if (incidents.length === 0) {
         return (
             <Text style={[styles.note, { color: theme.colors.textMuted }]}>
-                No se encontraron noticias del delito para esta placa.
+                No se encontraron noticias del delito para esta placa en los últimos {months}{' '}
+                {months === 1 ? 'mes' : 'meses'}.
             </Text>
         );
     }

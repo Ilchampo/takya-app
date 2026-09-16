@@ -44,6 +44,7 @@ export const QueryStatus: React.FC<QueryStatusProps> = (props) => {
                 source={sri}
                 theme={theme}
                 initiallyExpanded={expanded}
+                fetchedAt={result.fetchedAt}
             />
             <ServiceSection
                 key={`fiscalia-${result.plate}`}
@@ -51,6 +52,7 @@ export const QueryStatus: React.FC<QueryStatusProps> = (props) => {
                 source={fiscalia}
                 theme={theme}
                 initiallyExpanded={expanded}
+                fetchedAt={result.fetchedAt}
             />
             {loading && onCancel ? (
                 <Pressable

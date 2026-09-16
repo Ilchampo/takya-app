@@ -104,8 +104,12 @@ export const projectVehicleData = (data: unknown): Record<string, unknown> | nul
 export const isVehicleNotFoundProjection = (data: Record<string, unknown>): boolean =>
     data.sriVehicleNotFound === true;
 
-export const projectFiscaliaData = (data: unknown): Record<string, unknown> | null => {
-    const incidents = incidentRecords(sanitizeGovernmentData(data));
+export const projectFiscaliaData = (
+    data: unknown,
+    endDate = Date.now(),
+    months = 24,
+): Record<string, unknown> | null => {
+    const incidents = incidentRecords(sanitizeGovernmentData(data), endDate, months);
 
     if (!incidents) {
         return null;

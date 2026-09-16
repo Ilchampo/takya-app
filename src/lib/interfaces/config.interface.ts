@@ -23,6 +23,7 @@ interface Service {
     maxRetries: number;
     maxResponseBytes: number;
     rateLimit: RateLimit;
+    incidentMonths: number;
 }
 
 export interface Config {
