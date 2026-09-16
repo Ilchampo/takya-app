@@ -1,6 +1,6 @@
 import type * as types from '../types';
 
-import { FiscaliaPlaceholder } from '../../components/FiscaliaPlaceholder/FiscaliaPlaceholder';
+import { IncidentList } from '../../components/IncidentList/IncidentList';
 import { VehicleDetails } from '../../components/VehicleDetails/VehicleDetails';
 
 const sri: types.ServiceConfig = {
@@ -14,7 +14,7 @@ const fiscalia: types.ServiceConfig = {
     title: 'Fiscalía',
     subtitle: 'Noticias del delito',
     icon: 'file',
-    Success: FiscaliaPlaceholder,
+    Success: IncidentList,
 };
 
 export const getServiceConfig = (service: types.ServiceId): types.ServiceConfig => {

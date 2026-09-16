@@ -50,17 +50,6 @@ export type VehicleDetail = {
     value: string;
 };
 
-export type Incident = {
-    id: string;
-    date: string;
-    title: string;
-    city: string;
-    province: string;
-    unit: string;
-    plates: string[];
-    matchesPlate: boolean;
-};
-
 export type ThemeMode = 'light' | 'dark';
 
 export type ServiceRequest<T> = (signal: AbortSignal) => Promise<T>;

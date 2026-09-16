@@ -63,39 +63,49 @@ test('vehicle details are defensive and preserve unavailable values', () => {
     assert.equal(vehicleDetails([]), null);
 });
 
-test('incident parser distinguishes empty results from unknown response shapes', () => {
-    assert.deepEqual(incidentRecords({ cabecera: [] }, 'PBC1234'), []);
-    assert.equal(incidentRecords({ mensaje: 'formato distinto' }, 'PBC1234'), null);
+test('incident parser keeps only general Fiscalía fields and ignores the rest', () => {
+    assert.deepEqual(incidentRecords({ cabecera: [] }), []);
+    assert.equal(incidentRecords({ mensaje: 'formato distinto' }), null);
     assert.deepEqual(
-        incidentRecords(
-            {
-                cabecera: [
-                    {
-                        ndd: 'REF-1',
-                        fecha: '2026-09-14',
-                        gen_delito_tipopenal: 'Registro de prueba',
-                        ciudad: 'Quito',
-                        pro_descripcion: 'Pichincha',
-                        unidad: 'Unidad 1',
-                        vehiculos: [{ placa: 'PBC1234' }],
-                    },
-                ],
-            },
-            'pbc1234',
-        ),
+        incidentRecords({
+            cabecera: [
+                {
+                    ndd: 'REF-1',
+                    fecha: '2026-09-14',
+                    hora: '11:01:05',
+                    gen_delito_tipopenal: 'Registro de prueba',
+                    ciudad: 'Quito',
+                    pro_descripcion: 'Pichincha',
+                    unidad: 'Unidad 1',
+                    vehiculos: [{ placa: 'PBC1234' }],
+                    sujetos: [{ persona: 'Alguien', tipo: 'VICTIMA' }],
+                },
+            ],
+        }),
         [
             {
-                id: 'REF-1',
-                date: '2026-09-14',
-                title: 'Registro de prueba',
-                city: 'Quito',
-                province: 'Pichincha',
-                unit: 'Unidad 1',
-                plates: ['PBC1234'],
-                matchesPlate: true,
+                ciudad: 'Quito',
+                fecha: '2026-09-14',
+                hora: '11:01:05',
+                gen_delito_tipopenal: 'Registro de prueba',
             },
         ],
     );
+});
+
+test('incident parser accepts real Fiscalía mock payloads', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const raw = await readFile(new URL('../__mocks__/GMJ-0622.json', import.meta.url), 'utf8');
+    const incidents = incidentRecords(JSON.parse(raw));
+
+    assert.deepEqual(incidents, [
+        {
+            ciudad: 'GUAYAQUIL',
+            fecha: '2011-11-09',
+            hora: '11:01:05',
+            gen_delito_tipopenal: 'ACCIDENTE DE TRANSITO CON SOLO DANOS MATERIALES INDETERMINADOS.',
+        },
+    ]);
 });
 
 test('lookup age has compact Spanish labels', () => {
