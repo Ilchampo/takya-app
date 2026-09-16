@@ -1,4 +1,3 @@
-import type { UseAppThemeOptions } from '../lib/types';
 import type * as types from '../lib/types';
 
 import { useCallback, useMemo, useState } from 'react';
@@ -7,7 +6,7 @@ import { createTheme } from '../theme/theme';
 
 import * as dbService from '../lib/services/database.service';
 
-export const useAppTheme = ({ onStorageError }: UseAppThemeOptions) => {
+export const useAppTheme = ({ onStorageError }: types.UseAppThemeOptions) => {
     const systemScheme = useColorScheme();
 
     const [themeMode, setThemeMode] = useState<types.ThemeMode>(

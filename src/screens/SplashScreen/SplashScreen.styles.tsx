@@ -2,7 +2,7 @@ import { StyleSheet } from 'react-native';
 
 import config from '../../lib/configs/app.config';
 
-export const styles = StyleSheet.create({
+const styles = StyleSheet.create({
     screen: { flex: 1, backgroundColor: config.branding.primary, paddingHorizontal: 28 },
     hero: {
         flex: 1,

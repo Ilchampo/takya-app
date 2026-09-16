@@ -1,4 +1,3 @@
-import type { UsePlateSearchOptions } from '../lib/types';
 import type * as types from '../lib/types';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -17,7 +16,10 @@ const cancelledSource = {
     message: 'Consulta cancelada.',
 };
 
-export const usePlateSearch = ({ onHistoryChange, onStorageError }: UsePlateSearchOptions) => {
+export const usePlateSearch = ({
+    onHistoryChange,
+    onStorageError,
+}: types.UsePlateSearchOptions) => {
     const [plate, setPlate] = useState('');
     const [result, setResult] = useState<types.LookupProgress | null>(null);
     const [loading, setLoading] = useState(false);

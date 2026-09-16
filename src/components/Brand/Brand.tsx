@@ -4,9 +4,8 @@ import type { AppTheme } from '../../theme/theme';
 
 import { Image, Text, View } from 'react-native';
 import { isLoaded } from 'expo-font';
-import { Circle, Path } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 
-import Svg from 'react-native-svg';
 import styles from './Brand.styles';
 
 interface TakyaBrandProps {

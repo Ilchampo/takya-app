@@ -1,9 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import type { AppTheme } from '../../theme/theme';
 import type * as types from '../../lib/types';
 
-import { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { Icon } from '../Icon/Icon';
 import { getServiceConfig } from '../../lib/configs/serviceSection.config';

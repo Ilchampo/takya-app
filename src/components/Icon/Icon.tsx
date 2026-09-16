@@ -2,9 +2,7 @@ import React from 'react';
 
 import type * as types from '../../lib/types';
 
-import { Circle, Path, Rect } from 'react-native-svg';
-
-import Svg from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 
 interface IconProps {
     name: types.IconName;
@@ -123,9 +121,6 @@ const getIconPath = (name: string, color?: string) => {
                     />
                 </>
             );
-            break;
-        case 'car':
-            path = <Rect x="8" y="10" width="8" height="1" fill="transparent" />;
             break;
         default:
             path = null;

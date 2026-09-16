@@ -1,11 +1,10 @@
-import type { UseSavedLookupOptions } from '../lib/types';
 import type * as types from '../lib/types';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import * as dbService from '../lib/services/database.service';
 
-export const useSavedLookup = ({ onHistoryChange }: UseSavedLookupOptions) => {
+export const useSavedLookup = ({ onHistoryChange }: types.UseSavedLookupOptions) => {
     const [savedPlate, setSavedPlate] = useState<string | null>(null);
     const [savedResult, setSavedResult] = useState<types.LookupResult | null>(null);
     const [savedLoading, setSavedLoading] = useState(false);
@@ -13,8 +12,10 @@ export const useSavedLookup = ({ onHistoryChange }: UseSavedLookupOptions) => {
     const historyRequest = useRef(0);
 
     useEffect(() => {
+        const requestRef = historyRequest;
+
         return () => {
-            historyRequest.current++;
+            requestRef.current++;
         };
     }, []);
 
