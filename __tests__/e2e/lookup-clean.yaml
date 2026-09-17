@@ -1,0 +1,21 @@
+appId: com.astrobit.takya
+tags:
+    - lookup
+---
+- launchApp:
+      clearState: true
+- runFlow:
+      file: _searchPlate.yaml
+      env:
+          PLATE: ABC1111
+- assertVisible: 'Tu consulta'
+- assertVisible: 'CHEVROLET'
+- assertVisible: 'SAIL'
+- assertVisible: 'BLANCO'
+- scrollUntilVisible:
+      element: 'Sin registros en el período consultado'
+      direction: DOWN
+      timeout: 8000
+- tapOn:
+      id: nav-back
+- runFlow: _waitForHome.yaml

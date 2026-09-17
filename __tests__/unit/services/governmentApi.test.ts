@@ -2,9 +2,13 @@
 import assert from 'node:assert/strict';
 import { jest, test } from '@jest/globals';
 
-import config from '../src/lib/configs/app.config.ts';
-import { GovernmentApiError } from '../src/lib/errors/service.errors.ts';
-import { lookupFiscalia, lookupVehicle } from '../src/lib/services/governementApi.service.ts';
+import config from '../../../src/lib/configs/app.config.ts';
+import { GovernmentApiError } from '../../../src/lib/errors/service.errors.ts';
+import {
+    lookupFiscalia,
+    lookupVehicle,
+    validateGovernmentApiConfig,
+} from '../../../src/lib/services/governementApi.service.ts';
 
 test('SRI lookup uses a normalized encoded plate and a GET request', async () => {
     let calls = 0;
@@ -222,4 +226,55 @@ test('Fiscalía session and lookup receive separate timeout signals', async () =
     });
     assert.equal(signals.length, 2);
     assert.notEqual(signals[0], signals[1]);
+});
+
+test('validateGovernmentApiConfig accepts the configured HTTPS endpoints', () => {
+    assert.equal(validateGovernmentApiConfig(), null);
+});
+
+test('SRI rejects a vehicle sheet that belongs to another plate', async () => {
+    await assert.rejects(
+        lookupVehicle('PBC1234', {
+            fetchImpl: async () => Response.json({ numeroPlaca: 'ABC0123' }),
+        }),
+        /ficha vehicular válida/,
+    );
+});
+
+test('oversized responses are rejected before they are treated as data', async () => {
+    await assert.rejects(
+        lookupVehicle('PBC1234', {
+            fetchImpl: async () =>
+                new Response('{}', {
+                    headers: {
+                        'content-type': 'application/json',
+                        'content-length': String(config.service.maxResponseBytes + 1),
+                    },
+                }),
+        }),
+        /demasiado grande/,
+    );
+});
+
+test('HTTP 429 captures Retry-After as milliseconds', async () => {
+    await assert.rejects(
+        lookupVehicle('PBC1234', {
+            fetchImpl: async () =>
+                new Response('', {
+                    status: 429,
+                    headers: { 'retry-after': '2' },
+                }),
+        }),
+        (error: unknown) =>
+            error instanceof GovernmentApiError && error.diagnostics?.retryAfterMs === 2_000,
+    );
+});
+
+test('Fiscalía rejects payloads that cannot be projected', async () => {
+    await assert.rejects(
+        lookupFiscalia('PBC1234', {
+            fetchImpl: async () => Response.json({ mensaje: 'formato distinto' }),
+        }),
+        /registros de Fiscalía válidos/,
+    );
 });

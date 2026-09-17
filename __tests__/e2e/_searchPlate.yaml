@@ -1,0 +1,13 @@
+appId: com.astrobit.takya
+---
+- runFlow: _waitForHome.yaml
+- tapOn:
+      id: plate-input
+- inputText: ${PLATE}
+- hideKeyboard
+- tapOn:
+      id: search-vehicle
+- extendedWaitUntil:
+      visible:
+          id: refresh-lookup
+      timeout: 15000

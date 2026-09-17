@@ -1,0 +1,10 @@
+appId: com.astrobit.takya
+---
+- extendedWaitUntil:
+      visible: '¿Cuál es la placa?'
+      timeout: 20000
+- extendedWaitUntil:
+      notVisible: 'Developed by Astrobit'
+      timeout: 20000
+- assertVisible:
+      id: plate-input

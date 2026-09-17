@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import { test } from '@jest/globals';
-import { createPlateSearch } from '../src/lib/services/search.service.ts';
-import { abortError } from '../src/lib/utils/service.utils.ts';
-import config from '../src/lib/configs/app.config.ts';
-import type * as types from '../src/lib/types.ts';
+import { createPlateSearch } from '../../../src/lib/services/search.service.ts';
+import { abortError } from '../../../src/lib/utils/service.utils.ts';
+import { GovernmentApiError } from '../../../src/lib/errors/service.errors.ts';
+import config from '../../../src/lib/configs/app.config.ts';
+import type * as types from '../../../src/lib/types.ts';
 
 const reply = (plate: string) => ({
     plate,
@@ -332,4 +333,144 @@ test('late source responses after cancellation are ignored', async () => {
     release();
     await assert.rejects(running, { name: 'AbortError' });
     assert.equal(updates.length, count);
+});
+
+test('in-memory rate limit blocks extra full lookups', async () => {
+    const search = createPlateSearch({
+        getCachedLookup: async () => null,
+        saveLookup: async () => {},
+        vehicle: async (plate) => reply(plate),
+        fiscalia: async (plate) => reply(plate),
+        wait: async () => {},
+    });
+
+    for (let index = 0; index < config.service.rateLimit.maxRequests; index++) {
+        await search(`ABC${String(index).padStart(4, '0')}`, { onUpdate: () => {} });
+    }
+
+    await assert.rejects(search('PBC1234', { onUpdate: () => {} }), /límite de consultas/);
+});
+
+test('a persisted rate-limit denial stops the lookup', async () => {
+    const search = createPlateSearch({
+        getCachedLookup: async () => null,
+        saveLookup: async () => {},
+        consumeLookupRateLimit: async () => ({ allowed: false, retryAfterMs: 15_000 }),
+        vehicle: async () => assert.fail('must not fetch'),
+        fiscalia: async () => assert.fail('must not fetch'),
+    });
+
+    await assert.rejects(search('PBC1234', { onUpdate: () => {} }), /15 s/);
+});
+
+test('persisted rate-limit storage failures do not block the lookup', async () => {
+    const search = createPlateSearch({
+        getCachedLookup: async () => null,
+        saveLookup: async () => {},
+        consumeLookupRateLimit: async () => {
+            throw new Error('storage down');
+        },
+        vehicle: async (plate) => reply(plate),
+        fiscalia: async (plate) => reply(plate),
+    });
+
+    const result = await search('PBC1234', { onUpdate: () => {} });
+    assert.equal(result.sri.status, 'success');
+});
+
+test('HTTP 429 is not retried and persists a source cooldown', async () => {
+    const cooldowns: number[] = [];
+    let fiscaliaCalls = 0;
+    const search = createPlateSearch({
+        getCachedLookup: async () => null,
+        saveLookup: async () => {},
+        vehicle: async (plate) => reply(plate),
+        fiscalia: async () => {
+            fiscaliaCalls++;
+            throw new GovernmentApiError(
+                'paused',
+                {
+                    stage: 'lookup',
+                    status: 429,
+                    contentType: 'application/json',
+                    elapsedMs: 1,
+                    retryAfterMs: 2_000,
+                },
+                true,
+            );
+        },
+        setSourceCooldown: async (_source, until) => {
+            cooldowns.push(until);
+        },
+        wait: async () => assert.fail('must not retry a 429'),
+    });
+
+    const result = await search('PBC1234', { onUpdate: () => {} });
+    assert.equal(fiscaliaCalls, 1);
+    assert.equal(result.fiscalia.status, 'error');
+    if (result.fiscalia.status === 'error') {
+        assert.match(result.fiscalia.message, /2 s/);
+    }
+    assert.equal(cooldowns.length, 1);
+});
+
+test('client errors are not retried while server errors are', async () => {
+    let notFoundCalls = 0;
+    const notFound = createPlateSearch({
+        getCachedLookup: async () => null,
+        saveLookup: async () => {},
+        vehicle: async (plate) => reply(plate),
+        fiscalia: async () => {
+            notFoundCalls++;
+            throw new GovernmentApiError('missing', {
+                stage: 'lookup',
+                status: 404,
+                contentType: 'application/json',
+                elapsedMs: 1,
+            });
+        },
+        wait: async () => assert.fail('must not retry HTTP 404'),
+    });
+    await notFound('PBC1234', { onUpdate: () => {} });
+    assert.equal(notFoundCalls, 1);
+
+    let serverCalls = 0;
+    const recovering = createPlateSearch({
+        getCachedLookup: async () => null,
+        saveLookup: async () => {},
+        vehicle: async (plate) => reply(plate),
+        fiscalia: async (plate) => {
+            serverCalls++;
+            if (serverCalls < 2) {
+                throw new GovernmentApiError('offline', {
+                    stage: 'lookup',
+                    status: 503,
+                    contentType: 'application/json',
+                    elapsedMs: 1,
+                });
+            }
+            return reply(plate);
+        },
+        wait: async () => {},
+    });
+    const recovered = await recovering('PBC1234', { onUpdate: () => {} });
+    assert.equal(serverCalls, 2);
+    assert.equal(recovered.fiscalia.status, 'success');
+});
+
+test('storage failures keep the visible lookup result', async () => {
+    const search = createPlateSearch({
+        getCachedLookup: async () => {
+            throw new Error('cache unreadable');
+        },
+        saveLookup: async () => {
+            throw new Error('cannot write');
+        },
+        vehicle: async (plate) => reply(plate),
+        fiscalia: async (plate) => reply(plate),
+    });
+
+    const result = await search('PBC1234', { onUpdate: () => {} });
+    assert.equal(result.sri.status, 'success');
+    assert.equal(result.fiscalia.status, 'success');
 });

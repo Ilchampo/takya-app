@@ -1,0 +1,15 @@
+appId: com.astrobit.takya
+tags:
+    - lookup
+---
+- launchApp:
+      clearState: true
+- runFlow:
+      file: _searchPlate.yaml
+      env:
+          PLATE: ABC4444
+- assertVisible: 'El vehículo no existe'
+- scrollUntilVisible:
+      element: 'Sin registros en el período consultado'
+      direction: DOWN
+      timeout: 8000

@@ -2,8 +2,11 @@
 import assert from 'node:assert/strict';
 import { test } from '@jest/globals';
 
-import { projectFiscaliaData } from '../src/lib/utils/privacy.utils.ts';
-import { maskPersonName, PROTECTED_IDENTITY_LABEL } from '../src/lib/utils/personName.utils.ts';
+import { projectFiscaliaData } from '../../../src/lib/utils/privacy.utils.ts';
+import {
+    maskPersonName,
+    PROTECTED_IDENTITY_LABEL,
+} from '../../../src/lib/utils/personName.utils.ts';
 
 test('maskPersonName keeps the first token and initials of the rest', () => {
     assert.equal(maskPersonName('Juan Pepito Batalla Floreros'), 'Juan P. B. F.');

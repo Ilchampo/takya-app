@@ -25,13 +25,15 @@ interface DocumentLinkProps {
     title: string;
     subtitle: string;
     onPress: VoidFunction;
+    testID?: string;
 }
 
 const DocumentLink: React.FC<DocumentLinkProps> = (props) => {
-    const { theme, icon, title, subtitle, onPress } = props;
+    const { theme, icon, title, subtitle, onPress, testID } = props;
 
     return (
         <Pressable
+            testID={testID}
             accessibilityRole="button"
             accessibilityLabel={title}
             onPress={onPress}
@@ -136,6 +138,7 @@ export const LegalScreen: React.FC<LegalScreenProps> = (props) => {
                         Documentos legales
                     </Text>
                     <DocumentLink
+                        testID="open-privacy-policy"
                         theme={theme}
                         icon="shield"
                         title="Política de Privacidad"
@@ -143,6 +146,7 @@ export const LegalScreen: React.FC<LegalScreenProps> = (props) => {
                         onPress={onOpenPrivacyPolicy}
                     />
                     <DocumentLink
+                        testID="open-terms"
                         theme={theme}
                         icon="file"
                         title="Términos y Condiciones"

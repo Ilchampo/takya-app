@@ -1,0 +1,32 @@
+appId: com.astrobit.takya
+tags:
+    - legal
+---
+- launchApp:
+      clearState: true
+- runFlow: _waitForHome.yaml
+- scrollUntilVisible:
+      element:
+          id: open-legal
+      direction: DOWN
+      timeout: 8000
+- tapOn:
+      id: open-legal
+- assertVisible: 'Privacidad y uso'
+- assertVisible: 'Tu información.'
+- tapOn:
+      id: open-privacy-policy
+- assertVisible: 'Política de privacidad'
+- assertVisible: 'Política de Privacidad de Takya'
+- tapOn:
+      id: nav-back
+- assertVisible: 'Privacidad y uso'
+- tapOn:
+      id: open-terms
+- assertVisible: 'Términos y condiciones'
+- assertVisible: 'Términos y Condiciones de Takya'
+- tapOn:
+      id: nav-back
+- tapOn:
+      id: nav-back
+- runFlow: _waitForHome.yaml

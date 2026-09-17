@@ -18,6 +18,7 @@ interface ButtonProps {
     loading?: boolean;
     variant?: ButtonType;
     icon?: ReactNode;
+    testID?: string;
 }
 
 const getBackgroundColor = (isPrimary: boolean, variant: ButtonType, theme: AppTheme): string => {
@@ -29,7 +30,16 @@ const getBackgroundColor = (isPrimary: boolean, variant: ButtonType, theme: AppT
 };
 
 export const Button: React.FC<ButtonProps> = (props) => {
-    const { label, onPress, theme, disabled, loading = false, variant = 'primary', icon } = props;
+    const {
+        label,
+        onPress,
+        theme,
+        disabled,
+        loading = false,
+        variant = 'primary',
+        icon,
+        testID,
+    } = props;
 
     const isPrimary = variant === 'primary';
     const color = disabled
@@ -42,7 +52,9 @@ export const Button: React.FC<ButtonProps> = (props) => {
 
     return (
         <Pressable
+            testID={testID}
             accessibilityRole="button"
+            accessibilityLabel={label}
             accessibilityState={{ disabled: disabled || loading, busy: loading }}
             disabled={disabled || loading}
             onPress={onPress}

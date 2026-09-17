@@ -4,18 +4,18 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from '@jest/globals';
 
-import { privacyPolicy, termsOfService } from '../src/data/legal.data.ts';
-import { privacyPolicyMarkdown } from '../src/data/privacyPolicy.data.ts';
-import { termsOfServiceMarkdown } from '../src/data/termsOfService.data.ts';
+import { privacyPolicy, termsOfService } from '../../../src/data/legal.data.ts';
+import { privacyPolicyMarkdown } from '../../../src/data/privacyPolicy.data.ts';
+import { termsOfServiceMarkdown } from '../../../src/data/termsOfService.data.ts';
 import {
     flattenLegalText,
     legalHeadingText,
     parseLegalInline,
     parseLegalMarkdown,
     unwrapMarkdownFence,
-} from '../src/lib/utils/legalMarkdown.utils.ts';
+} from '../../../src/lib/utils/legalMarkdown.utils.ts';
 
-const root = join(__dirname, '..');
+const root = join(__dirname, '../../..');
 
 const headingTexts = (document: { blocks: { type: string; text?: string }[] }): string[] =>
     document.blocks

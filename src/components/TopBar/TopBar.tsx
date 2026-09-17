@@ -28,6 +28,7 @@ export const TopBar: React.FC<TopBarProps> = (props) => {
         <View style={styles.row}>
             {onBack ? (
                 <Pressable
+                    testID="nav-back"
                     accessibilityRole="button"
                     accessibilityLabel="Volver"
                     onPress={onBack}
@@ -49,6 +50,7 @@ export const TopBar: React.FC<TopBarProps> = (props) => {
                 </Text>
             )}
             <Pressable
+                testID="toggle-theme"
                 accessibilityRole="button"
                 accessibilityLabel={`Cambiar a modo ${theme.dark ? 'claro' : 'oscuro'}`}
                 onPress={onToggleTheme}

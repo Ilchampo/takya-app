@@ -2,13 +2,14 @@
 import assert from 'node:assert/strict';
 import { test } from '@jest/globals';
 
-import config from '../src/lib/configs/app.config.ts';
+import config from '../../../src/lib/configs/app.config.ts';
 import {
     abortError,
     retryBackoffMs,
+    retryBackoffWithJitterMs,
     serviceWrapper,
     ServiceTimeoutError,
-} from '../src/lib/utils/service.utils.ts';
+} from '../../../src/lib/utils/service.utils.ts';
 
 test('returns on the first successful attempt', async () => {
     let calls = 0;
@@ -189,5 +190,21 @@ test('defaults timeout and retries to the service config', async () => {
     assert.deepEqual(
         waits,
         Array.from({ length: config.service.maxRetries }, (_, index) => retryBackoffMs(index + 2)),
+    );
+});
+
+test('retry jitter stays within half to full backoff', () => {
+    const base = retryBackoffMs(3);
+    assert.equal(
+        retryBackoffWithJitterMs(3, () => 0),
+        Math.round(base * 0.5),
+    );
+    assert.equal(
+        retryBackoffWithJitterMs(3, () => 1),
+        base,
+    );
+    assert.equal(
+        retryBackoffWithJitterMs(3, () => 2),
+        base,
     );
 });

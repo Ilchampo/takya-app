@@ -1,0 +1,5 @@
+# Flows target the native app (com.astrobit.takya), not Expo Go.
+# Lookups use in-app ABC-1111…ABC-5555 fixtures. Build or start with
+# EXPO_PUBLIC_APP_DEBUG=true (eas.json profile: e2e-test).
+appId: com.astrobit.takya
+name: Takya
