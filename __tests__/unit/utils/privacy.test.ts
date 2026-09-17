@@ -15,7 +15,12 @@ const flaggedIncident = (persona: string, extra: Record<string, unknown> = {}) =
     hora: '11:01:05',
     gen_delito_tipopenal: 'Registro de prueba',
     ciudad: 'Quito',
-    sujetos: [{ persona, tipo: 'SOSPECHOSO', ...extra }],
+    sujetos: [
+        { persona, tipo: 'SOSPECHOSO', ...extra } as {
+            persona: string;
+            tipo: string;
+        } & Record<string, unknown>,
+    ],
 });
 
 test('SRI projection keeps vehicle sheets and explicit not-found replies', () => {

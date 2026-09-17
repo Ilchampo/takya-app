@@ -16,7 +16,7 @@ const diagnostics: types.Diagnostics = {
     elapsedMs: 1,
 };
 
-const reply = (plate: string, data: unknown = { numeroPlaca: plate }) => ({
+const reply = (plate: string, data: Record<string, unknown> = { numeroPlaca: plate }) => ({
     plate,
     data,
     diagnostics,
