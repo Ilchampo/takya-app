@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from '@jest/globals';
 
 import { debugFiscaliaPayload, debugVehiclePayload } from '../src/data/debugLookups.data.ts';
 import { incidentRecords } from '../src/data/incidents.data.ts';

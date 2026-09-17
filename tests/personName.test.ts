@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from '@jest/globals';
 
 import { projectFiscaliaData } from '../src/lib/utils/privacy.utils.ts';
 import { maskPersonName, PROTECTED_IDENTITY_LABEL } from '../src/lib/utils/personName.utils.ts';

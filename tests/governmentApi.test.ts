@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { jest, test } from '@jest/globals';
 
 import config from '../src/lib/configs/app.config.ts';
 import { GovernmentApiError } from '../src/lib/errors/service.errors.ts';
@@ -164,21 +164,26 @@ test('requests are aborted after their deadline', async () => {
     );
 });
 
-test('the production request deadline is ten seconds', async (t) => {
-    t.mock.timers.enable({ apis: ['setTimeout'] });
-    let signal: AbortSignal | null | undefined;
-    const request = lookupVehicle('PBC1234', {
-        fetchImpl: async (_url, init) => {
-            signal = init?.signal;
-            return new Promise(() => {});
-        },
-    });
-    const rejection = assert.rejects(request, /tardó demasiado/);
-    t.mock.timers.tick(9_999);
-    assert.equal(signal?.aborted, false);
-    t.mock.timers.tick(1);
-    assert.equal(signal?.aborted, true);
-    await rejection;
+test('the production request deadline is ten seconds', async () => {
+    jest.useFakeTimers();
+
+    try {
+        let signal: AbortSignal | null | undefined;
+        const request = lookupVehicle('PBC1234', {
+            fetchImpl: async (_url, init) => {
+                signal = init?.signal;
+                return new Promise(() => {});
+            },
+        });
+        const rejection = assert.rejects(request, /tardó demasiado/);
+        jest.advanceTimersByTime(9_999);
+        assert.equal(signal?.aborted, false);
+        jest.advanceTimersByTime(1);
+        assert.equal(signal?.aborted, true);
+        await rejection;
+    } finally {
+        jest.useRealTimers();
+    }
 });
 
 test('timeout covers a stalled body and does not rely on fetch honoring abort', async () => {

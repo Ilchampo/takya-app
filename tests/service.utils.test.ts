@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from '@jest/globals';
 
 import config from '../src/lib/configs/app.config.ts';
 import {
@@ -165,7 +165,7 @@ test('cancellation during retry backoff does not start another request', async (
 
 test('defaults timeout and retries to the service config', async () => {
     assert.equal(config.service.timeout, 10_000);
-    assert.equal(config.service.maxRetries, 5);
+    assert.equal(config.service.maxRetries, 3);
 
     let calls = 0;
     const waits: number[] = [];

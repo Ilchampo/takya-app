@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from '@jest/globals';
 
 import config from '../src/lib/configs/app.config.ts';
 import { sourcePresentation } from '../src/lib/utils/source.utils.ts';

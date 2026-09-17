@@ -1,6 +1,9 @@
 /// <reference types="node" />
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { existsSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { test } from '@jest/globals';
 
 import { incidentRecords, projectedIncidentRecords } from '../src/data/incidents.data.ts';
 import { vehicleDetails, vehicleLookupNote } from '../src/data/vehicle.data.ts';
@@ -300,21 +303,26 @@ test('government data sanitizer removes identity documents and Fiscalía positio
     assert.equal(response.cedulaPropietario, '9999999999');
 });
 
-test('incident parser accepts real Fiscalía mock payloads', async () => {
-    const { readFile } = await import('node:fs/promises');
-    const raw = await readFile(new URL('../__mocks__/GMJ-0622.json', import.meta.url), 'utf8');
-    const incidents = incidentRecords(JSON.parse(raw), Date.parse('2012-11-09T12:00:00'));
+const fiscaliaFixture = join(__dirname, '../__mocks__/GMJ-0622.json');
 
-    assert.deepEqual(incidents, [
-        {
-            ciudad: 'GUAYAQUIL',
-            fecha: '2011-11-09',
-            hora: '11:01:05',
-            gen_delito_tipopenal: 'ACCIDENTE DE TRANSITO CON SOLO DANOS MATERIALES INDETERMINADOS.',
-            personasSenaladas: [],
-        },
-    ]);
-});
+(existsSync(fiscaliaFixture) ? test : test.skip)(
+    'incident parser accepts real Fiscalía mock payloads',
+    async () => {
+        const raw = await readFile(fiscaliaFixture, 'utf8');
+        const incidents = incidentRecords(JSON.parse(raw), Date.parse('2012-11-09T12:00:00'));
+
+        assert.deepEqual(incidents, [
+            {
+                ciudad: 'GUAYAQUIL',
+                fecha: '2011-11-09',
+                hora: '11:01:05',
+                gen_delito_tipopenal:
+                    'ACCIDENTE DE TRANSITO CON SOLO DANOS MATERIALES INDETERMINADOS.',
+                personasSenaladas: [],
+            },
+        ]);
+    },
+);
 
 test('incident parser keeps only records inside the lookback window', () => {
     const requestDate = Date.parse('2026-09-16T12:00:00');

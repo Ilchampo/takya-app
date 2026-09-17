@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from '@jest/globals';
 import { createPlateSearch } from '../src/lib/services/search.service.ts';
 import { abortError } from '../src/lib/utils/service.utils.ts';
 import config from '../src/lib/configs/app.config.ts';
