@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import assert from 'node:assert/strict';
 import { test } from '@jest/globals';
 
@@ -8,6 +7,16 @@ import {
     projectVehicleData,
     sanitizeGovernmentData,
 } from '../../../src/lib/utils/privacy.utils.ts';
+
+const REQUEST_DATE = Date.parse('2026-09-16T12:00:00');
+
+const flaggedIncident = (persona: string, extra: Record<string, unknown> = {}) => ({
+    fecha: '2026-09-14',
+    hora: '11:01:05',
+    gen_delito_tipopenal: 'Registro de prueba',
+    ciudad: 'Quito',
+    sujetos: [{ persona, tipo: 'SOSPECHOSO', ...extra }],
+});
 
 test('SRI projection keeps vehicle sheets and explicit not-found replies', () => {
     assert.deepEqual(
@@ -32,6 +41,7 @@ test('SRI projection keeps vehicle sheets and explicit not-found replies', () =>
             mensaje: 'El vehículo no existe',
         },
     );
+
     assert.equal(projectVehicleData({ mensajeServidor: { texto: 'error interno' } }), null);
     assert.equal(
         isVehicleNotFoundProjection({ sriVehicleNotFound: true, mensaje: 'El vehículo no existe' }),
@@ -52,30 +62,21 @@ test('SRI projection clips oversized vehicle fields', () => {
 });
 
 test('Fiscalía projection allowlists UI fields and is idempotent', () => {
-    const requestDate = Date.parse('2026-09-16T12:00:00');
     const raw = {
         mensaje: 'ruido',
         cabecera: [
             {
                 ndd: 'REF-1',
-                fecha: '2026-09-14',
-                hora: '11:01:05',
-                gen_delito_tipopenal: 'Registro de prueba',
-                ciudad: 'Quito',
                 pro_descripcion: 'Pichincha',
                 vehiculos: [{ placa: 'PBC1234' }],
-                sujetos: [
-                    {
-                        0: '0123456789',
-                        cedula: '0123456789',
-                        persona: 'CRESPO GARCIA JONNY MANOLO',
-                        tipo: 'SOSPECHOSO',
-                    },
-                ],
+                ...flaggedIncident('CRESPO GARCIA JONNY MANOLO', {
+                    0: '0123456789',
+                    cedula: '0123456789',
+                }),
             },
         ],
     };
-    const projected = projectFiscaliaData(raw, requestDate);
+    const projected = projectFiscaliaData(raw, REQUEST_DATE);
 
     assert.deepEqual(projected, {
         cabecera: [
@@ -93,34 +94,33 @@ test('Fiscalía projection allowlists UI fields and is idempotent', () => {
             },
         ],
     });
-    assert.deepEqual(projectFiscaliaData(projected, requestDate), projected);
+    assert.deepEqual(projectFiscaliaData(projected, REQUEST_DATE), projected);
     assert.equal(raw.cabecera[0]?.sujetos[0]?.cedula, '0123456789');
     assert.equal(JSON.stringify(projected).includes('CRESPO GARCIA JONNY MANOLO'), false);
 });
 
 test('Fiscalía projection caps incidents and people', () => {
-    const requestDate = Date.parse('2026-09-16T12:00:00');
-    const sample = (index: number) => ({
-        fecha: '2026-09-14',
-        hora: '11:01:05',
-        gen_delito_tipopenal: 'Registro de prueba',
-        ciudad: 'Quito',
-        sujetos: [{ persona: `PERSONA EJEMPLO ${index}`, tipo: 'SOSPECHOSO' }],
-    });
     const projected = projectFiscaliaData(
-        { cabecera: Array.from({ length: 120 }, (_, index) => sample(index)) },
-        requestDate,
+        {
+            cabecera: Array.from({ length: 120 }, (_, index) =>
+                flaggedIncident(`PERSONA EJEMPLO ${index}`),
+            ),
+        },
+        REQUEST_DATE,
     );
 
     assert.ok(projected && Array.isArray(projected.cabecera));
     assert.equal(projected.cabecera.length, 100);
+
     const people = projected.cabecera.flatMap((incident) => {
         const sujetos =
             incident && typeof incident === 'object' && 'sujetos' in incident
                 ? incident.sujetos
                 : [];
+
         return Array.isArray(sujetos) ? sujetos : [];
     });
+
     assert.equal(people.length, 100);
 });
 

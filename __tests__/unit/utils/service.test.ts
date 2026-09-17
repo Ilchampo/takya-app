@@ -1,15 +1,15 @@
-/// <reference types="node" />
 import assert from 'node:assert/strict';
 import { test } from '@jest/globals';
 
-import config from '../../../src/lib/configs/app.config.ts';
 import {
+    ServiceTimeoutError,
     abortError,
     retryBackoffMs,
     retryBackoffWithJitterMs,
     serviceWrapper,
-    ServiceTimeoutError,
 } from '../../../src/lib/utils/service.utils.ts';
+
+import config from '../../../src/lib/configs/app.config.ts';
 
 test('returns on the first successful attempt', async () => {
     let calls = 0;
@@ -18,6 +18,7 @@ test('returns on the first successful attempt', async () => {
     const result = await serviceWrapper(
         async () => {
             calls += 1;
+
             return 'ok';
         },
         {
@@ -42,7 +43,11 @@ test('retries failed attempts with exponential backoff, then returns', async () 
     const result = await serviceWrapper(
         async () => {
             calls += 1;
-            if (calls < 3) throw new Error(`offline ${calls}`);
+
+            if (calls < 3) {
+                throw new Error(`offline ${calls}`);
+            }
+
             return 'recovered';
         },
         {
@@ -73,7 +78,7 @@ test('throws the last error after the initial attempt plus maxRetries', async ()
             },
             {
                 maxRetries: 3,
-                wait: async () => {},
+                wait: async () => undefined,
             },
         ),
         { message: 'unavailable 4' },
@@ -84,7 +89,7 @@ test('throws the last error after the initial attempt plus maxRetries', async ()
 
 test('times out an attempt even if the request ignores abort', async () => {
     await assert.rejects(
-        serviceWrapper(async () => new Promise(() => {}), {
+        serviceWrapper(async () => new Promise(() => undefined), {
             timeout: 15,
             maxRetries: 0,
         }),
@@ -101,12 +106,13 @@ test('retries timeouts and aborts the in-flight signal', async () => {
             async (signal) => {
                 calls += 1;
                 signals.push(signal);
-                return new Promise(() => {});
+
+                return new Promise(() => undefined);
             },
             {
                 timeout: 15,
                 maxRetries: 1,
-                wait: async () => {},
+                wait: async () => undefined,
             },
         ),
         (error: unknown) => error instanceof ServiceTimeoutError,
@@ -165,11 +171,11 @@ test('cancellation during retry backoff does not start another request', async (
 });
 
 test('defaults timeout and retries to the service config', async () => {
-    assert.equal(config.service.timeout, 10_000);
-    assert.equal(config.service.maxRetries, 3);
-
     let calls = 0;
     const waits: number[] = [];
+
+    assert.equal(config.service.timeout, 10_000);
+    assert.equal(config.service.maxRetries, 3);
 
     await assert.rejects(
         serviceWrapper(
@@ -195,6 +201,7 @@ test('defaults timeout and retries to the service config', async () => {
 
 test('retry jitter stays within half to full backoff', () => {
     const base = retryBackoffMs(3);
+
     assert.equal(
         retryBackoffWithJitterMs(3, () => 0),
         Math.round(base * 0.5),

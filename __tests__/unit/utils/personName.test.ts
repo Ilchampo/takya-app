@@ -1,12 +1,13 @@
-/// <reference types="node" />
 import assert from 'node:assert/strict';
 import { test } from '@jest/globals';
 
-import { projectFiscaliaData } from '../../../src/lib/utils/privacy.utils.ts';
 import {
-    maskPersonName,
     PROTECTED_IDENTITY_LABEL,
+    maskPersonName,
 } from '../../../src/lib/utils/personName.utils.ts';
+import { projectFiscaliaData } from '../../../src/lib/utils/privacy.utils.ts';
+
+const REQUEST_DATE = Date.parse('2026-09-16T12:00:00');
 
 test('maskPersonName keeps the first token and initials of the rest', () => {
     assert.equal(maskPersonName('Juan Pepito Batalla Floreros'), 'Juan P. B. F.');
@@ -32,7 +33,6 @@ test('maskPersonName is idempotent for already masked names', () => {
 });
 
 test('Fiscalía projection stores masked names and not the source full name', () => {
-    const requestDate = Date.parse('2026-09-16T12:00:00');
     const sourceName = 'Juan Pepito Batalla Floreros';
     const projected = projectFiscaliaData(
         {
@@ -46,7 +46,7 @@ test('Fiscalía projection stores masked names and not the source full name', ()
                 },
             ],
         },
-        requestDate,
+        REQUEST_DATE,
     );
 
     assert.deepEqual(projected?.cabecera, [

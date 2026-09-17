@@ -1,8 +1,11 @@
+import type * as types from '../../../src/lib/types.ts';
+
 import assert from 'node:assert/strict';
 import { beforeEach, jest, test } from '@jest/globals';
 import { act, renderHook } from '@testing-library/react-native';
 
 import { mockGetCachedLookup, mockListHistory } from '../helpers/hookMocks.ts';
+import { useSavedLookup } from '../../../src/hooks/useSavedLookup.ts';
 
 jest.mock('../../../src/lib/services/database.service', () => ({
     getCachedLookup: (...args: unknown[]) =>
@@ -10,16 +13,14 @@ jest.mock('../../../src/lib/services/database.service', () => ({
     listLookupHistory: () => require('../helpers/hookMocks').mockListHistory(),
 }));
 
-import { useSavedLookup } from '../../../src/hooks/useSavedLookup.ts';
-
 const mockOnHistoryChange = jest.fn();
 
-const cached = {
+const cached: types.LookupResult = {
     plate: 'PBC1234',
     fetchedAt: 1,
     fromCache: true,
-    sri: { status: 'success' as const, data: { numeroPlaca: 'PBC1234' } },
-    fiscalia: { status: 'success' as const, data: { cabecera: [] } },
+    sri: { status: 'success', data: { numeroPlaca: 'PBC1234' } },
+    fiscalia: { status: 'success', data: { cabecera: [] } },
 };
 
 beforeEach(() => {
@@ -34,6 +35,7 @@ const renderSaved = async () =>
 
 test('openHistory loads a cached lookup', async () => {
     mockGetCachedLookup.mockResolvedValue(cached);
+
     const { result } = await renderSaved();
 
     await act(async () => {
@@ -49,6 +51,7 @@ test('openHistory loads a cached lookup', async () => {
 test('a missing saved lookup shows an error and refreshes history', async () => {
     mockGetCachedLookup.mockResolvedValue(null);
     mockListHistory.mockResolvedValue([]);
+
     const { result } = await renderSaved();
 
     await act(async () => {
@@ -61,7 +64,8 @@ test('a missing saved lookup shows an error and refreshes history', async () => 
 });
 
 test('a newer openHistory ignores a stale response', async () => {
-    let releaseFirst!: (value: typeof cached | null) => void;
+    let releaseFirst!: (value: types.LookupResult | null) => void;
+
     mockGetCachedLookup
         .mockImplementationOnce(
             () =>
@@ -74,6 +78,7 @@ test('a newer openHistory ignores a stale response', async () => {
     const { result } = await renderSaved();
 
     let first: Promise<void> = Promise.resolve();
+
     await act(async () => {
         first = result.current?.openHistory('ABC0123') ?? first;
     });
@@ -90,6 +95,7 @@ test('a newer openHistory ignores a stale response', async () => {
 
 test('closeHistory clears the saved lookup', async () => {
     mockGetCachedLookup.mockResolvedValue(cached);
+
     const { result } = await renderSaved();
 
     await act(async () => {

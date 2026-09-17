@@ -1,9 +1,4 @@
-type LookupRow = {
-    plate: string;
-    sri_json: string;
-    fiscalia_json: string;
-    fetched_at: number;
-};
+import type { LookupRow } from '../../../src/lib/types.ts';
 
 const compactSql = (sql: string): string => sql.replace(/\s+/g, ' ').trim().toLowerCase();
 
@@ -64,6 +59,7 @@ export class FakeSqliteDatabase {
 
         if (statement.startsWith('update lookups set sri_json')) {
             const row = this.lookups.get(String(params[2]));
+
             if (row) {
                 row.sri_json = String(params[0]);
                 row.fiscalia_json = String(params[1]);

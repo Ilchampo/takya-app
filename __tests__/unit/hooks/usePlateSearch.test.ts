@@ -1,8 +1,11 @@
+import type * as types from '../../../src/lib/types.ts';
+
 import assert from 'node:assert/strict';
 import { beforeEach, jest, test } from '@jest/globals';
 import { act, renderHook } from '@testing-library/react-native';
 
 import { mockListHistory, mockSearch } from '../helpers/hookMocks.ts';
+import { usePlateSearch } from '../../../src/hooks/usePlateSearch.ts';
 
 jest.mock('../../../src/lib/services/search.service', () => ({
     createPlateSearch: () => require('../helpers/hookMocks').mockSearch,
@@ -17,17 +20,31 @@ jest.mock('../../../src/lib/services/database.service', () => ({
     listLookupHistory: () => require('../helpers/hookMocks').mockListHistory(),
 }));
 
-import { usePlateSearch } from '../../../src/hooks/usePlateSearch.ts';
-
 const mockOnHistoryChange = jest.fn();
 const mockOnStorageError = jest.fn();
 
-const completed = {
+const completed: types.LookupResult = {
     plate: 'ABC1234',
     fetchedAt: 1,
     fromCache: false,
-    sri: { status: 'success' as const, data: { numeroPlaca: 'ABC1234' } },
-    fiscalia: { status: 'success' as const, data: { cabecera: [] } },
+    sri: { status: 'success', data: { numeroPlaca: 'ABC1234' } },
+    fiscalia: { status: 'success', data: { cabecera: [] } },
+};
+
+const abortOnSignal = (...args: unknown[]): Promise<never> => {
+    const options = args[1] as { signal: AbortSignal };
+
+    return new Promise((_resolve, reject) => {
+        options.signal.addEventListener(
+            'abort',
+            () => {
+                const error = new Error('Consulta cancelada.');
+                error.name = 'AbortError';
+                reject(error);
+            },
+            { once: true },
+        );
+    });
 };
 
 beforeEach(() => {
@@ -39,6 +56,7 @@ beforeEach(() => {
     mockSearch.mockImplementation(async (...args: unknown[]) => {
         const options = args[1] as { onUpdate: (value: unknown) => void };
         options.onUpdate(completed);
+
         return completed;
     });
 });
@@ -64,20 +82,7 @@ test('invalid plates set an error and never start a lookup', async () => {
 });
 
 test('the same in-flight plate is ignored unless the caller asks for a refresh', async () => {
-    mockSearch.mockImplementation((...args: unknown[]) => {
-        const options = args[1] as { signal: AbortSignal };
-        return new Promise((_resolve, reject) => {
-            options.signal.addEventListener(
-                'abort',
-                () => {
-                    const error = new Error('Consulta cancelada.');
-                    error.name = 'AbortError';
-                    reject(error);
-                },
-                { once: true },
-            );
-        });
-    });
+    mockSearch.mockImplementation(abortOnSignal);
 
     const { result } = await renderSearch();
 
@@ -93,6 +98,7 @@ test('the same in-flight plate is ignored unless the caller asks for a refresh',
 test('cancelSearch marks in-flight sources as cancelled', async () => {
     mockSearch.mockImplementation((...args: unknown[]) => {
         const options = args[1] as { signal: AbortSignal; onUpdate: (value: unknown) => void };
+
         return new Promise((_resolve, reject) => {
             options.onUpdate({
                 plate: 'ABC1234',
@@ -116,6 +122,7 @@ test('cancelSearch marks in-flight sources as cancelled', async () => {
     const { result } = await renderSearch();
 
     let running: Promise<void> = Promise.resolve();
+
     await act(async () => {
         running = result.current?.runSearch('ABC-1234') ?? running;
     });
@@ -133,22 +140,10 @@ test('cancelSearch marks in-flight sources as cancelled', async () => {
 test('changing the plate aborts a lookup for a different plate', async () => {
     const { result } = await renderSearch();
 
-    mockSearch.mockImplementation((...args: unknown[]) => {
-        const options = args[1] as { signal: AbortSignal };
-        return new Promise((_resolve, reject) => {
-            options.signal.addEventListener(
-                'abort',
-                () => {
-                    const error = new Error('Consulta cancelada.');
-                    error.name = 'AbortError';
-                    reject(error);
-                },
-                { once: true },
-            );
-        });
-    });
+    mockSearch.mockImplementation(abortOnSignal);
 
     let running: Promise<void> = Promise.resolve();
+
     await act(async () => {
         running = result.current?.runSearch('ABC-1234') ?? running;
     });

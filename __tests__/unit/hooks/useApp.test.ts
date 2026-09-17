@@ -13,6 +13,7 @@ import {
     mockSearch,
     mockTheme,
 } from '../helpers/appHookMocks.ts';
+import { useApp } from '../../../src/hooks/useApp.ts';
 
 jest.mock('expo-font', () => ({
     useFonts: () => [true, null],
@@ -41,8 +42,6 @@ jest.mock('../../../src/lib/services/governementApi.service', () => ({
     validateGovernmentApiConfig: () => null,
 }));
 
-import { useApp } from '../../../src/hooks/useApp.ts';
-
 beforeEach(() => {
     mockSearch.plate = 'ABC-1234';
     mockSearch.result = null;
@@ -62,6 +61,7 @@ beforeEach(() => {
     backHandlers.length = 0;
     jest.spyOn(BackHandler, 'addEventListener').mockImplementation((...args: unknown[]) => {
         backHandlers.push(args[1] as () => boolean);
+
         return { remove: jest.fn() } as never;
     });
 });
@@ -127,6 +127,7 @@ test('legal pages stack and pop', async () => {
 
 test('refreshHistory re-queries the saved plate', async () => {
     mockSaved.savedPlate = 'PBC1234';
+
     const { result } = await renderApp();
 
     await act(async () => {
@@ -144,6 +145,7 @@ test('clearHistory empties local history when storage succeeds', async () => {
     const { result } = await renderApp();
 
     let cleared = false;
+
     await act(async () => {
         cleared = (await result.current?.clearHistory()) ?? false;
     });
@@ -161,6 +163,7 @@ test('hardware back closes the result view', async () => {
     });
 
     const handler = backHandlers.at(-1);
+
     assert.equal(typeof handler, 'function');
 
     await act(async () => {

@@ -1,8 +1,6 @@
-/// <reference types="node" />
 import assert from 'node:assert/strict';
 import { jest, test } from '@jest/globals';
 
-import config from '../../../src/lib/configs/app.config.ts';
 import { GovernmentApiError } from '../../../src/lib/errors/service.errors.ts';
 import {
     lookupFiscalia,
@@ -10,21 +8,35 @@ import {
     validateGovernmentApiConfig,
 } from '../../../src/lib/services/governementApi.service.ts';
 
+import config from '../../../src/lib/configs/app.config.ts';
+
+const calendarStamp = (date = new Date()): string =>
+    [
+        date.getFullYear(),
+        String(date.getMonth() + 1).padStart(2, '0'),
+        String(date.getDate()).padStart(2, '0'),
+    ].join('-');
+
+const jsonResponse = (body: unknown) => async (): Promise<Response> => Response.json(body);
+
 test('SRI lookup uses a normalized encoded plate and a GET request', async () => {
     let calls = 0;
     const result = await lookupVehicle(' pbc1234 ', {
         fetchImpl: async (url, init) => {
-            calls++;
+            calls += 1;
+
             assert.equal(url, `${config.source.SRI}?numeroPlacaCampvCpn=PBC1234`);
             assert.equal(init?.method, 'GET');
             assert.equal(init?.body, undefined);
             assert.deepEqual(init?.headers, { Accept: 'application/json' });
+
             return Response.json({
                 numeroPlaca: 'PBC1234',
                 cedulaPropietario: '0123456789',
             });
         },
     });
+
     assert.equal(calls, 1);
     assert.deepEqual(result.data, { numeroPlaca: 'PBC1234' });
     assert.equal(result.diagnostics.status, 200);
@@ -32,20 +44,18 @@ test('SRI lookup uses a normalized encoded plate and a GET request', async () =>
 
 test('Fiscalía lookup initializes its session and sends the captured form contract', async () => {
     const urls: unknown[] = [];
-    const now = new Date();
-    const fecha = [
-        now.getFullYear(),
-        String(now.getMonth() + 1).padStart(2, '0'),
-        String(now.getDate()).padStart(2, '0'),
-    ].join('-');
+    const fecha = calendarStamp();
     const result = await lookupFiscalia('ABC-123', {
         initializeSession: true,
         fetchImpl: async (url, init) => {
             urls.push(url);
+
             if (url === config.source.fiscaliaEntry) {
                 assert.equal(init?.credentials, 'include');
+
                 return new Response('<html>Sesión</html>');
             }
+
             assert.equal(url, config.source.fiscaliaLookup);
             assert.equal(init?.method, 'POST');
             assert.equal(init?.credentials, 'include');
@@ -76,6 +86,7 @@ test('Fiscalía lookup initializes its session and sends the captured form contr
             });
         },
     });
+
     assert.deepEqual(urls, [config.source.fiscaliaEntry, config.source.fiscaliaLookup]);
     assert.deepEqual(result.data, {
         cabecera: [
@@ -98,12 +109,11 @@ test('Fiscalía lookup initializes its session and sends the captured form contr
 
 test('SRI treats an explicit vehicle-not-found payload as a usable response', async () => {
     const result = await lookupVehicle('PBC1234', {
-        fetchImpl: async () =>
-            Response.json({
-                data: [],
-                objeto: null,
-                mensajeServidor: { texto: 'El vehículo no existe' },
-            }),
+        fetchImpl: jsonResponse({
+            data: [],
+            objeto: null,
+            mensajeServidor: { texto: 'El vehículo no existe' },
+        }),
     });
 
     assert.deepEqual(result.data, {
@@ -116,6 +126,7 @@ test('SRI pads an old plate and omits its display dash in the request', async ()
     await lookupVehicle('ICP-327', {
         fetchImpl: async (url) => {
             assert.equal(url, `${config.source.SRI}?numeroPlacaCampvCpn=ICP0327`);
+
             return Response.json({ numeroPlaca: 'ICP0327' });
         },
     });
@@ -176,14 +187,18 @@ test('the production request deadline is ten seconds', async () => {
         const request = lookupVehicle('PBC1234', {
             fetchImpl: async (_url, init) => {
                 signal = init?.signal;
-                return new Promise(() => {});
+
+                return new Promise(() => undefined);
             },
         });
         const rejection = assert.rejects(request, /tardó demasiado/);
+
         jest.advanceTimersByTime(9_999);
         assert.equal(signal?.aborted, false);
+
         jest.advanceTimersByTime(1);
         assert.equal(signal?.aborted, true);
+
         await rejection;
     } finally {
         jest.useRealTimers();
@@ -207,23 +222,28 @@ test('caller cancellation aborts the HTTP request without waiting for its timeou
     const controller = new AbortController();
     const running = lookupVehicle('PBC1234', {
         signal: controller.signal,
-        fetchImpl: async () => new Promise(() => {}),
+        fetchImpl: async () => new Promise(() => undefined),
     });
+
     controller.abort();
+
     await assert.rejects(running, { name: 'AbortError' });
 });
 
 test('Fiscalía session and lookup receive separate timeout signals', async () => {
     const signals: (AbortSignal | null | undefined)[] = [];
+
     await lookupFiscalia('PBC1234', {
         initializeSession: true,
         fetchImpl: async (url, init) => {
             signals.push(init?.signal);
+
             return url === config.source.fiscaliaEntry
                 ? new Response('session')
                 : Response.json({ cabecera: [] });
         },
     });
+
     assert.equal(signals.length, 2);
     assert.notEqual(signals[0], signals[1]);
 });
@@ -235,7 +255,7 @@ test('validateGovernmentApiConfig accepts the configured HTTPS endpoints', () =>
 test('SRI rejects a vehicle sheet that belongs to another plate', async () => {
     await assert.rejects(
         lookupVehicle('PBC1234', {
-            fetchImpl: async () => Response.json({ numeroPlaca: 'ABC0123' }),
+            fetchImpl: jsonResponse({ numeroPlaca: 'ABC0123' }),
         }),
         /ficha vehicular válida/,
     );
@@ -273,7 +293,7 @@ test('HTTP 429 captures Retry-After as milliseconds', async () => {
 test('Fiscalía rejects payloads that cannot be projected', async () => {
     await assert.rejects(
         lookupFiscalia('PBC1234', {
-            fetchImpl: async () => Response.json({ mensaje: 'formato distinto' }),
+            fetchImpl: jsonResponse({ mensaje: 'formato distinto' }),
         }),
         /registros de Fiscalía válidos/,
     );

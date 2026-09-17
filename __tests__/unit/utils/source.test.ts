@@ -1,10 +1,10 @@
-/// <reference types="node" />
 import assert from 'node:assert/strict';
 import { test } from '@jest/globals';
 
-import config from '../../../src/lib/configs/app.config.ts';
-import { createTheme } from '../../../src/theme/theme.ts';
 import { sourcePresentation, toneColors } from '../../../src/lib/utils/source.utils.ts';
+import { createTheme } from '../../../src/theme/theme.ts';
+
+import config from '../../../src/lib/configs/app.config.ts';
 
 test('source presentation maps idle, loading, retry, success, and error states', () => {
     assert.deepEqual(sourcePresentation(), {
@@ -23,6 +23,7 @@ test('source presentation maps idle, loading, retry, success, and error states',
     assert.equal(sourcePresentation({ status: 'success', data: {} }).note, null);
 
     const error = sourcePresentation({ status: 'error', message: 'Fuera de servicio' });
+
     assert.equal(error.tone, 'error');
     assert.equal(error.label, 'No disponible');
     assert.equal(error.note, 'Fuera de servicio');
@@ -30,6 +31,7 @@ test('source presentation maps idle, loading, retry, success, and error states',
 
 test('tone colors follow the active theme', () => {
     const theme = createTheme('light');
+
     assert.deepEqual(toneColors('success', theme), {
         color: theme.colors.success,
         background: theme.colors.successMuted,

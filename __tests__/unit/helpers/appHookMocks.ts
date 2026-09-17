@@ -10,7 +10,7 @@ export const mockSearch = {
     changePlate: jest.fn((...args: unknown[]) => {
         mockSearch.plate = String(args[0] ?? '');
     }),
-    runSearch: jest.fn(async (..._args: unknown[]) => undefined),
+    runSearch: jest.fn(async (..._args: unknown[]): Promise<void> => undefined),
     cancelSearch: jest.fn(),
 };
 
@@ -33,10 +33,14 @@ export const mockTheme = {
     hydrateTheme: jest.fn(),
 };
 
-export const mockInitializeDatabase = jest.fn(async () => undefined);
+export const mockInitializeDatabase = jest.fn(async (): Promise<void> => undefined);
+
 export const mockGetThemeMode = jest.fn(
-    async (..._args: unknown[]) => null as 'light' | 'dark' | null,
+    async (..._args: unknown[]): Promise<'light' | 'dark' | null> => null,
 );
-export const mockListHistory = jest.fn(async (..._args: unknown[]) => [] as unknown[]);
-export const mockClearHistory = jest.fn(async (..._args: unknown[]) => undefined);
-export const backHandlers: Array<() => boolean> = [];
+
+export const mockListHistory = jest.fn(async (..._args: unknown[]): Promise<unknown[]> => []);
+
+export const mockClearHistory = jest.fn(async (..._args: unknown[]): Promise<void> => undefined);
+
+export const backHandlers: (() => boolean)[] = [];

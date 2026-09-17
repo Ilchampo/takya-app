@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import assert from 'node:assert/strict';
 import { test } from '@jest/globals';
 
@@ -12,6 +11,7 @@ test('vehicle details are defensive and preserve unavailable values', () => {
         anioAuto: 2020,
         colorVehiculo1: null,
     });
+
     assert.ok(details);
     assert.equal(details.find(({ key }) => key === 'descripcionMarca')?.value, 'KIA');
     assert.equal(details.find(({ key }) => key === 'colorVehiculo1')?.value, 'No disponible');
@@ -19,6 +19,7 @@ test('vehicle details are defensive and preserve unavailable values', () => {
         details.map((item) => item.label),
         ['Marca', 'Modelo', 'Placa', 'Color'],
     );
+
     assert.equal(vehicleDetails({ mensaje: 'sin datos' }), null);
     assert.equal(vehicleDetails([]), null);
     assert.equal(
