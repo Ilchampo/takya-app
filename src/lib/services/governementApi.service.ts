@@ -1,7 +1,8 @@
 import type * as types from '../types.ts';
 
+import { debugFiscaliaPayload, debugVehiclePayload } from '../../data/debugLookups.data.ts';
 import { GovernmentApiError } from '../errors/service.errors.ts';
-import { abortError, serviceWrapper } from '../utils/service.utils.ts';
+import { abortError, delay, serviceWrapper } from '../utils/service.utils.ts';
 import { normalizePlate, tryNormalizePlate } from '../utils/licensePlate.utils.ts';
 import { asRecord } from '../utils/misc.utils.ts';
 import {
@@ -11,6 +12,9 @@ import {
 } from '../utils/privacy.utils.ts';
 
 import config from '../configs/app.config.ts';
+
+const DEBUG_SRI_DELAY_MS = 420;
+const DEBUG_FISCALIA_DELAY_MS = 780;
 
 const allowedSourceHosts = {
     SRI: 'srienlinea.sri.gob.ec',
@@ -87,6 +91,10 @@ const configuredSourceUrl = (value: string, source: SourceName): string => {
 };
 
 export const validateGovernmentApiConfig = (): string | null => {
+    if (config.debug) {
+        return null;
+    }
+
     try {
         configuredSourceUrl(config.source.SRI, 'SRI');
         configuredSourceUrl(config.source.fiscaliaEntry, 'Fiscalía');
@@ -98,6 +106,31 @@ export const validateGovernmentApiConfig = (): string | null => {
             ? error.message
             : 'Los servicios públicos no están configurados correctamente.';
     }
+};
+
+const usesMockLookups = (options: types.RequestOptions): boolean =>
+    config.debug && options.fetchImpl === undefined;
+
+const mockLookup = async (
+    plate: string,
+    data: Record<string, unknown>,
+    delayMs: number,
+    options: types.RequestOptions,
+): Promise<{ plate: string; data: Record<string, unknown>; diagnostics: types.Diagnostics }> => {
+    const startedAt = Date.now();
+
+    await delay(delayMs, options.signal);
+
+    return {
+        plate,
+        data,
+        diagnostics: {
+            stage: 'lookup',
+            status: 200,
+            contentType: 'application/json',
+            elapsedMs: Date.now() - startedAt,
+        },
+    };
 };
 
 type LookupProjector = (data: unknown) => unknown;
@@ -232,6 +265,11 @@ function request(
 
 export const lookupVehicle = async (value: string, options: types.RequestOptions = {}) => {
     const plate = normalizePlate(value);
+
+    if (usesMockLookups(options)) {
+        return mockLookup(plate, debugVehiclePayload(plate), DEBUG_SRI_DELAY_MS, options);
+    }
+
     const endpoint = configuredSourceUrl(config.source.SRI, 'SRI');
 
     const { data, diagnostics } = await request(
@@ -265,6 +303,15 @@ export const lookupVehicle = async (value: string, options: types.RequestOptions
 
 export const lookupFiscalia = async (value: string, options: types.FiscaliaOptions = {}) => {
     const plate = normalizePlate(value);
+
+    if (usesMockLookups(options)) {
+        if (options.initializeSession) {
+            options.onSessionInitialized?.();
+        }
+
+        return mockLookup(plate, debugFiscaliaPayload(plate), DEBUG_FISCALIA_DELAY_MS, options);
+    }
+
     const lookupEndpoint = configuredSourceUrl(config.source.fiscaliaLookup, 'Fiscalía');
 
     if (options.initializeSession) {

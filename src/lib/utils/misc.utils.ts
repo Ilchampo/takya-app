@@ -19,6 +19,24 @@ export const parseNonNegativeEnvInt = (value: string | undefined, fallback: numb
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
 };
 
+export const parseEnvBoolean = (value: string | undefined, fallback = false): boolean => {
+    if (value === undefined) {
+        return fallback;
+    }
+
+    const normalized = value.trim().toLowerCase();
+
+    if (['1', 'true', 'yes', 'on'].includes(normalized)) {
+        return true;
+    }
+
+    if (['0', 'false', 'no', 'off', ''].includes(normalized)) {
+        return false;
+    }
+
+    return fallback;
+};
+
 export const parseJson = (value: string): ParsedCacheJson => {
     try {
         const parsed = JSON.parse(value) as unknown;
