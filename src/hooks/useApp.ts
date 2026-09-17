@@ -21,6 +21,7 @@ export interface AppState {
     storageAvailable: boolean;
     theme: AppTheme;
     showLegal: boolean;
+    legalPage: types.LegalPage | null;
     showResult: boolean;
     closeResult: VoidFunction;
     refreshHistory: VoidFunction;
@@ -39,6 +40,7 @@ export interface AppState {
     openHistory: (key: string) => Promise<void>;
     closeHistory: VoidFunction;
     openLegal: VoidFunction;
+    openLegalPage: (page: Exclude<types.LegalPage, 'hub'>) => void;
     closeLegal: VoidFunction;
     toggleTheme: VoidFunction;
     clearHistory: () => Promise<boolean>;
@@ -57,7 +59,7 @@ export const useApp = (): AppState => {
     const [configurationError] = useState(validateGovernmentApiConfig);
     const [storageAvailable, setStorageAvailable] = useState(true);
     const [history, setHistory] = useState<types.LookupHistoryItem[]>([]);
-    const [showLegal, setShowLegal] = useState(false);
+    const [legalStack, setLegalStack] = useState<types.LegalPage[]>([]);
     const [showResult, setShowResult] = useState(false);
 
     const onStorageError = useCallback((): void => {
@@ -158,6 +160,9 @@ export const useApp = (): AppState => {
         };
     }, [configurationError, hydrateTheme]);
 
+    const legalPage = legalStack[legalStack.length - 1] ?? null;
+    const showLegal = legalPage !== null;
+
     useEffect(() => {
         if (!showLegal && !savedPlate && !showResult) {
             return;
@@ -165,7 +170,7 @@ export const useApp = (): AppState => {
 
         const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
             if (showLegal) {
-                setShowLegal(false);
+                setLegalStack((stack) => stack.slice(0, -1));
             } else if (showResult) {
                 closeResult();
             } else {
@@ -189,11 +194,23 @@ export const useApp = (): AppState => {
 
     const openLegal = useCallback((): void => {
         cancelSearch();
-        setShowLegal(true);
+        setLegalStack(['hub']);
     }, [cancelSearch]);
 
+    const openLegalPage = useCallback((page: Exclude<types.LegalPage, 'hub'>): void => {
+        setLegalStack((stack) => {
+            const current = stack[stack.length - 1];
+
+            if (current === page) {
+                return stack;
+            }
+
+            return [...stack, page];
+        });
+    }, []);
+
     const closeLegal = useCallback((): void => {
-        setShowLegal(false);
+        setLegalStack((stack) => stack.slice(0, -1));
     }, []);
 
     const clearHistory = useCallback(async (): Promise<boolean> => {
@@ -217,6 +234,7 @@ export const useApp = (): AppState => {
         storageAvailable,
         theme,
         showLegal,
+        legalPage,
         showResult,
         closeResult,
         refreshHistory,
@@ -235,6 +253,7 @@ export const useApp = (): AppState => {
         openHistory,
         closeHistory,
         openLegal,
+        openLegalPage,
         closeLegal,
         toggleTheme,
         clearHistory,

@@ -55,6 +55,8 @@ export type VehicleDetail = {
 
 export type ThemeMode = 'light' | 'dark';
 
+export type LegalPage = 'hub' | 'privacy' | 'terms';
+
 export type ServiceRequest<T> = (signal: AbortSignal) => Promise<T>;
 
 export type ServiceWrapperOptions = {
