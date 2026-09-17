@@ -1,8 +1,11 @@
 import type { AppTheme } from '../../theme/theme';
 import type * as types from '../../lib/types';
 
+import { useEffect, useState } from 'react';
 import {
     Alert,
+    Animated,
+    Easing,
     Keyboard,
     KeyboardAvoidingView,
     Platform,
@@ -24,6 +27,12 @@ import { TopBar } from '../../components/TopBar/TopBar';
 import config from '../../lib/configs/app.config';
 import styles from './HomeScreen.styles';
 
+const HERO_TOP_GAP = 12;
+const HEADER_SHEET_EXTRA = 12;
+const CONTENT_REVEAL_MS = 860;
+
+const contentEasing = Easing.bezier(0.22, 1, 0.36, 1);
+
 interface HomeScreenProps {
     theme: AppTheme;
     plate: string;
@@ -38,7 +47,8 @@ interface HomeScreenProps {
     onToggleTheme: VoidFunction;
     onClearHistory: () => Promise<boolean>;
     hideBrand?: boolean;
-    onHeroLayout?: (height: number) => void;
+    revealContent?: boolean;
+    onHeaderLayout?: (height: number) => void;
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
@@ -56,10 +66,21 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
         onToggleTheme,
         onClearHistory,
         hideBrand = false,
-        onHeroLayout,
+        revealContent = true,
+        onHeaderLayout,
     } = props;
 
     const insets = useSafeAreaInsets();
+    const [bodyOpacity] = useState(() => new Animated.Value(revealContent ? 1 : 0));
+
+    useEffect(() => {
+        Animated.timing(bodyOpacity, {
+            toValue: revealContent ? 1 : 0,
+            duration: revealContent ? CONTENT_REVEAL_MS : 0,
+            easing: contentEasing,
+            useNativeDriver: true,
+        }).start();
+    }, [revealContent, bodyOpacity]);
 
     const submit = (): void => {
         if (!loading && isValidPlate(plate)) {
@@ -117,13 +138,24 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                     contentContainerStyle={styles.content}
                     showsVerticalScrollIndicator={false}
                 >
-                    <Hero theme={theme} onHeight={onHeroLayout}>
-                        <TopBar
-                            theme={theme}
-                            onToggleTheme={onToggleTheme}
-                            onPrimary
-                            hideBrand={hideBrand}
-                        />
+                    <Hero theme={theme}>
+                        <View
+                            onLayout={(event) =>
+                                onHeaderLayout?.(
+                                    insets.top +
+                                        HERO_TOP_GAP +
+                                        event.nativeEvent.layout.height +
+                                        HEADER_SHEET_EXTRA,
+                                )
+                            }
+                        >
+                            <TopBar
+                                theme={theme}
+                                onToggleTheme={onToggleTheme}
+                                onPrimary
+                                hideBrand={hideBrand}
+                            />
+                        </View>
                         <View style={styles.intro}>
                             <Text style={[styles.eyebrow, { color: theme.colors.onPrimaryFaint }]}>
                                 ANTES DE SUBIR
@@ -139,7 +171,22 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                             </Text>
                         </View>
                     </Hero>
-                    <View style={styles.body}>
+                    <Animated.View
+                        style={[
+                            styles.body,
+                            {
+                                opacity: bodyOpacity,
+                                transform: [
+                                    {
+                                        translateY: bodyOpacity.interpolate({
+                                            inputRange: [0, 1],
+                                            outputRange: [18, 0],
+                                        }),
+                                    },
+                                ],
+                            },
+                        ]}
+                    >
                         <View
                             style={[
                                 styles.form,
@@ -318,7 +365,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                             </View>
                             <Icon name="chevron" size={18} color={theme.colors.textMuted} />
                         </Pressable>
-                    </View>
+                    </Animated.View>
                 </ScrollView>
             </KeyboardAvoidingView>
         </View>

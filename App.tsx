@@ -46,7 +46,9 @@ const AppContent = () => {
     } = useApp();
 
     const [splashVisible, setSplashVisible] = useState(true);
-    const [heroHeight, setHeroHeight] = useState(0);
+    const [headerHeight, setHeaderHeight] = useState(0);
+    const [revealHome, setRevealHome] = useState(false);
+
     const fontsReady = fontsLoaded || Boolean(fontError);
     const showingError = Boolean(configurationError);
     const showApp = ready && fontsReady && !configurationError;
@@ -87,7 +89,8 @@ const AppContent = () => {
                             onToggleTheme={toggleTheme}
                             onClearHistory={clearHistory}
                             hideBrand={splashVisible}
-                            onHeroLayout={setHeroHeight}
+                            revealContent={revealHome || !splashVisible}
+                            onHeaderLayout={setHeaderHeight}
                         />
                     )}
                     {!showLegal && !savedPlate && showResult && (
@@ -129,8 +132,9 @@ const AppContent = () => {
             {splashVisible && !configurationError && (
                 <SplashScreen
                     theme={theme}
-                    ready={showApp && heroHeight > 0}
-                    heroHeight={heroHeight}
+                    ready={showApp && headerHeight > 0}
+                    headerHeight={headerHeight}
+                    onMorphStart={() => setRevealHome(true)}
                     onFinished={() => setSplashVisible(false)}
                 />
             )}

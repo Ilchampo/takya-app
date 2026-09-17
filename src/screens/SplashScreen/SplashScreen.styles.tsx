@@ -8,6 +8,7 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         zIndex: 20,
+        backgroundColor: 'transparent',
     },
     sheet: {
         position: 'absolute',

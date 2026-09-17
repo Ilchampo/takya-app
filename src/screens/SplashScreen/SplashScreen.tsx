@@ -24,6 +24,7 @@ const HERO_MAX_WIDTH = 600;
 const HERO_GUTTER = 24;
 const HERO_TOP_GAP = 12;
 const TOPBAR_ROW = 48;
+const HEADER_SHEET_EXTRA = 12;
 const MIN_HOLD_MS = 520;
 const MORPH_MS = 860;
 const CREDIT_MS = 280;
@@ -34,7 +35,8 @@ type Box = { x: number; y: number; width: number; height: number };
 interface SplashScreenProps {
     theme: AppTheme;
     ready?: boolean;
-    heroHeight?: number;
+    headerHeight?: number;
+    onMorphStart?: VoidFunction;
     onFinished?: VoidFunction;
 }
 
@@ -51,14 +53,17 @@ const centerDelta = (from: Box, to: Box) => ({
 });
 
 export const SplashScreen: React.FC<SplashScreenProps> = (props) => {
-    const { theme, ready = false, heroHeight = 0, onFinished } = props;
+    const { theme, ready = false, headerHeight = 0, onMorphStart, onFinished } = props;
+
     const insets = useSafeAreaInsets();
+
     const { width, height } = useWindowDimensions();
 
     const markRef = useRef<View>(null);
     const wordRef = useRef<View>(null);
     const started = useRef(false);
     const mountedAt = useRef(0);
+    const onMorphStartRef = useRef(onMorphStart);
     const onFinishedRef = useRef(onFinished);
     const [progress] = useState(() => new Animated.Value(0));
     const [sheet] = useState(() => new Animated.Value(0));
@@ -75,8 +80,9 @@ export const SplashScreen: React.FC<SplashScreenProps> = (props) => {
     }, []);
 
     useEffect(() => {
+        onMorphStartRef.current = onMorphStart;
         onFinishedRef.current = onFinished;
-    }, [onFinished]);
+    }, [onMorphStart, onFinished]);
 
     const measure = (): void => {
         markRef.current?.measureInWindow((x, y, boxWidth, boxHeight) => {
@@ -118,6 +124,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = (props) => {
                 started.current = true;
 
                 if (reduceMotion) {
+                    onMorphStartRef.current?.();
                     Animated.timing(credit, {
                         toValue: 0,
                         duration: 220,
@@ -129,13 +136,18 @@ export const SplashScreen: React.FC<SplashScreenProps> = (props) => {
 
                 setAnimating(true);
 
-                Animated.sequence([
-                    Animated.timing(credit, {
-                        toValue: 0,
-                        duration: CREDIT_MS,
-                        easing: Easing.out(Easing.quad),
-                        useNativeDriver: true,
-                    }),
+                Animated.timing(credit, {
+                    toValue: 0,
+                    duration: CREDIT_MS,
+                    easing: Easing.out(Easing.quad),
+                    useNativeDriver: true,
+                }).start(({ finished }) => {
+                    if (!finished) {
+                        return;
+                    }
+
+                    onMorphStartRef.current?.();
+
                     Animated.parallel([
                         Animated.timing(progress, {
                             toValue: 1,
@@ -149,8 +161,8 @@ export const SplashScreen: React.FC<SplashScreenProps> = (props) => {
                             easing,
                             useNativeDriver: false,
                         }),
-                    ]),
-                ]).start(() => onFinishedRef.current?.());
+                    ]).start(() => onFinishedRef.current?.());
+                });
             });
         }, wait);
 
@@ -161,7 +173,8 @@ export const SplashScreen: React.FC<SplashScreenProps> = (props) => {
     const headerMarkHeight = markHeight(HEADER_MARK_WIDTH);
     const headerWordHeight = Math.round(HEADER_WORD_SIZE * 1.15);
     const headerTop = insets.top + HERO_TOP_GAP;
-    const targetHeight = heroHeight > 0 ? heroHeight : Math.round(height * 0.42);
+    const fallbackHeader = headerTop + TOPBAR_ROW + HEADER_SHEET_EXTRA;
+    const targetHeight = headerHeight > 0 ? headerHeight : fallbackHeader;
 
     const markTarget: Box = {
         x: gutter,
