@@ -37,6 +37,8 @@ interface HomeScreenProps {
     onOpenLegal: VoidFunction;
     onToggleTheme: VoidFunction;
     onClearHistory: () => Promise<boolean>;
+    hideBrand?: boolean;
+    onHeroLayout?: (height: number) => void;
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
@@ -53,6 +55,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
         onOpenLegal,
         onToggleTheme,
         onClearHistory,
+        hideBrand = false,
+        onHeroLayout,
     } = props;
 
     const insets = useSafeAreaInsets();
@@ -113,8 +117,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                     contentContainerStyle={styles.content}
                     showsVerticalScrollIndicator={false}
                 >
-                    <Hero theme={theme}>
-                        <TopBar theme={theme} onToggleTheme={onToggleTheme} onPrimary />
+                    <Hero theme={theme} onHeight={onHeroLayout}>
+                        <TopBar
+                            theme={theme}
+                            onToggleTheme={onToggleTheme}
+                            onPrimary
+                            hideBrand={hideBrand}
+                        />
                         <View style={styles.intro}>
                             <Text style={[styles.eyebrow, { color: theme.colors.onPrimaryFaint }]}>
                                 ANTES DE SUBIR

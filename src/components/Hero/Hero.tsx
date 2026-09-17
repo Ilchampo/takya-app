@@ -12,14 +12,16 @@ interface HeroProps {
     theme: AppTheme;
     children: ReactNode;
     compact?: boolean;
+    onHeight?: (height: number) => void;
 }
 
 export const Hero: React.FC<HeroProps> = (props) => {
-    const { theme, children, compact = false } = props;
+    const { theme, children, compact = false, onHeight } = props;
     const insets = useSafeAreaInsets();
 
     return (
         <View
+            onLayout={(event) => onHeight?.(event.nativeEvent.layout.height)}
             style={[
                 styles.hero,
                 compact ? styles.compact : styles.default,

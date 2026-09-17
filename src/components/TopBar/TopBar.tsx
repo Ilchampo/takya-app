@@ -15,10 +15,11 @@ interface TopBarProps {
     onBack?: VoidFunction;
     title?: string;
     onPrimary?: boolean;
+    hideBrand?: boolean;
 }
 
 export const TopBar: React.FC<TopBarProps> = (props) => {
-    const { theme, onToggleTheme, onBack, title, onPrimary = false } = props;
+    const { theme, onToggleTheme, onBack, title, onPrimary = false, hideBrand = false } = props;
 
     const ink = onPrimary ? theme.colors.onPrimary : theme.colors.text;
     const buttonBackground = onPrimary ? theme.colors.onPrimaryOverlay : theme.colors.surfaceMuted;
@@ -38,7 +39,9 @@ export const TopBar: React.FC<TopBarProps> = (props) => {
                     <Icon name="back" color={ink} size={20} />
                 </Pressable>
             ) : (
-                <TakyaBrand theme={theme} onPrimary={onPrimary} />
+                <View style={hideBrand ? styles.hiddenBrand : undefined}>
+                    <TakyaBrand theme={theme} onPrimary={onPrimary} />
+                </View>
             )}
             {title && (
                 <Text accessibilityRole="header" style={[styles.title, { color: ink }]}>

@@ -1,5 +1,8 @@
+import { useEffect, useState } from 'react';
+import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import * as ExpoSplashScreen from 'expo-splash-screen';
 import { useApp } from './src/hooks/useApp';
 
 import { ErrorBoundary } from './src/components/ErrorBoundary/ErrorBoundary';
@@ -42,21 +45,32 @@ const AppContent = () => {
         clearHistory,
     } = useApp();
 
-    const showingSplash = !ready || (!fontsLoaded && !fontError);
+    const [splashVisible, setSplashVisible] = useState(true);
+    const [heroHeight, setHeroHeight] = useState(0);
+    const fontsReady = fontsLoaded || Boolean(fontError);
     const showingError = Boolean(configurationError);
+    const showApp = ready && fontsReady && !configurationError;
+
+    useEffect(() => {
+        if (fontsReady) {
+            void ExpoSplashScreen.hideAsync().catch(() => undefined);
+        }
+    }, [fontsReady]);
+
+    if (!fontsReady) {
+        return null;
+    }
 
     return (
-        <>
-            <StatusBar style={theme.dark && (showingSplash || showingError) ? 'light' : 'dark'} />
-            {!ready || (!fontsLoaded && !fontError) ? (
-                <SplashScreen theme={theme} />
-            ) : configurationError ? (
+        <View style={{ flex: 1 }}>
+            <StatusBar style={theme.dark && showingError && !splashVisible ? 'light' : 'dark'} />
+            {configurationError ? (
                 <ErrorScreen
                     theme={theme}
                     title="Esta instalación no puede consultar"
                     message={configurationError}
                 />
-            ) : (
+            ) : showApp ? (
                 <>
                     {!showLegal && !savedPlate && !showResult && (
                         <HomeScreen
@@ -72,6 +86,8 @@ const AppContent = () => {
                             onOpenLegal={openLegal}
                             onToggleTheme={toggleTheme}
                             onClearHistory={clearHistory}
+                            hideBrand={splashVisible}
+                            onHeroLayout={setHeroHeight}
                         />
                     )}
                     {!showLegal && !savedPlate && showResult && (
@@ -109,8 +125,16 @@ const AppContent = () => {
                         />
                     )}
                 </>
+            ) : null}
+            {splashVisible && !configurationError && (
+                <SplashScreen
+                    theme={theme}
+                    ready={showApp && heroHeight > 0}
+                    heroHeight={heroHeight}
+                    onFinished={() => setSplashVisible(false)}
+                />
             )}
-        </>
+        </View>
     );
 };
 

@@ -10,10 +10,10 @@
         "splash": {
             "image": "./assets/splash-light.png",
             "resizeMode": "contain",
-            "backgroundColor": "#F6F6F3",
+            "backgroundColor": "#F7C702",
             "dark": {
                 "image": "./assets/splash-dark.png",
-                "backgroundColor": "#151914"
+                "backgroundColor": "#F7C702"
             }
         },
         "ios": {
@@ -43,12 +43,12 @@
             [
                 "expo-splash-screen",
                 {
-                    "backgroundColor": "#F6F6F3",
+                    "backgroundColor": "#F7C702",
                     "image": "./assets/splash-light.png",
                     "imageWidth": 154,
                     "resizeMode": "contain",
                     "dark": {
-                        "backgroundColor": "#151914",
+                        "backgroundColor": "#F7C702",
                         "image": "./assets/splash-dark.png"
                     }
                 }

@@ -18,6 +18,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    hiddenBrand: { opacity: 0 },
 });
 
 export default styles;
