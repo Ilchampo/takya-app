@@ -125,7 +125,7 @@ La Aplicación utiliza un mecanismo de enmascaramiento mediante el cual:
 
 Por ejemplo:
 
-`Juan Pablo Beltrán Flores`
+`Juan Pepito Batalla Floreros`
 
 puede mostrarse como:
 

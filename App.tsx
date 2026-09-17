@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as ExpoSplashScreen from 'expo-splash-screen';
 import { useApp } from './src/hooks/useApp';
 
+import { CreditFooter } from './src/components/CreditFooter/CreditFooter';
 import { ErrorBoundary } from './src/components/ErrorBoundary/ErrorBoundary';
 import { ErrorScreen } from './src/screens/ErrorScreen/ErrorScreen';
 import { HistoryScreen } from './src/screens/HistoryScreen/HistoryScreen';
@@ -77,7 +78,7 @@ const AppContent = () => {
                     message={configurationError}
                 />
             ) : showApp ? (
-                <>
+                <View style={{ flex: 1 }}>
                     {!showLegal && !savedPlate && !showResult && (
                         <HomeScreen
                             theme={theme}
@@ -144,7 +145,8 @@ const AppContent = () => {
                             }
                         />
                     )}
-                </>
+                    <CreditFooter theme={theme} />
+                </View>
             ) : null}
             {splashVisible && !configurationError && (
                 <SplashScreen

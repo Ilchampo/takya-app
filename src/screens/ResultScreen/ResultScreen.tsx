@@ -2,7 +2,6 @@ import type { AppTheme } from '../../theme/theme';
 import type * as types from '../../lib/types';
 
 import { ActivityIndicator, ScrollView, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { displayPlate, tryNormalizePlate } from '../../lib/utils/licensePlate.utils';
 import { formatLookupDate } from '../../lib/utils/date.utils';
 
@@ -44,15 +43,8 @@ export const ResultScreen: React.FC<ResultScreenProps> = (props) => {
         onOpenLegal,
     } = props;
 
-    const insets = useSafeAreaInsets();
-
     return (
-        <View
-            style={[
-                styles.safe,
-                { backgroundColor: theme.colors.background, paddingBottom: insets.bottom },
-            ]}
-        >
+        <View style={[styles.safe, { backgroundColor: theme.colors.background }]}>
             <Hero theme={theme} compact>
                 <TopBar
                     theme={theme}
@@ -111,7 +103,9 @@ export const ResultScreen: React.FC<ResultScreenProps> = (props) => {
                         seguridad.
                     </Text>
                 </View>
-                {loading && onCancel ? (
+                {saved ? (
+                    <Button label="Consultar otra placa" theme={theme} onPress={onBack} />
+                ) : loading && onCancel ? (
                     <Button
                         label="Cancelar consulta"
                         theme={theme}
@@ -119,18 +113,23 @@ export const ResultScreen: React.FC<ResultScreenProps> = (props) => {
                         onPress={onCancel}
                     />
                 ) : (
+                    <Button label="Consultar de nuevo" theme={theme} onPress={onRefresh} />
+                )}
+                {saved ? (
                     <Button
-                        label={saved ? 'Actualizar consulta' : 'Consultar de nuevo'}
+                        label="Actualizar consulta"
                         theme={theme}
+                        variant="secondary"
                         onPress={onRefresh}
                     />
+                ) : (
+                    <Button
+                        label="Consultar otra placa"
+                        theme={theme}
+                        variant="ghost"
+                        onPress={onBack}
+                    />
                 )}
-                <Button
-                    label="Consultar otra placa"
-                    theme={theme}
-                    variant="ghost"
-                    onPress={onBack}
-                />
                 <Button
                     label="Privacidad y uso responsable"
                     theme={theme}

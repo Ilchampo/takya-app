@@ -136,7 +136,7 @@ Takya aplica un mecanismo de enmascaramiento mediante el cual se mantiene única
 
 Por ejemplo:
 
-`Juan Pablo Beltrán Flores`
+`Juan Pepito Batalla Floreros`
 
 puede mostrarse como:
 

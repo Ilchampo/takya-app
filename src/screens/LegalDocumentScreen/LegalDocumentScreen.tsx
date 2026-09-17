@@ -3,7 +3,6 @@ import React, { Fragment } from 'react';
 import type { AppTheme } from '../../theme/theme';
 import type { LegalBlock, LegalDocument, LegalSpan } from '../../lib/interfaces/legal.interface.ts';
 import { Linking, ScrollView, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Hero } from '../../components/Hero/Hero';
 import { Icon } from '../../components/Icon/Icon';
@@ -225,15 +224,9 @@ const DocumentBlock: React.FC<BlockProps> = (props) => {
 
 export const LegalDocumentScreen: React.FC<LegalDocumentScreenProps> = (props) => {
     const { theme, document, onBack, onToggleTheme, onOpenPrivacyPolicy } = props;
-    const insets = useSafeAreaInsets();
 
     return (
-        <View
-            style={[
-                styles.safe,
-                { backgroundColor: theme.colors.background, paddingBottom: insets.bottom },
-            ]}
-        >
+        <View style={[styles.safe, { backgroundColor: theme.colors.background }]}>
             <Hero theme={theme} compact>
                 <TopBar
                     theme={theme}

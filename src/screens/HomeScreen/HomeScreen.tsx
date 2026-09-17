@@ -116,12 +116,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
     };
 
     return (
-        <View
-            style={[
-                styles.safe,
-                { backgroundColor: theme.colors.background, paddingBottom: insets.bottom },
-            ]}
-        >
+        <View style={[styles.safe, { backgroundColor: theme.colors.background }]}>
             <View
                 pointerEvents="none"
                 style={[
