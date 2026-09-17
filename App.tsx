@@ -7,6 +7,7 @@ import { ErrorScreen } from './src/screens/ErrorScreen/ErrorScreen';
 import { HistoryScreen } from './src/screens/HistoryScreen/HistoryScreen';
 import { HomeScreen } from './src/screens/HomeScreen/HomeScreen';
 import { LegalScreen } from './src/screens/LegalScreen/LegalScreen';
+import { ResultScreen } from './src/screens/ResultScreen/ResultScreen';
 import { SplashScreen } from './src/screens/SplashScreen/SplashScreen';
 
 const AppContent = () => {
@@ -18,6 +19,9 @@ const AppContent = () => {
         storageAvailable,
         theme,
         showLegal,
+        showResult,
+        closeResult,
+        refreshHistory,
         plate,
         history,
         result,
@@ -40,9 +44,9 @@ const AppContent = () => {
 
     return (
         <>
-            <StatusBar style={(!showLegal && !savedPlate) || !theme.dark ? 'dark' : 'light'} />
+            <StatusBar style={theme.dark ? 'light' : 'dark'} />
             {!ready || (!fontsLoaded && !fontError) ? (
-                <SplashScreen />
+                <SplashScreen theme={theme} />
             ) : configurationError ? (
                 <ErrorScreen
                     theme={theme}
@@ -51,23 +55,34 @@ const AppContent = () => {
                 />
             ) : (
                 <>
-                    {!showLegal && !savedPlate && (
+                    {!showLegal && !savedPlate && !showResult && (
                         <HomeScreen
                             theme={theme}
                             plate={plate}
-                            result={result}
                             history={history}
                             loading={loading}
                             error={error}
                             storageAvailable={storageAvailable}
                             onPlateChange={changePlate}
                             onSubmit={() => void runSearch(plate)}
-                            onRefresh={() => void runSearch(plate, { refresh: true })}
-                            onCancel={cancelSearch}
                             onOpenHistory={(recentPlate) => void openHistory(recentPlate)}
                             onOpenLegal={openLegal}
                             onToggleTheme={toggleTheme}
                             onClearHistory={clearHistory}
+                        />
+                    )}
+                    {!showLegal && !savedPlate && showResult && (
+                        <ResultScreen
+                            theme={theme}
+                            plate={plate}
+                            result={result}
+                            loading={loading}
+                            error={error}
+                            onBack={closeResult}
+                            onCancel={cancelSearch}
+                            onRefresh={() => void runSearch(plate, { refresh: true })}
+                            onToggleTheme={toggleTheme}
+                            onOpenLegal={openLegal}
                         />
                     )}
                     {!showLegal && savedPlate && (
@@ -78,6 +93,7 @@ const AppContent = () => {
                             loading={savedLoading}
                             error={savedError}
                             onBack={closeHistory}
+                            onRefresh={refreshHistory}
                             onToggleTheme={toggleTheme}
                             onOpenLegal={openLegal}
                         />

@@ -1,5 +1,4 @@
 import { StyleSheet } from 'react-native';
-import { fonts } from '../../theme/typography';
 
 const styles = StyleSheet.create({
     safe: {
@@ -11,29 +10,32 @@ const styles = StyleSheet.create({
         width: '100%',
         maxWidth: 520,
         alignSelf: 'center',
-        borderRadius: 24,
+        borderRadius: 20,
         padding: 24,
-        gap: 14,
+        gap: 16,
     },
     title: {
-        fontFamily: fonts.title,
         fontSize: 26,
-        lineHeight: 36,
+        lineHeight: 34,
+        fontWeight: '800',
+        letterSpacing: -0.5,
     },
     message: {
-        fontSize: 15,
-        lineHeight: 23,
+        fontSize: 16,
+        lineHeight: 25,
     },
     button: {
-        minHeight: 52,
+        minHeight: 56,
         marginTop: 8,
-        borderRadius: 16,
+        borderRadius: 14,
+        padding: 16,
         alignItems: 'center',
         justifyContent: 'center',
     },
     buttonText: {
         fontSize: 16,
-        fontWeight: '600',
+        lineHeight: 23,
+        fontWeight: '700',
     },
 });
 

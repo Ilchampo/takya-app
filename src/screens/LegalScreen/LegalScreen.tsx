@@ -6,6 +6,7 @@ import { Icon } from '../../components/Icon/Icon';
 import { Text } from '../../components/Text/Text';
 import { TopBar } from '../../components/TopBar/TopBar';
 
+import config from '../../lib/configs/app.config';
 import styles from './LegalScreen.styles';
 
 interface LegalScreenProps {
@@ -18,66 +19,73 @@ export const LegalScreen: React.FC<LegalScreenProps> = (props) => {
     const { theme, onBack, onToggleTheme } = props;
 
     return (
-        <SafeAreaView
-            style={[styles.safe, { backgroundColor: theme.colors.background }]}
-            edges={['top', 'bottom', 'left', 'right']}
-        >
-            <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-                <TopBar theme={theme} onBack={onBack} onToggleTheme={onToggleTheme} />
-                <View style={styles.heading}>
-                    <View style={[styles.icon, { backgroundColor: theme.colors.surfaceMuted }]}>
-                        <Icon name="shield" size={26} color={theme.colors.primaryPressed} />
-                    </View>
-                    <Text style={[styles.title, { color: theme.colors.text }]}>
-                        Privacidad y uso responsable
-                    </Text>
-                    <Text style={[styles.intro, { color: theme.colors.textMuted }]}>
-                        Takya acerca información pública sin convertirla en un juicio sobre una
-                        persona o un vehículo.
-                    </Text>
+        <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
+            <View style={styles.header}>
+                <TopBar
+                    theme={theme}
+                    onBack={onBack}
+                    title="Privacidad"
+                    onToggleTheme={onToggleTheme}
+                />
+            </View>
+            <ScrollView contentContainerStyle={styles.content}>
+                <View style={[styles.symbol, { backgroundColor: theme.colors.primary }]}>
+                    <Icon name="shield" size={29} color={theme.colors.onPrimary} />
                 </View>
-
-                <View
-                    style={[
-                        styles.card,
-                        {
-                            backgroundColor: theme.colors.surface,
-                            borderColor: theme.colors.border,
-                        },
-                    ]}
+                <Text
+                    accessibilityRole="header"
+                    style={[styles.title, { color: theme.colors.text }]}
                 >
-                    <Text style={[styles.cardTitle, { color: theme.colors.text }]}>
-                        Tus datos permanecen contigo
+                    Tu información.{'\n'}Bajo tu control.
+                </Text>
+                <Text style={[styles.intro, { color: theme.colors.textMuted }]}>
+                    Conoce qué consultas, dónde se guarda y cómo interpretar los resultados.
+                </Text>
+                <View style={[styles.section, { borderTopColor: theme.colors.border }]}>
+                    <Text
+                        accessibilityRole="header"
+                        style={[styles.subtitle, { color: theme.colors.text }]}
+                    >
+                        Directo a las fuentes
                     </Text>
                     <Text style={[styles.body, { color: theme.colors.textMuted }]}>
-                        No necesitas crear una cuenta. La placa se consulta directamente desde tu
-                        teléfono a las fuentes públicas y Takya no usa un servidor propio para
-                        recolectar, vender o analizar tus búsquedas.
-                    </Text>
-                    <View style={[styles.fact, { borderTopColor: theme.colors.border }]}>
-                        <Icon name="database" size={20} color={theme.colors.primaryPressed} />
-                        <Text style={[styles.factText, { color: theme.colors.text }]}>
-                            El historial local guarda hasta 5 consultas y elimina cada registro
-                            después de 3 días.
-                        </Text>
-                    </View>
-                </View>
-
-                <View style={[styles.notice, { backgroundColor: theme.colors.surfaceMuted }]}>
-                    <Icon name="info" size={22} color={theme.colors.primaryPressed} />
-                    <Text style={[styles.noticeText, { color: theme.colors.text }]}>
-                        La presencia o ausencia de registros no prueba culpabilidad, inocencia, ni
-                        que un vehículo sea seguro o inseguro. Contrasta siempre la información con
-                        las autoridades y con el vehículo que observas.
+                        La placa se consulta desde tu teléfono al SRI y a la Fiscalía. No necesitas
+                        una cuenta y Takya no utiliza un servidor propio para recolectar tus
+                        búsquedas.
                     </Text>
                 </View>
-
-                <View style={styles.disclaimer}>
-                    <Text style={[styles.kicker, { color: theme.colors.primaryPressed }]}>
-                        AVISO DE LA FISCALÍA GENERAL DEL ESTADO
+                <View style={[styles.section, { borderTopColor: theme.colors.border }]}>
+                    <Text
+                        accessibilityRole="header"
+                        style={[styles.subtitle, { color: theme.colors.text }]}
+                    >
+                        Un historial que tú controlas
                     </Text>
-                    <Text selectable style={[styles.body, { color: theme.colors.textMuted }]}>
-                        ACA EL LEGAL DISCLAIMER
+                    <Text style={[styles.body, { color: theme.colors.textMuted }]}>
+                        Se guardan hasta {config.service.historyLimit} consultas en este
+                        dispositivo, disponibles durante {config.service.ttlDays}{' '}
+                        {config.service.ttlDays === 1 ? 'día' : 'días'}. Puedes borrarlas desde la
+                        pantalla de inicio.
+                    </Text>
+                </View>
+                <View style={[styles.section, { borderTopColor: theme.colors.border }]}>
+                    <Text
+                        accessibilityRole="header"
+                        style={[styles.subtitle, { color: theme.colors.text }]}
+                    >
+                        Información para decidir
+                    </Text>
+                    <Text style={[styles.body, { color: theme.colors.textMuted }]}>
+                        La presencia o ausencia de registros no prueba culpabilidad, inocencia ni la
+                        seguridad de un vehículo. Contrasta los datos con el vehículo que observas
+                        y, cuando lo necesites, con las autoridades.
+                    </Text>
+                </View>
+                <View style={[styles.note, { backgroundColor: theme.colors.surfaceMuted }]}>
+                    <Icon name="info" size={20} color={theme.colors.textMuted} />
+                    <Text style={[styles.noteText, { color: theme.colors.textMuted }]}>
+                        Los nombres y estados que aparecen pertenecen al registro público. No
+                        confirman quién conduce el vehículo.
                     </Text>
                 </View>
             </ScrollView>

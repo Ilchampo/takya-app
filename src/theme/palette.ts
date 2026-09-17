@@ -2,7 +2,7 @@ import type { ThemeMode } from '../lib/types';
 
 /**
  * Edit colors here. Light and dark use the same keys so a token can be compared in one glance.
- * Brand: primary #F7C703, secondary #E4DFD9 (light canvas), black #2A323F.
+ * Brand: primary #F7C702, light canvas #F6F6F3, ink #20251F.
  * Native splash and adaptive icon in `app.json` still need a matching `primary` hex.
  */
 export type Palette = {
@@ -28,59 +28,60 @@ export type Palette = {
     shadow: string;
 };
 
+// One neutral scale per mode. Yellow belongs to the brand and the main action.
 export const palette: Record<ThemeMode, Palette> = {
     light: {
         // Surfaces
-        background: '#E4DFD9',
-        surface: '#F8F6F3',
-        surfaceMuted: '#EDE6D2',
-        surfaceStrong: '#D5D0CA',
-        border: '#C9C4BE',
+        background: '#F6F6F3',
+        surface: '#FFFFFF',
+        surfaceMuted: '#EEEFEB',
+        surfaceStrong: '#E2E4DE',
+        border: '#DDE0D9',
         // Content
-        text: '#2A323F',
-        textMuted: '#5C6570',
-        textFaint: '#7A8290',
+        text: '#20251F',
+        textMuted: '#62685F',
+        textFaint: '#6F766B',
         // Brand
-        primary: '#F7C703',
-        primaryPressed: '#C49F02',
-        onPrimary: '#2A323F',
-        onPrimaryMuted: '#4A5565',
-        onPrimaryFaint: '#6B7380',
-        onPrimaryOverlay: '#FFFFFF55',
+        primary: '#F7C702',
+        primaryPressed: '#DDB200',
+        onPrimary: '#20251F',
+        onPrimaryMuted: '#41473D',
+        onPrimaryFaint: '#575E51',
+        onPrimaryOverlay: '#FFFFFF66',
         // Status
-        success: '#19764A',
-        successMuted: '#E4F6EB',
-        danger: '#A33A25',
-        dangerMuted: '#FCE8E3',
+        success: '#367148',
+        successMuted: '#EDF4EE',
+        danger: '#A83C31',
+        dangerMuted: '#FAEFED',
         // Effects
-        overlay: 'rgba(42, 50, 63, 0.48)',
-        shadow: '#2A323F',
+        overlay: 'rgba(20,24,19,0.5)',
+        shadow: '#20251F',
     },
     dark: {
         // Surfaces
-        background: '#2A323F',
-        surface: '#343C4A',
-        surfaceMuted: '#3D3F2E',
-        surfaceStrong: '#3E4654',
-        border: '#4A5260',
+        background: '#151914',
+        surface: '#20261E',
+        surfaceMuted: '#2A3127',
+        surfaceStrong: '#343D30',
+        border: '#3C4537',
         // Content
-        text: '#F4F4F1',
-        textMuted: '#B0B6C0',
-        textFaint: '#8B93A0',
+        text: '#F3F4ED',
+        textMuted: '#B6BDAE',
+        textFaint: '#A2AB9A',
         // Brand
-        primary: '#F7C703',
-        primaryPressed: '#FFD54A',
-        onPrimary: '#2A323F',
-        onPrimaryMuted: '#4A5565',
-        onPrimaryFaint: '#6B7380',
-        onPrimaryOverlay: '#FFFFFF55',
+        primary: '#F7C702',
+        primaryPressed: '#DDB200',
+        onPrimary: '#20251F',
+        onPrimaryMuted: '#41473D',
+        onPrimaryFaint: '#575E51',
+        onPrimaryOverlay: '#FFFFFF66',
         // Status
-        success: '#78D6A2',
-        successMuted: '#173D2B',
-        danger: '#FF9B88',
-        dangerMuted: '#44231D',
+        success: '#A8D4AF',
+        successMuted: '#263C2A',
+        danger: '#F1A69A',
+        dangerMuted: '#3F2924',
         // Effects
-        overlay: 'rgba(42, 50, 63, 0.56)',
-        shadow: '#2A323F',
+        overlay: 'rgba(0,0,0,0.6)',
+        shadow: '#000000',
     },
 };

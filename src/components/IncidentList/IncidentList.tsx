@@ -1,28 +1,95 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import type { FiscaliaIncident } from '../../lib/interfaces/incident.interface';
 import type * as types from '../../lib/types';
+import type { AppTheme } from '../../theme/theme';
 
-import { StyleSheet, View } from 'react-native';
-import { flaggedPersonFromSubject, projectedIncidentRecords } from '../../data/incidents.data';
+import { Pressable, View } from 'react-native';
+import { projectedIncidentRecords } from '../../data/incidents.data';
+import { Icon } from '../Icon/Icon';
 import { Text } from '../Text/Text';
 
 import config from '../../lib/configs/app.config';
 import styles from './IncidentList.styles';
 
-type GeneralIncidentField = keyof Pick<
-    FiscaliaIncident,
-    'gen_delito_tipopenal' | 'ciudad' | 'fecha' | 'hora'
->;
+interface IncidentItemProps {
+    incident: FiscaliaIncident;
+    theme: AppTheme;
+}
 
-const fields: { key: GeneralIncidentField; label: string }[] = [
-    { key: 'gen_delito_tipopenal', label: 'Delito' },
-    { key: 'ciudad', label: 'Ciudad' },
-    { key: 'fecha', label: 'Fecha' },
-    { key: 'hora', label: 'Hora' },
-];
+const IncidentItem: React.FC<IncidentItemProps> = (props) => {
+    const { incident, theme } = props;
+    const [open, setOpen] = useState(false);
 
-const displayValue = (value: string): string => (value.trim() ? value.trim() : 'No disponible');
+    return (
+        <View style={[styles.record, { borderTopColor: theme.colors.border }]}>
+            <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ expanded: open }}
+                accessibilityLabel={`${incident.gen_delito_tipopenal}, ${incident.fecha}. ${open ? 'Ocultar' : 'Ver'} detalle`}
+                onPress={() => setOpen(!open)}
+                style={({ pressed }) => [styles.recordHeader, { opacity: pressed ? 0.6 : 1 }]}
+            >
+                <View style={styles.copy}>
+                    <Text style={[styles.recordTitle, { color: theme.colors.text }]}>
+                        {incident.gen_delito_tipopenal}
+                    </Text>
+                    <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
+                        {incident.ciudad} · {incident.fecha}
+                    </Text>
+                    <Text style={[styles.link, { color: theme.colors.text }]}>
+                        {open ? 'Ocultar detalle' : 'Ver detalle'}
+                    </Text>
+                </View>
+                <View style={open ? styles.chevronOpen : undefined}>
+                    <Icon name="chevron" color={theme.colors.textMuted} size={18} />
+                </View>
+            </Pressable>
+            {open && (
+                <View style={styles.details}>
+                    <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
+                        Hora del registro: {incident.hora}
+                    </Text>
+                    <Text style={[styles.recordTitle, { color: theme.colors.text }]}>
+                        Personas señaladas
+                    </Text>
+                    <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
+                        El estado registrado no confirma culpabilidad ni que la persona sea
+                        propietaria o conductora del vehículo.
+                    </Text>
+                    {incident.sujetos.length ? (
+                        incident.sujetos.map((person) => (
+                            <View
+                                key={`${person.tipo}-${person.persona}`}
+                                style={[
+                                    styles.person,
+                                    { backgroundColor: theme.colors.surfaceMuted },
+                                ]}
+                            >
+                                <Text
+                                    selectable
+                                    style={[styles.personName, { color: theme.colors.text }]}
+                                >
+                                    {person.persona}
+                                </Text>
+                                <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
+                                    Estado: {person.tipo}
+                                </Text>
+                                <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
+                                    Primer apellido: {person.persona.split(' ')[0]}
+                                </Text>
+                            </View>
+                        ))
+                    ) : (
+                        <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
+                            No hay nombres disponibles con los estados seleccionados.
+                        </Text>
+                    )}
+                </View>
+            )}
+        </View>
+    );
+};
 
 export const IncidentList: React.FC<types.SuccessBodyProps> = (props) => {
     const { data, theme } = props;
@@ -32,110 +99,28 @@ export const IncidentList: React.FC<types.SuccessBodyProps> = (props) => {
 
     if (!incidents) {
         return (
-            <Text style={[styles.note, { color: theme.colors.textMuted }]}>
-                La respuesta no contiene registros de Fiscalía que podamos mostrar.
-            </Text>
-        );
-    }
-
-    if (incidents.length === 0) {
-        return (
-            <Text style={[styles.note, { color: theme.colors.textMuted }]}>
-                No se encontraron noticias del delito para esta placa en los últimos {months}{' '}
-                {months === 1 ? 'mes' : 'meses'}.
+            <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
+                La fuente no devolvió registros que podamos mostrar.
             </Text>
         );
     }
 
     return (
         <View style={styles.list}>
+            <Text style={[styles.summary, { color: theme.colors.text }]}>
+                {incidents.length === 0
+                    ? 'Sin registros en el período consultado'
+                    : `${incidents.length} ${incidents.length === 1 ? 'registro encontrado' : 'registros encontrados'}`}
+            </Text>
+            <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
+                Noticias del delito · Últimos {months} {months === 1 ? 'mes' : 'meses'}
+            </Text>
             {incidents.map((incident, index) => (
-                <View
-                    key={`${incident.fecha}-${incident.hora}-${incident.ciudad}-${index}`}
-                    style={[
-                        styles.card,
-                        index > 0 && {
-                            borderTopWidth: StyleSheet.hairlineWidth,
-                            borderTopColor: theme.colors.border,
-                        },
-                    ]}
-                >
-                    {fields.map((field) => (
-                        <View key={field.key} style={styles.detail}>
-                            <Text style={[styles.label, { color: theme.colors.textMuted }]}>
-                                {field.label}
-                            </Text>
-                            <Text selectable style={[styles.value, { color: theme.colors.text }]}>
-                                {displayValue(incident[field.key])}
-                            </Text>
-                        </View>
-                    ))}
-                    <View
-                        style={[
-                            styles.people,
-                            {
-                                borderTopColor: theme.colors.border,
-                                backgroundColor: theme.colors.surfaceMuted,
-                            },
-                        ]}
-                    >
-                        <Text style={[styles.peopleTitle, { color: theme.colors.text }]}>
-                            Personas señaladas en el registro
-                        </Text>
-                        <Text style={[styles.peopleNotice, { color: theme.colors.textMuted }]}>
-                            Estos estados no confirman culpabilidad ni que la persona sea
-                            propietaria o conductora del vehículo.
-                        </Text>
-                        {incident.sujetos.length > 0 ? (
-                            incident.sujetos.map((subject) => {
-                                const person = flaggedPersonFromSubject(subject);
-
-                                return (
-                                    <View
-                                        key={`${person.estado}-${person.nombreCompleto}`}
-                                        style={[
-                                            styles.person,
-                                            {
-                                                backgroundColor: theme.colors.surface,
-                                                borderColor: theme.colors.border,
-                                            },
-                                        ]}
-                                    >
-                                        <Text
-                                            selectable
-                                            style={[
-                                                styles.personName,
-                                                { color: theme.colors.text },
-                                            ]}
-                                        >
-                                            {person.nombreCompleto}
-                                        </Text>
-                                        <Text
-                                            style={[
-                                                styles.personStatus,
-                                                { color: theme.colors.primaryPressed },
-                                            ]}
-                                        >
-                                            Estado registrado: {person.estado}
-                                        </Text>
-                                        <Text
-                                            style={[
-                                                styles.surnameHint,
-                                                { color: theme.colors.textMuted },
-                                            ]}
-                                        >
-                                            Primer apellido para comparar: {person.primerApellido}
-                                        </Text>
-                                    </View>
-                                );
-                            })
-                        ) : (
-                            <Text style={[styles.noPeople, { color: theme.colors.textMuted }]}>
-                                No hay nombres válidos con los estados seleccionados.
-                            </Text>
-                        )}
-                    </View>
-                </View>
+                <IncidentItem
+                    key={`${incident.fecha}-${index}`}
+                    incident={incident}
+                    theme={theme}
+                />
             ))}
         </View>
     );

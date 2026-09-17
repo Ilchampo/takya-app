@@ -9,6 +9,7 @@ import { validateGovernmentApiConfig } from '../lib/services/governementApi.serv
 import { useAppTheme } from './useAppTheme';
 import { usePlateSearch } from './usePlateSearch';
 import { useSavedLookup } from './useSavedLookup';
+import { isValidPlate } from '../lib/utils/licensePlate.utils';
 
 import * as dbService from '../lib/services/database.service';
 
@@ -20,6 +21,9 @@ export interface AppState {
     storageAvailable: boolean;
     theme: AppTheme;
     showLegal: boolean;
+    showResult: boolean;
+    closeResult: VoidFunction;
+    refreshHistory: VoidFunction;
     plate: string;
     history: types.LookupHistoryItem[];
     result: types.LookupProgress | null;
@@ -54,6 +58,7 @@ export const useApp = (): AppState => {
     const [storageAvailable, setStorageAvailable] = useState(true);
     const [history, setHistory] = useState<types.LookupHistoryItem[]>([]);
     const [showLegal, setShowLegal] = useState(false);
+    const [showResult, setShowResult] = useState(false);
 
     const onStorageError = useCallback((): void => {
         setStorageAvailable(false);
@@ -63,7 +68,15 @@ export const useApp = (): AppState => {
         onStorageError,
     });
 
-    const { plate, result, loading, error, changePlate, runSearch, cancelSearch } = usePlateSearch({
+    const {
+        plate,
+        result,
+        loading,
+        error,
+        changePlate,
+        runSearch: searchPlate,
+        cancelSearch,
+    } = usePlateSearch({
         onHistoryChange: setHistory,
         onStorageError,
     });
@@ -78,6 +91,34 @@ export const useApp = (): AppState => {
     } = useSavedLookup({
         onHistoryChange: setHistory,
     });
+
+    const runSearch = useCallback(
+        async (value: string, options?: { refresh?: boolean }): Promise<void> => {
+            if (isValidPlate(value)) {
+                setShowResult(true);
+            }
+
+            await searchPlate(value, options);
+        },
+        [searchPlate],
+    );
+
+    const closeResult = useCallback((): void => {
+        cancelSearch();
+        setShowResult(false);
+    }, [cancelSearch]);
+
+    const refreshHistory = useCallback((): void => {
+        if (!savedPlate) {
+            return;
+        }
+
+        const value = savedPlate;
+
+        closeHistory();
+        changePlate(value);
+        void runSearch(value, { refresh: true });
+    }, [savedPlate, closeHistory, changePlate, runSearch]);
 
     useEffect(() => {
         let active = true;
@@ -118,13 +159,15 @@ export const useApp = (): AppState => {
     }, [configurationError, hydrateTheme]);
 
     useEffect(() => {
-        if (!showLegal && !savedPlate) {
+        if (!showLegal && !savedPlate && !showResult) {
             return;
         }
 
         const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
             if (showLegal) {
                 setShowLegal(false);
+            } else if (showResult) {
+                closeResult();
             } else {
                 closeHistory();
             }
@@ -133,11 +176,12 @@ export const useApp = (): AppState => {
         });
 
         return () => subscription.remove();
-    }, [showLegal, savedPlate, closeHistory]);
+    }, [showLegal, savedPlate, showResult, closeHistory, closeResult]);
 
     const openHistory = useCallback(
         async (key: string): Promise<void> => {
             cancelSearch();
+            setShowResult(false);
             await openSavedHistory(key);
         },
         [cancelSearch, openSavedHistory],
@@ -173,6 +217,9 @@ export const useApp = (): AppState => {
         storageAvailable,
         theme,
         showLegal,
+        showResult,
+        closeResult,
+        refreshHistory,
         plate,
         history,
         result,

@@ -87,7 +87,7 @@ export const usePlateSearch = ({
             setResult(null);
 
             try {
-                await searchPlate(normalized, {
+                const completed = await searchPlate(normalized, {
                     signal: controller.signal,
                     refresh: options?.refresh,
                     onUpdate: (next) => {
@@ -100,6 +100,8 @@ export const usePlateSearch = ({
                 if (!isCurrent()) {
                     return;
                 }
+
+                setResult(completed);
 
                 try {
                     const recent = await dbService.listLookupHistory();

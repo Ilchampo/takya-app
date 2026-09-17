@@ -1,36 +1,40 @@
 import React from 'react';
 
-import { Image, View } from 'react-native';
+import type { AppTheme } from '../../theme/theme';
+
+import { ActivityIndicator, useColorScheme, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { isLoaded } from 'expo-font';
-import { AstrobitLogo } from '../../components/Brand/Brand';
+import { TakyaBrand } from '../../components/Brand/Brand';
 import { Text } from '../../components/Text/Text';
-import { palette } from '../../theme/palette';
-import { fonts } from '../../theme/typography';
+import { createTheme } from '../../theme/theme';
 
 import styles from './SplashScreen.styles';
 
-export const SplashScreen: React.FC = () => (
-    <SafeAreaView style={styles.screen}>
-        <View style={styles.hero}>
-            <Image
-                source={require('../../../assets/taxi.png')}
-                style={styles.taxi}
-                resizeMode="contain"
-            />
-            <Text
-                style={[
-                    styles.wordmark,
-                    { fontFamily: isLoaded(fonts.title) ? fonts.title : undefined },
-                ]}
-            >
-                Takya
+interface SplashScreenProps {
+    theme?: AppTheme;
+}
+
+export const SplashScreen: React.FC<SplashScreenProps> = (props) => {
+    const { theme } = props;
+
+    const system = useColorScheme();
+    const current = theme ?? createTheme(system === 'dark' ? 'dark' : 'light');
+
+    return (
+        <SafeAreaView style={[styles.screen, { backgroundColor: current.colors.background }]}>
+            <View style={styles.center}>
+                <TakyaBrand theme={current} full width={154} />
+                <Text style={[styles.tagline, { color: current.colors.textMuted }]}>
+                    Información para tu camino.
+                </Text>
+                <ActivityIndicator
+                    color={current.colors.text}
+                    accessibilityLabel="Cargando Takya"
+                />
+            </View>
+            <Text style={[styles.credit, { color: current.colors.textMuted }]}>
+                Hecho por Astrobit
             </Text>
-            <Text style={styles.tagline}>Información pública, más cerca.</Text>
-        </View>
-        <View style={styles.madeBy}>
-            <Text style={styles.created}>CREADO POR</Text>
-            <AstrobitLogo color={palette.light.onPrimary} />
-        </View>
-    </SafeAreaView>
-);
+        </SafeAreaView>
+    );
+};

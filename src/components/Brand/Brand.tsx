@@ -2,66 +2,56 @@ import React from 'react';
 
 import type { AppTheme } from '../../theme/theme';
 
-import { Image, View } from 'react-native';
-import { isLoaded } from 'expo-font';
-import Svg, { Circle, Path } from 'react-native-svg';
-import { fonts } from '../../theme/typography';
-import { Text } from '../Text/Text';
+import Svg, { G, Path } from 'react-native-svg';
 
-import styles from './Brand.styles';
+import { logoPaths } from './logoPaths';
 
-interface TakyaBrandProps {
+interface LogoProps {
     theme: AppTheme;
+    full?: boolean;
+    width?: number;
     onPrimary?: boolean;
 }
 
-interface AstrobitLogoProps {
-    color: string;
-}
+// All paths come from the original full logo, including the outlined wordmark.
+export const TakyaBrand: React.FC<LogoProps> = (props) => {
+    const { theme, full = false, width, onPrimary = false } = props;
 
-export const TakyaBrand: React.FC<TakyaBrandProps> = (props) => {
-    const { theme, onPrimary = false } = props;
-
-    const color = onPrimary ? theme.colors.onPrimary : theme.colors.text;
+    const ink = onPrimary ? theme.colors.onPrimary : theme.colors.text;
+    const size = width ?? (full ? 144 : 112);
 
     return (
-        <View style={styles.takyaRow} accessibilityLabel="Takya">
-            <Image
-                source={require('../../../assets/icon.png')}
-                style={styles.icon}
-                accessibilityIgnoresInvertColors
-            />
-            <Text
-                style={[
-                    styles.wordmark,
-                    {
-                        color,
-                        fontFamily: isLoaded(fonts.title) ? fonts.title : undefined,
-                    },
-                ]}
-            >
-                Takya
-            </Text>
-        </View>
-    );
-};
-
-export const AstrobitLogo: React.FC<AstrobitLogoProps> = (props) => {
-    const { color } = props;
-
-    return (
-        <View style={styles.astrobitRow} accessibilityLabel="Astrobit">
-            <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" accessibilityElementsHidden>
-                <Circle cx="12" cy="12" r="3.2" fill={color} />
-                <Path
-                    d="M3.5 14.8c2.7 2 8.1 1.4 12.1-1.4s5-6.7 2.3-8.2c-2.1-1.2-5.8-.2-8.9 2"
-                    stroke={color}
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                />
-                <Circle cx="18.3" cy="5.4" r="1.4" fill={color} />
-            </Svg>
-            <Text style={[styles.astrobitText, { color }]}>ASTROBIT</Text>
-        </View>
+        <Svg
+            width={size}
+            height={full ? (size * 119.45782) / 94.294677 : (size * 42) / 126}
+            viewBox={full ? '0 0 94.294677 119.45782' : '0 0 126 42'}
+            accessibilityRole="image"
+            accessibilityLabel="Takya"
+        >
+            {full ? (
+                <G transform="translate(-3081.4359,671.749)">
+                    {logoPaths.map((p) => (
+                        <Path key={p.id} d={p.d} fill={p.yellow ? theme.colors.primary : ink} />
+                    ))}
+                </G>
+            ) : (
+                <>
+                    <G transform="scale(0.42) translate(-3081.4359,671.749)">
+                        {logoPaths
+                            .filter((p) => p.id !== 'text91')
+                            .map((p) => (
+                                <Path
+                                    key={p.id}
+                                    d={p.d}
+                                    fill={p.yellow ? theme.colors.primary : ink}
+                                />
+                            ))}
+                    </G>
+                    <G transform="translate(48,8) scale(1.38) translate(-3101.7925,572)">
+                        <Path d={logoPaths[0].d} fill={ink} />
+                    </G>
+                </>
+            )}
+        </Svg>
     );
 };
