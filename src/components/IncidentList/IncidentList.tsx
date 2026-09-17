@@ -6,6 +6,11 @@ import type { AppTheme } from '../../theme/theme';
 
 import { Pressable, View } from 'react-native';
 import { projectedIncidentRecords } from '../../data/incidents.data';
+import {
+    MASKED_NAME_PRIVACY_LABEL,
+    maskPersonName,
+    PEOPLE_NAME_PRIVACY_NOTE,
+} from '../../lib/utils/personName.utils';
 import { Icon } from '../Icon/Icon';
 import { Text } from '../Text/Text';
 
@@ -54,32 +59,44 @@ const IncidentItem: React.FC<IncidentItemProps> = (props) => {
                         Personas señaladas
                     </Text>
                     <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
+                        {PEOPLE_NAME_PRIVACY_NOTE}
+                    </Text>
+                    <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
                         El estado registrado no confirma culpabilidad ni que la persona sea
                         propietaria o conductora del vehículo.
                     </Text>
                     {incident.sujetos.length ? (
-                        incident.sujetos.map((person) => (
-                            <View
-                                key={`${person.tipo}-${person.persona}`}
-                                style={[
-                                    styles.person,
-                                    { backgroundColor: theme.colors.surfaceMuted },
-                                ]}
-                            >
-                                <Text
-                                    selectable
-                                    style={[styles.personName, { color: theme.colors.text }]}
+                        incident.sujetos.map((person, index) => {
+                            const displayName = maskPersonName(person.persona);
+
+                            return (
+                                <View
+                                    key={`${person.tipo}-${displayName}-${index}`}
+                                    style={[
+                                        styles.person,
+                                        { backgroundColor: theme.colors.surfaceMuted },
+                                    ]}
                                 >
-                                    {person.persona}
-                                </Text>
-                                <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
-                                    Estado: {person.tipo}
-                                </Text>
-                                <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
-                                    Primer apellido: {person.persona.split(' ')[0]}
-                                </Text>
-                            </View>
-                        ))
+                                    <Text
+                                        selectable
+                                        style={[styles.personName, { color: theme.colors.text }]}
+                                    >
+                                        {displayName}
+                                    </Text>
+                                    <Text
+                                        style={[
+                                            styles.privacyLabel,
+                                            { color: theme.colors.textMuted },
+                                        ]}
+                                    >
+                                        {MASKED_NAME_PRIVACY_LABEL}
+                                    </Text>
+                                    <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
+                                        Estado: {person.tipo}
+                                    </Text>
+                                </View>
+                            );
+                        })
                     ) : (
                         <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
                             No hay nombres disponibles con los estados seleccionados.

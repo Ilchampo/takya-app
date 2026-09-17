@@ -8,6 +8,7 @@ import type {
 
 import { isWithinLookback, parseCalendarDate } from '../lib/utils/date.utils.ts';
 import { asRecord, asText } from '../lib/utils/misc.utils.ts';
+import { maskPersonName } from '../lib/utils/personName.utils.ts';
 
 const flaggedStatuses = new Set<FlaggedPersonStatus>([
     'SOSPECHOSO',
@@ -58,7 +59,7 @@ const flaggedSubjects = (value: unknown): FiscaliaSubject[] => {
             }
 
             seen.add(key);
-            people.push({ persona, tipo });
+            people.push({ persona: maskPersonName(persona), tipo });
         }
     }
 
@@ -109,11 +110,15 @@ const toIncident = (incident: FiscaliaIncident): Incident => ({
     personasSenaladas: incident.sujetos.map(flaggedPersonFromSubject),
 });
 
-export const flaggedPersonFromSubject = (subject: FiscaliaSubject): FlaggedPerson => ({
-    nombreCompleto: subject.persona,
-    primerApellido: subject.persona.split(' ')[0] || subject.persona,
-    estado: subject.tipo,
-});
+export const flaggedPersonFromSubject = (subject: FiscaliaSubject): FlaggedPerson => {
+    const nombreCompleto = maskPersonName(subject.persona);
+
+    return {
+        nombreCompleto,
+        primerApellido: nombreCompleto.split(' ')[0] || nombreCompleto,
+        estado: subject.tipo,
+    };
+};
 
 export const fiscaliaIncidents = (
     data: unknown,
