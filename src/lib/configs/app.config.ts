@@ -1,7 +1,11 @@
 import type { Config } from '../interfaces/config.interface';
 
 import { daysToMilliSeconds, secondsTomilliSeconds } from '../utils/date.utils.ts';
-import { parsePositiveEnvInt, parseNonNegativeEnvInt } from '../utils/misc.utils.ts';
+import {
+    parseEnvBoolean,
+    parseNonNegativeEnvInt,
+    parsePositiveEnvInt,
+} from '../utils/misc.utils.ts';
 
 const TTL_DAYS = 3 as const;
 const TIMEOUT = 10 as const;
@@ -37,8 +41,10 @@ const incidentMonths = parsePositiveEnvInt(
     process.env.EXPO_PUBLIC_APP_INCIDENT_MONTHS,
     INCIDENT_MONTHS,
 );
+const debug = parseEnvBoolean(process.env.EXPO_PUBLIC_APP_DEBUG);
 
 const config: Config = {
+    debug,
     source: {
         SRI: process.env.EXPO_PUBLIC_SRI_URL ?? '',
         fiscaliaLookup: process.env.EXPO_PUBLIC_FISCALIA_LOOKUP_URL ?? '',

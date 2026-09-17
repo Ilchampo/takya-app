@@ -22,6 +22,7 @@ interface Service {
 }
 
 export interface Config {
+    debug: boolean;
     source: Source;
     service: Service;
 }
