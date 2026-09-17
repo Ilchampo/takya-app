@@ -9,9 +9,11 @@ import { ErrorBoundary } from './src/components/ErrorBoundary/ErrorBoundary';
 import { ErrorScreen } from './src/screens/ErrorScreen/ErrorScreen';
 import { HistoryScreen } from './src/screens/HistoryScreen/HistoryScreen';
 import { HomeScreen } from './src/screens/HomeScreen/HomeScreen';
+import { LegalDocumentScreen } from './src/screens/LegalDocumentScreen/LegalDocumentScreen';
 import { LegalScreen } from './src/screens/LegalScreen/LegalScreen';
 import { ResultScreen } from './src/screens/ResultScreen/ResultScreen';
 import { SplashScreen } from './src/screens/SplashScreen/SplashScreen';
+import { legalDocuments } from './src/data/legal.data';
 
 const AppContent = () => {
     const {
@@ -22,6 +24,7 @@ const AppContent = () => {
         storageAvailable,
         theme,
         showLegal,
+        legalPage,
         showResult,
         closeResult,
         refreshHistory,
@@ -40,6 +43,7 @@ const AppContent = () => {
         openHistory,
         closeHistory,
         openLegal,
+        openLegalPage,
         closeLegal,
         toggleTheme,
         clearHistory,
@@ -120,11 +124,24 @@ const AppContent = () => {
                             onOpenLegal={openLegal}
                         />
                     )}
-                    {showLegal && (
+                    {legalPage === 'hub' && (
                         <LegalScreen
                             theme={theme}
                             onBack={closeLegal}
                             onToggleTheme={toggleTheme}
+                            onOpenPrivacyPolicy={() => openLegalPage('privacy')}
+                            onOpenTermsOfService={() => openLegalPage('terms')}
+                        />
+                    )}
+                    {legalPage && legalPage !== 'hub' && (
+                        <LegalDocumentScreen
+                            theme={theme}
+                            document={legalDocuments[legalPage]}
+                            onBack={closeLegal}
+                            onToggleTheme={toggleTheme}
+                            onOpenPrivacyPolicy={
+                                legalPage === 'terms' ? () => openLegalPage('privacy') : undefined
+                            }
                         />
                     )}
                 </>

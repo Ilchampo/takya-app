@@ -1,6 +1,8 @@
 import type { AppTheme } from '../../theme/theme';
+import type { IconName } from '../../lib/types.ts';
 
-import { ScrollView, View } from 'react-native';
+import React from 'react';
+import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Hero } from '../../components/Hero/Hero';
 import { Icon } from '../../components/Icon/Icon';
@@ -14,10 +16,47 @@ interface LegalScreenProps {
     theme: AppTheme;
     onBack: VoidFunction;
     onToggleTheme: VoidFunction;
+    onOpenPrivacyPolicy: VoidFunction;
+    onOpenTermsOfService: VoidFunction;
 }
 
+interface DocumentLinkProps {
+    theme: AppTheme;
+    icon: IconName;
+    title: string;
+    subtitle: string;
+    onPress: VoidFunction;
+}
+
+const DocumentLink: React.FC<DocumentLinkProps> = (props) => {
+    const { theme, icon, title, subtitle, onPress } = props;
+
+    return (
+        <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={title}
+            onPress={onPress}
+            style={({ pressed }) => [
+                styles.documentRow,
+                { borderBottomColor: theme.colors.border, opacity: pressed ? 0.55 : 1 },
+            ]}
+        >
+            <View style={[styles.documentIcon, { backgroundColor: theme.colors.surfaceMuted }]}>
+                <Icon name={icon} size={21} color={theme.colors.text} />
+            </View>
+            <View style={styles.documentCopy}>
+                <Text style={[styles.documentTitle, { color: theme.colors.text }]}>{title}</Text>
+                <Text style={[styles.documentSubtitle, { color: theme.colors.textMuted }]}>
+                    {subtitle}
+                </Text>
+            </View>
+            <Icon name="chevron" size={18} color={theme.colors.textMuted} />
+        </Pressable>
+    );
+};
+
 export const LegalScreen: React.FC<LegalScreenProps> = (props) => {
-    const { theme, onBack, onToggleTheme } = props;
+    const { theme, onBack, onToggleTheme, onOpenPrivacyPolicy, onOpenTermsOfService } = props;
     const insets = useSafeAreaInsets();
 
     return (
@@ -31,7 +70,7 @@ export const LegalScreen: React.FC<LegalScreenProps> = (props) => {
                 <TopBar
                     theme={theme}
                     onBack={onBack}
-                    title="Privacidad"
+                    title="Privacidad y uso"
                     onToggleTheme={onToggleTheme}
                     onPrimary
                 />
@@ -95,6 +134,28 @@ export const LegalScreen: React.FC<LegalScreenProps> = (props) => {
                         Los nombres y estados que aparecen pertenecen al registro público. No
                         confirman quién conduce el vehículo.
                     </Text>
+                </View>
+                <View style={styles.documents}>
+                    <Text
+                        accessibilityRole="header"
+                        style={[styles.documentsTitle, { color: theme.colors.text }]}
+                    >
+                        Documentos legales
+                    </Text>
+                    <DocumentLink
+                        theme={theme}
+                        icon="shield"
+                        title="Política de Privacidad"
+                        subtitle="Qué información trata Takya y qué no recopila"
+                        onPress={onOpenPrivacyPolicy}
+                    />
+                    <DocumentLink
+                        theme={theme}
+                        icon="file"
+                        title="Términos y Condiciones"
+                        subtitle="Uso permitido, límites y responsabilidades"
+                        onPress={onOpenTermsOfService}
+                    />
                 </View>
             </ScrollView>
         </View>

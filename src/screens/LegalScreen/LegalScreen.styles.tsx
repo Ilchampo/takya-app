@@ -25,6 +25,26 @@ const styles = StyleSheet.create({
     body: { fontSize: 16, lineHeight: 26 },
     note: { padding: 16, borderRadius: 16, flexDirection: 'row', gap: 12 },
     noteText: { flex: 1, fontSize: 14, lineHeight: 23 },
+    documents: { gap: 4, paddingTop: 4 },
+    documentsTitle: { fontSize: 19, lineHeight: 27, fontWeight: '700', marginBottom: 4 },
+    documentRow: {
+        minHeight: 80,
+        paddingVertical: 14,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 14,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+    },
+    documentIcon: {
+        width: 44,
+        height: 44,
+        borderRadius: 15,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    documentCopy: { flex: 1, gap: 3 },
+    documentTitle: { fontSize: 16, lineHeight: 23, fontWeight: '700' },
+    documentSubtitle: { fontSize: 14, lineHeight: 21 },
 });
 
 export default styles;
