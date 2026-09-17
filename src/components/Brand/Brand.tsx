@@ -10,8 +10,8 @@ import { Text } from '../Text/Text';
 import { logoPaths } from './logoPaths';
 import styles from './Brand.styles';
 
-export const MARK_VIEW_WIDTH = 48;
-export const MARK_VIEW_HEIGHT = 42;
+export const MARK_VIEW_WIDTH = 40;
+export const MARK_VIEW_HEIGHT = 40;
 export const MARK_RATIO = MARK_VIEW_HEIGHT / MARK_VIEW_WIDTH;
 export const HEADER_MARK_WIDTH = 36;
 export const HEADER_WORD_SIZE = 30;

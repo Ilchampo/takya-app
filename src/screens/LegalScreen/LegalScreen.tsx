@@ -3,7 +3,6 @@ import type { IconName } from '../../lib/types.ts';
 
 import React from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Hero } from '../../components/Hero/Hero';
 import { Icon } from '../../components/Icon/Icon';
 import { Text } from '../../components/Text/Text';
@@ -57,15 +56,9 @@ const DocumentLink: React.FC<DocumentLinkProps> = (props) => {
 
 export const LegalScreen: React.FC<LegalScreenProps> = (props) => {
     const { theme, onBack, onToggleTheme, onOpenPrivacyPolicy, onOpenTermsOfService } = props;
-    const insets = useSafeAreaInsets();
 
     return (
-        <View
-            style={[
-                styles.safe,
-                { backgroundColor: theme.colors.background, paddingBottom: insets.bottom },
-            ]}
-        >
+        <View style={[styles.safe, { backgroundColor: theme.colors.background }]}>
             <Hero theme={theme} compact>
                 <TopBar
                     theme={theme}

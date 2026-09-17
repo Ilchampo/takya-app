@@ -85,7 +85,7 @@ test('legal markdown parser keeps names, contacts and the official warning', () 
     assert.equal(privacyCode.length, 2);
     assert.equal(
         privacyCode[0]?.type === 'paragraph' ? privacyCode[0].lines[0]?.[0]?.value : undefined,
-        'Juan Pablo Beltrán Flores',
+        'Juan Pepito Batalla Floreros',
     );
     assert.equal(
         privacyCode[1]?.type === 'paragraph' ? privacyCode[1].lines[0]?.[0]?.value : undefined,

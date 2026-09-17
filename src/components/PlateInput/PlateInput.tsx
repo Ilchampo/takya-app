@@ -1,12 +1,16 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 
 import type { AppTheme } from '../../theme/theme';
 
 import { TextInput, View } from 'react-native';
 import { Text } from '../Text/Text';
+import { PlateFrame } from '../LicensePlate/PlateFrame';
 
 import * as plateUtils from '../../lib/utils/licensePlate.utils';
 import styles from './PlateInput.styles';
+
+const LETTER_SLOTS = 3;
+const NUMBER_SLOTS = 4;
 
 interface PlateInputProps {
     value: string;
@@ -15,120 +19,81 @@ interface PlateInputProps {
     theme: AppTheme;
 }
 
+interface CellProps {
+    value: string;
+    active: boolean;
+}
+
+const Cell: React.FC<CellProps> = (props) => {
+    const { value, active } = props;
+    const filled = value.length > 0;
+
+    return (
+        <View style={[styles.cell, filled && styles.cellFilled, active && styles.cellActive]}>
+            <Text style={styles.glyph}>{value}</Text>
+        </View>
+    );
+};
+
 export const PlateInput: React.FC<PlateInputProps> = (props) => {
     const { value, onChange, onSubmit, theme } = props;
-
-    const lettersRef = useRef<TextInput>(null);
-    const numbersRef = useRef<TextInput>(null);
-
     const [focused, setFocused] = useState(false);
-    const [letters = '', numbers = ''] = value.split('-');
 
-    const shouldFocusNumbers = useRef(false);
-
-    useEffect(() => {
-        if (shouldFocusNumbers.current && letters.length === 3) {
-            shouldFocusNumbers.current = false;
-            numbersRef.current?.focus();
-        }
-    }, [letters, numbers]);
-
+    const compact = value.replace(/-/g, '').toUpperCase();
+    const letters = compact.slice(0, LETTER_SLOTS);
+    const numbers = compact.slice(LETTER_SLOTS, LETTER_SLOTS + NUMBER_SLOTS);
+    const activeIndex = focused ? Math.min(compact.length, LETTER_SLOTS + NUMBER_SLOTS - 1) : -1;
     const valid = plateUtils.isValidPlate(value);
 
-    const changeLetters = (text: string): void => {
+    const change = (text: string): void => {
         const next = plateUtils.formatPlateInput(text, value);
 
-        if (next === value) {
-            return;
-        }
-
-        const prefix = next.split('-')[0] ?? '';
-        shouldFocusNumbers.current = prefix.length === 3;
-
-        onChange(next.includes('-') ? next : numbers ? `${prefix}-${numbers}` : prefix);
-    };
-
-    const changeNumbers = (text: string): void => {
-        if (/^\d{0,4}$/.test(text)) {
-            onChange(text ? `${letters}-${text}` : letters);
+        if (next !== value) {
+            onChange(next);
         }
     };
 
     return (
         <View style={styles.wrapper}>
-            <View
-                style={[
-                    styles.plate,
-                    {
-                        backgroundColor: theme.colors.surface,
-                        borderColor: focused ? theme.colors.text : theme.colors.border,
-                    },
-                ]}
-            >
-                <View style={styles.countryRow}>
-                    <View style={[styles.dot, { backgroundColor: theme.colors.border }]} />
-                    <Text style={[styles.country, { color: theme.colors.textMuted }]}>ECUADOR</Text>
-                    <View style={[styles.dot, { backgroundColor: theme.colors.border }]} />
-                </View>
-                <View style={styles.fields}>
+            <PlateFrame size="input" focused={focused}>
+                <View style={styles.field}>
+                    <View pointerEvents="none" accessibilityElementsHidden style={styles.cells}>
+                        {Array.from({ length: LETTER_SLOTS }, (_, index) => (
+                            <Cell
+                                key={`letter-${index}`}
+                                value={letters[index] ?? ''}
+                                active={activeIndex === index}
+                            />
+                        ))}
+                        <Text style={styles.dash}>-</Text>
+                        {Array.from({ length: NUMBER_SLOTS }, (_, index) => (
+                            <Cell
+                                key={`number-${index}`}
+                                value={numbers[index] ?? ''}
+                                active={activeIndex === LETTER_SLOTS + index}
+                            />
+                        ))}
+                    </View>
                     <TextInput
-                        ref={lettersRef}
-                        accessibilityLabel="Letras de la placa"
-                        accessibilityHint="Escribe tres letras. Luego pasarás a los números."
+                        accessibilityLabel="Placa"
+                        accessibilityHint="Tres letras y tres o cuatro números, tal como aparecen en el vehículo."
                         autoCapitalize="characters"
                         autoCorrect={false}
+                        autoComplete="off"
                         spellCheck={false}
+                        caretHidden
+                        value={compact}
                         keyboardType="default"
-                        value={letters}
-                        placeholder="ABC"
-                        placeholderTextColor={theme.colors.textFaint}
-                        onChangeText={changeLetters}
+                        onChangeText={change}
                         onFocus={() => setFocused(true)}
                         onBlur={() => setFocused(false)}
-                        onSubmitEditing={() => numbersRef.current?.focus()}
-                        returnKeyType="next"
-                        selectTextOnFocus
-                        selectionColor={theme.colors.primary}
-                        style={[styles.letters, styles.input, { color: theme.colors.text }]}
-                    />
-                    <Text
-                        accessible={false}
-                        style={[styles.dash, { color: theme.colors.textMuted }]}
-                    >
-                        -
-                    </Text>
-                    <TextInput
-                        ref={numbersRef}
-                        accessibilityLabel="Números de la placa"
-                        accessibilityHint="Escribe tres o cuatro números."
-                        editable={letters.length === 3}
-                        keyboardType="number-pad"
-                        autoCorrect={false}
-                        value={numbers}
-                        placeholder="1234"
-                        placeholderTextColor={theme.colors.textFaint}
-                        onChangeText={changeNumbers}
-                        onFocus={() => setFocused(true)}
-                        onBlur={() => setFocused(false)}
-                        onKeyPress={({ nativeEvent }) => {
-                            if (nativeEvent.key === 'Backspace' && !numbers) {
-                                lettersRef.current?.focus();
-                            }
-                        }}
                         onSubmitEditing={() => valid && onSubmit()}
                         returnKeyType="search"
-                        selectTextOnFocus
-                        selectionColor={theme.colors.primary}
-                        style={[styles.numbers, styles.input, { color: theme.colors.text }]}
+                        selectionColor="transparent"
+                        style={styles.hiddenInput}
                     />
                 </View>
-                <View style={styles.guides}>
-                    <Text style={[styles.guide, { color: theme.colors.textMuted }]}>3 letras</Text>
-                    <Text style={[styles.guide, { color: theme.colors.textMuted }]}>
-                        3 o 4 números
-                    </Text>
-                </View>
-            </View>
+            </PlateFrame>
             <Text style={[styles.help, { color: theme.colors.textMuted }]}>
                 {valid && numbers.length === 3
                     ? `Se consultará como ${plateUtils.displayPlate(plateUtils.normalizePlate(value))}.`
