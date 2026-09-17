@@ -1,21 +1,11 @@
 import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
-    note: { fontSize: 14, lineHeight: 22, paddingVertical: 10 },
-    detail: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        gap: 20,
-        paddingVertical: 16,
-    },
-    label: { width: 65, fontSize: 16, lineHeight: 24 },
-    value: {
-        flex: 1,
-        fontSize: 16,
-        lineHeight: 24,
-        textAlign: 'right',
-        fontWeight: '500',
-    },
+    grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
+    detail: { gap: 4 },
+    label: { fontSize: 13, lineHeight: 20 },
+    value: { fontSize: 17, lineHeight: 25, fontWeight: '700' },
+    note: { fontSize: 15, lineHeight: 23 },
 });
 
 export default styles;

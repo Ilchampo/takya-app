@@ -2,7 +2,7 @@ import React from 'react';
 
 import type * as types from '../../lib/types';
 
-import { StyleSheet, View } from 'react-native';
+import { View, useWindowDimensions } from 'react-native';
 import { vehicleDetails, vehicleLookupNote } from '../../data/vehicle.data';
 import { Text } from '../Text/Text';
 
@@ -12,28 +12,22 @@ export const VehicleDetails: React.FC<types.SuccessBodyProps> = (props) => {
     const { data, theme } = props;
 
     const details = vehicleDetails(data);
-    const note = vehicleLookupNote(data);
+    const { fontScale } = useWindowDimensions();
 
     if (!details) {
         return (
             <Text style={[styles.note, { color: theme.colors.textMuted }]}>
-                {note ?? 'La respuesta no contiene una ficha vehicular que podamos mostrar.'}
+                {vehicleLookupNote(data) ?? 'No hay una ficha vehicular disponible.'}
             </Text>
         );
     }
 
     return (
-        <>
-            {details.map((detail, index) => (
+        <View style={styles.grid}>
+            {details.map((detail) => (
                 <View
                     key={detail.key}
-                    style={[
-                        styles.detail,
-                        index > 0 && {
-                            borderTopWidth: StyleSheet.hairlineWidth,
-                            borderTopColor: theme.colors.border,
-                        },
-                    ]}
+                    style={[styles.detail, { width: fontScale > 1.3 ? '100%' : '46%' }]}
                 >
                     <Text style={[styles.label, { color: theme.colors.textMuted }]}>
                         {detail.label}
@@ -43,6 +37,6 @@ export const VehicleDetails: React.FC<types.SuccessBodyProps> = (props) => {
                     </Text>
                 </View>
             ))}
-        </>
+        </View>
     );
 };

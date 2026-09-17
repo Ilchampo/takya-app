@@ -1,48 +1,28 @@
 import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
-    section: { borderRadius: 22, overflow: 'hidden' },
-    serviceIcon: {
-        width: 42,
-        height: 42,
-        borderRadius: 14,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    statusIcon: {
-        width: 34,
-        height: 34,
-        borderRadius: 17,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
+    section: { borderRadius: 20, borderWidth: 1, overflow: 'hidden' },
     header: {
-        minHeight: 82,
-        paddingHorizontal: 16,
-        paddingTop: 12,
-        paddingBottom: 4,
+        padding: 18,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10,
+        gap: 12,
+        borderBottomWidth: StyleSheet.hairlineWidth,
     },
-    heading: { flex: 1, gap: 4 },
-    chevronExpanded: { transform: [{ rotate: '90deg' }] },
-    title: { fontSize: 17, fontWeight: '600', letterSpacing: -0.3 },
-    subtitle: { fontSize: 13, lineHeight: 18 },
-    status: {
-        fontSize: 14,
-        lineHeight: 20,
-        fontWeight: '500',
-        paddingLeft: 68,
-        paddingRight: 20,
-        paddingBottom: 17,
+    icon: {
+        width: 40,
+        height: 40,
+        borderRadius: 13,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    body: {
-        marginHorizontal: 20,
-        borderTopWidth: StyleSheet.hairlineWidth,
-        paddingVertical: 8,
-    },
-    note: { fontSize: 14, lineHeight: 22, paddingVertical: 10 },
+    copy: { flex: 1, gap: 2 },
+    title: { fontSize: 18, lineHeight: 25, fontWeight: '700' },
+    subtitle: { fontSize: 12, lineHeight: 18 },
+    body: { padding: 18 },
+    state: { padding: 18, gap: 8 },
+    stateTitle: { fontSize: 16, lineHeight: 23, fontWeight: '600' },
+    note: { fontSize: 15, lineHeight: 23 },
 });
 
 export default styles;

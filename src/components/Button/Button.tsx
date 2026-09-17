@@ -25,14 +25,18 @@ const getBackgroundColor = (isPrimary: boolean, variant: ButtonType, theme: AppT
         return theme.colors.primary;
     }
 
-    return variant === 'ghost' ? 'transparent' : theme.colors.surfaceStrong;
+    return variant === 'ghost' ? 'transparent' : theme.colors.surfaceMuted;
 };
 
 export const Button: React.FC<ButtonProps> = (props) => {
     const { label, onPress, theme, disabled, loading = false, variant = 'primary', icon } = props;
 
     const isPrimary = variant === 'primary';
-    const color = isPrimary ? theme.colors.onPrimary : theme.colors.text;
+    const color = disabled
+        ? theme.colors.textMuted
+        : isPrimary
+          ? theme.colors.onPrimary
+          : theme.colors.text;
 
     const backgroundColor = getBackgroundColor(isPrimary, variant, theme);
 
@@ -45,10 +49,17 @@ export const Button: React.FC<ButtonProps> = (props) => {
             style={({ pressed }) => [
                 styles.button,
                 {
-                    backgroundColor:
-                        pressed && isPrimary ? theme.colors.primaryPressed : backgroundColor,
-                    borderColor: variant === 'ghost' ? theme.colors.border : backgroundColor,
-                    opacity: disabled ? 0.5 : 1,
+                    backgroundColor: disabled
+                        ? theme.colors.surfaceStrong
+                        : pressed && isPrimary
+                          ? theme.colors.primaryPressed
+                          : backgroundColor,
+                    borderColor: disabled
+                        ? theme.colors.surfaceStrong
+                        : variant === 'secondary'
+                          ? theme.colors.border
+                          : 'transparent',
+                    opacity: pressed ? 0.8 : 1,
                 },
             ]}
         >

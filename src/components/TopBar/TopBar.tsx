@@ -5,6 +5,7 @@ import type { AppTheme } from '../../theme/theme';
 import { Pressable, View } from 'react-native';
 import { TakyaBrand } from '../Brand/Brand';
 import { Icon } from '../Icon/Icon';
+import { Text } from '../Text/Text';
 
 import styles from './TopBar.styles';
 
@@ -12,11 +13,16 @@ interface TopBarProps {
     theme: AppTheme;
     onToggleTheme: VoidFunction;
     onBack?: VoidFunction;
+    title?: string;
     onPrimary?: boolean;
+    hideBrand?: boolean;
 }
 
 export const TopBar: React.FC<TopBarProps> = (props) => {
-    const { theme, onToggleTheme, onBack, onPrimary = false } = props;
+    const { theme, onToggleTheme, onBack, title, onPrimary = false, hideBrand = false } = props;
+
+    const ink = onPrimary ? theme.colors.onPrimary : theme.colors.text;
+    const buttonBackground = onPrimary ? theme.colors.onPrimaryOverlay : theme.colors.surfaceMuted;
 
     return (
         <View style={styles.row}>
@@ -24,40 +30,34 @@ export const TopBar: React.FC<TopBarProps> = (props) => {
                 <Pressable
                     accessibilityRole="button"
                     accessibilityLabel="Volver"
-                    hitSlop={10}
                     onPress={onBack}
-                    style={[
-                        styles.iconButton,
-                        {
-                            backgroundColor: theme.colors.surface,
-                            borderColor: theme.colors.border,
-                        },
+                    style={({ pressed }) => [
+                        styles.back,
+                        { backgroundColor: buttonBackground, opacity: pressed ? 0.6 : 1 },
                     ]}
                 >
-                    <Icon name="back" color={theme.colors.text} />
+                    <Icon name="back" color={ink} size={20} />
                 </Pressable>
             ) : (
-                <TakyaBrand theme={theme} onPrimary={onPrimary} />
+                <View style={hideBrand ? styles.hiddenBrand : undefined}>
+                    <TakyaBrand theme={theme} onPrimary={onPrimary} />
+                </View>
+            )}
+            {title && (
+                <Text accessibilityRole="header" style={[styles.title, { color: ink }]}>
+                    {title}
+                </Text>
             )}
             <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`Cambiar a modo ${theme.dark ? 'claro' : 'oscuro'}`}
-                hitSlop={10}
                 onPress={onToggleTheme}
-                style={[
-                    styles.iconButton,
-                    {
-                        backgroundColor: onPrimary
-                            ? theme.colors.onPrimaryOverlay
-                            : theme.colors.surface,
-                        borderColor: theme.colors.border,
-                    },
+                style={({ pressed }) => [
+                    styles.appearance,
+                    { backgroundColor: buttonBackground, opacity: pressed ? 0.6 : 1 },
                 ]}
             >
-                <Icon
-                    name={theme.dark ? 'sun' : 'moon'}
-                    color={onPrimary ? theme.colors.onPrimary : theme.colors.text}
-                />
+                <Icon name={theme.dark ? 'sun' : 'moon'} size={19} color={ink} />
             </Pressable>
         </View>
     );

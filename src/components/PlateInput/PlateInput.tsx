@@ -60,8 +60,8 @@ export const PlateInput: React.FC<PlateInputProps> = (props) => {
                 style={[
                     styles.plate,
                     {
-                        backgroundColor: theme.colors.background,
-                        borderColor: focused ? theme.colors.primary : theme.colors.border,
+                        backgroundColor: theme.colors.surface,
+                        borderColor: focused ? theme.colors.text : theme.colors.border,
                     },
                 ]}
             >
@@ -111,8 +111,9 @@ export const PlateInput: React.FC<PlateInputProps> = (props) => {
                         onFocus={() => setFocused(true)}
                         onBlur={() => setFocused(false)}
                         onKeyPress={({ nativeEvent }) => {
-                            if (nativeEvent.key === 'Backspace' && !numbers)
+                            if (nativeEvent.key === 'Backspace' && !numbers) {
                                 lettersRef.current?.focus();
+                            }
                         }}
                         onSubmitEditing={() => valid && onSubmit()}
                         returnKeyType="search"

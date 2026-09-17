@@ -2,66 +2,96 @@ import React from 'react';
 
 import type { AppTheme } from '../../theme/theme';
 
-import { Image, View } from 'react-native';
-import { isLoaded } from 'expo-font';
-import Svg, { Circle, Path } from 'react-native-svg';
+import { View } from 'react-native';
+import Svg, { G, Path } from 'react-native-svg';
 import { fonts } from '../../theme/typography';
 import { Text } from '../Text/Text';
 
+import { logoPaths } from './logoPaths';
 import styles from './Brand.styles';
 
-interface TakyaBrandProps {
+export const MARK_VIEW_WIDTH = 48;
+export const MARK_VIEW_HEIGHT = 42;
+export const MARK_RATIO = MARK_VIEW_HEIGHT / MARK_VIEW_WIDTH;
+export const HEADER_MARK_WIDTH = 36;
+export const HEADER_WORD_SIZE = 30;
+export const HEADER_BRAND_GAP = 10;
+export const SPLASH_MARK_WIDTH = 148;
+export const SPLASH_WORD_SIZE = 54;
+
+interface MarkProps {
+    theme: AppTheme;
+    width?: number;
+    onPrimary?: boolean;
+}
+
+interface WordmarkProps {
+    color: string;
+    fontSize: number;
+}
+
+interface BrandProps {
     theme: AppTheme;
     onPrimary?: boolean;
 }
 
-interface AstrobitLogoProps {
-    color: string;
-}
+const markPaths = logoPaths.filter((path) => path.id !== 'text91');
 
-export const TakyaBrand: React.FC<TakyaBrandProps> = (props) => {
-    const { theme, onPrimary = false } = props;
+export const markHeight = (width: number): number => width * MARK_RATIO;
 
-    const color = onPrimary ? theme.colors.onPrimary : theme.colors.text;
+export const TakyaMark: React.FC<MarkProps> = (props) => {
+    const { theme, width = HEADER_MARK_WIDTH, onPrimary = false } = props;
+    const ink = onPrimary ? theme.colors.onPrimary : theme.colors.text;
+    const height = markHeight(width);
 
     return (
-        <View style={styles.takyaRow} accessibilityLabel="Takya">
-            <Image
-                source={require('../../../assets/icon.png')}
-                style={styles.icon}
-                accessibilityIgnoresInvertColors
-            />
-            <Text
-                style={[
-                    styles.wordmark,
-                    {
-                        color,
-                        fontFamily: isLoaded(fonts.title) ? fonts.title : undefined,
-                    },
-                ]}
-            >
-                Takya
-            </Text>
-        </View>
+        <Svg
+            width={width}
+            height={height}
+            viewBox={`0 0 ${MARK_VIEW_WIDTH} ${MARK_VIEW_HEIGHT}`}
+            accessibilityElementsHidden
+        >
+            <G transform="scale(0.42) translate(-3081.4359,671.749)">
+                {markPaths.map((path) => (
+                    <Path
+                        key={path.id}
+                        d={path.d}
+                        fill={path.yellow && !onPrimary ? theme.colors.primary : ink}
+                    />
+                ))}
+            </G>
+        </Svg>
     );
 };
 
-export const AstrobitLogo: React.FC<AstrobitLogoProps> = (props) => {
-    const { color } = props;
+export const TakyaWordmark: React.FC<WordmarkProps> = (props) => {
+    const { color, fontSize } = props;
 
     return (
-        <View style={styles.astrobitRow} accessibilityLabel="Astrobit">
-            <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" accessibilityElementsHidden>
-                <Circle cx="12" cy="12" r="3.2" fill={color} />
-                <Path
-                    d="M3.5 14.8c2.7 2 8.1 1.4 12.1-1.4s5-6.7 2.3-8.2c-2.1-1.2-5.8-.2-8.9 2"
-                    stroke={color}
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                />
-                <Circle cx="18.3" cy="5.4" r="1.4" fill={color} />
-            </Svg>
-            <Text style={[styles.astrobitText, { color }]}>ASTROBIT</Text>
+        <Text
+            style={[
+                styles.wordmark,
+                {
+                    color,
+                    fontFamily: fonts.title,
+                    fontSize,
+                    lineHeight: Math.round(fontSize * 1.15),
+                },
+            ]}
+        >
+            Takya
+        </Text>
+    );
+};
+
+export const TakyaBrand: React.FC<BrandProps> = (props) => {
+    const { theme, onPrimary = false } = props;
+    const ink = onPrimary ? theme.colors.onPrimary : theme.colors.text;
+
+    return (
+        <View accessibilityRole="image" accessibilityLabel="Takya" style={styles.lockup}>
+            <TakyaMark theme={theme} width={HEADER_MARK_WIDTH} onPrimary={onPrimary} />
+            <TakyaWordmark color={ink} fontSize={HEADER_WORD_SIZE} />
         </View>
     );
 };

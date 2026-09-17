@@ -1,77 +1,92 @@
 import type { AppTheme } from '../../theme/theme';
 import type * as types from '../../lib/types';
 
+import { useEffect, useState } from 'react';
 import {
     Alert,
+    Animated,
+    Easing,
     Keyboard,
     KeyboardAvoidingView,
     Platform,
     Pressable,
     ScrollView,
-    StyleSheet,
     View,
 } from 'react-native';
-import { displayPlate, isValidPlate, normalizePlate } from '../../lib/utils/licensePlate.utils';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { displayPlate, isValidPlate } from '../../lib/utils/licensePlate.utils';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { describeLookupAge } from '../../lib/utils/date.utils';
 
+import { Button } from '../../components/Button/Button';
+import { Hero } from '../../components/Hero/Hero';
 import { Icon } from '../../components/Icon/Icon';
 import { PlateInput } from '../../components/PlateInput/PlateInput';
-import { QueryStatus } from '../../components/QueryStatus/QueryStatus';
 import { Text } from '../../components/Text/Text';
 import { TopBar } from '../../components/TopBar/TopBar';
 
 import config from '../../lib/configs/app.config';
 import styles from './HomeScreen.styles';
 
+const HERO_TOP_GAP = 12;
+const HEADER_SHEET_EXTRA = 12;
+const CONTENT_REVEAL_MS = 860;
+
+const contentEasing = Easing.bezier(0.22, 1, 0.36, 1);
+
 interface HomeScreenProps {
     theme: AppTheme;
     plate: string;
-    result: types.LookupProgress | null;
     history: types.LookupHistoryItem[];
     loading: boolean;
     error: string | null;
     storageAvailable: boolean;
     onPlateChange: (value: string) => void;
     onSubmit: VoidFunction;
-    onRefresh: VoidFunction;
-    onCancel: VoidFunction;
     onOpenHistory: (plate: string) => void;
     onOpenLegal: VoidFunction;
     onToggleTheme: VoidFunction;
     onClearHistory: () => Promise<boolean>;
+    hideBrand?: boolean;
+    revealContent?: boolean;
+    onHeaderLayout?: (height: number) => void;
 }
 
 export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
     const {
         theme,
         plate,
-        result,
         history,
         loading,
         error,
         storageAvailable,
         onPlateChange,
         onSubmit,
-        onRefresh,
-        onCancel,
         onOpenHistory,
         onOpenLegal,
         onToggleTheme,
         onClearHistory,
+        hideBrand = false,
+        revealContent = true,
+        onHeaderLayout,
     } = props;
 
-    const valid = isValidPlate(plate);
-    const normalizedPlate = valid ? normalizePlate(plate) : null;
-    const visibleResult = result?.plate === normalizedPlate ? result : null;
+    const insets = useSafeAreaInsets();
+    const [bodyOpacity] = useState(() => new Animated.Value(revealContent ? 1 : 0));
 
-    const searchingThisPlate = loading;
+    useEffect(() => {
+        Animated.timing(bodyOpacity, {
+            toValue: revealContent ? 1 : 0,
+            duration: revealContent ? CONTENT_REVEAL_MS : 0,
+            easing: contentEasing,
+            useNativeDriver: true,
+        }).start();
+    }, [revealContent, bodyOpacity]);
 
-    const submitDisabled = !valid || searchingThisPlate;
-
-    const submit = () => {
-        Keyboard.dismiss();
-        onSubmit();
+    const submit = (): void => {
+        if (!loading && isValidPlate(plate)) {
+            Keyboard.dismiss();
+            onSubmit();
+        }
     };
 
     const clearHistory = async (): Promise<void> => {
@@ -80,7 +95,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
         if (!cleared) {
             Alert.alert(
                 'No se pudo borrar el historial',
-                'Intenta nuevamente o elimina los datos de Takya desde los ajustes del dispositivo.',
+                'Intenta nuevamente desde los ajustes del dispositivo.',
             );
         }
     };
@@ -88,7 +103,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
     const confirmClearHistory = (): void => {
         Alert.alert(
             'Borrar historial',
-            'Se eliminarán permanentemente todas las consultas guardadas en este dispositivo.',
+            'Se eliminarán las consultas guardadas en este dispositivo.',
             [
                 { text: 'Cancelar', style: 'cancel' },
                 {
@@ -101,12 +116,21 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
     };
 
     return (
-        <SafeAreaView
-            style={[styles.safe, { backgroundColor: theme.colors.primary }]}
-            edges={['top', 'bottom', 'left', 'right']}
+        <View
+            style={[
+                styles.safe,
+                { backgroundColor: theme.colors.background, paddingBottom: insets.bottom },
+            ]}
         >
+            <View
+                pointerEvents="none"
+                style={[
+                    styles.statusFill,
+                    { height: insets.top, backgroundColor: theme.colors.primary },
+                ]}
+            />
             <KeyboardAvoidingView
-                style={[styles.safe, { backgroundColor: theme.colors.background }]}
+                style={styles.safe}
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
                 <ScrollView
@@ -114,159 +138,181 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                     contentContainerStyle={styles.content}
                     showsVerticalScrollIndicator={false}
                 >
-                    <View style={[styles.hero, { backgroundColor: theme.colors.primary }]}>
-                        <TopBar theme={theme} onToggleTheme={onToggleTheme} onPrimary />
-                        <Text
-                            accessibilityRole="header"
-                            style={[styles.title, { color: theme.colors.onPrimary }]}
+                    <Hero theme={theme}>
+                        <View
+                            onLayout={(event) =>
+                                onHeaderLayout?.(
+                                    insets.top +
+                                        HERO_TOP_GAP +
+                                        event.nativeEvent.layout.height +
+                                        HEADER_SHEET_EXTRA,
+                                )
+                            }
                         >
-                            Una placa.{'\n'}Más información.
-                        </Text>
-                        <Text style={[styles.subtitle, { color: theme.colors.onPrimary }]}>
-                            Consulta tu vehículo, sin complicaciones.
-                        </Text>
-                    </View>
-
-                    <View style={styles.main}>
+                            <TopBar
+                                theme={theme}
+                                onToggleTheme={onToggleTheme}
+                                onPrimary
+                                hideBrand={hideBrand}
+                            />
+                        </View>
+                        <View style={styles.intro}>
+                            <Text style={[styles.eyebrow, { color: theme.colors.onPrimaryFaint }]}>
+                                ANTES DE SUBIR
+                            </Text>
+                            <Text
+                                accessibilityRole="header"
+                                style={[styles.title, { color: theme.colors.onPrimary }]}
+                            >
+                                Conoce el vehículo.{'\n'}Elige con información.
+                            </Text>
+                            <Text style={[styles.subtitle, { color: theme.colors.onPrimaryMuted }]}>
+                                Consulta su placa en fuentes públicas de Ecuador.
+                            </Text>
+                        </View>
+                    </Hero>
+                    <Animated.View
+                        style={[
+                            styles.body,
+                            {
+                                opacity: bodyOpacity,
+                                transform: [
+                                    {
+                                        translateY: bodyOpacity.interpolate({
+                                            inputRange: [0, 1],
+                                            outputRange: [18, 0],
+                                        }),
+                                    },
+                                ],
+                            },
+                        ]}
+                    >
                         <View
                             style={[
                                 styles.form,
                                 {
                                     backgroundColor: theme.colors.surface,
+                                    borderColor: theme.colors.border,
                                     shadowColor: theme.colors.shadow,
                                 },
                             ]}
                         >
-                            <Text
-                                accessibilityRole="header"
-                                style={[styles.formTitle, { color: theme.colors.text }]}
-                            >
-                                Placa del vehículo
+                            <Text style={[styles.formTitle, { color: theme.colors.text }]}>
+                                ¿Cuál es la placa?
                             </Text>
                             <PlateInput
                                 value={plate}
                                 onChange={onPlateChange}
-                                onSubmit={() => !searchingThisPlate && submit()}
+                                onSubmit={submit}
                                 theme={theme}
                             />
                             {error && (
                                 <Text
-                                    accessibilityLiveRegion="polite"
+                                    accessibilityRole="alert"
                                     style={[styles.error, { color: theme.colors.danger }]}
                                 >
                                     {error}
                                 </Text>
                             )}
-                            <Pressable
-                                accessibilityRole="button"
-                                accessibilityState={{ disabled: submitDisabled }}
-                                disabled={submitDisabled}
+                            <Button
+                                label="Consultar vehículo"
                                 onPress={submit}
-                                style={({ pressed }) => [
-                                    styles.submit,
-                                    {
-                                        backgroundColor: submitDisabled
-                                            ? theme.colors.surfaceStrong
-                                            : theme.colors.primary,
-                                        opacity: pressed ? 0.75 : 1,
-                                    },
-                                ]}
-                            >
-                                <Icon
-                                    name="search"
-                                    size={21}
-                                    color={
-                                        submitDisabled
-                                            ? theme.colors.textMuted
-                                            : theme.colors.onPrimary
-                                    }
-                                />
-                                <Text
-                                    style={[
-                                        styles.submitText,
-                                        {
-                                            color: submitDisabled
-                                                ? theme.colors.textMuted
-                                                : theme.colors.onPrimary,
-                                        },
-                                    ]}
-                                >
-                                    {searchingThisPlate ? 'Consultando…' : 'Consultar placa'}
-                                </Text>
-                            </Pressable>
-                        </View>
-
-                        {visibleResult && (
-                            <QueryStatus
-                                result={visibleResult}
                                 theme={theme}
-                                onCancel={onCancel}
-                                onRefresh={onRefresh}
+                                disabled={!isValidPlate(plate) || loading}
+                                loading={loading}
                             />
-                        )}
-
+                            <View style={[styles.sources, { borderTopColor: theme.colors.border }]}>
+                                <Icon name="database" color={theme.colors.textMuted} size={16} />
+                                <Text
+                                    style={[styles.sourceText, { color: theme.colors.textMuted }]}
+                                >
+                                    SRI <Text style={{ color: theme.colors.textFaint }}> · </Text>{' '}
+                                    Fiscalía General del Estado
+                                </Text>
+                            </View>
+                        </View>
                         <View style={styles.recent}>
-                            <View style={styles.recentHeader}>
+                            <View style={styles.sectionHeader}>
                                 <Text
                                     accessibilityRole="header"
                                     style={[styles.sectionTitle, { color: theme.colors.text }]}
                                 >
-                                    Recientes
+                                    Consultas recientes
                                 </Text>
                                 {history.length > 0 && (
-                                    <View style={styles.recentActions}>
+                                    <Pressable
+                                        accessibilityRole="button"
+                                        accessibilityLabel="Borrar historial"
+                                        onPress={confirmClearHistory}
+                                        style={styles.clear}
+                                    >
                                         <Text
                                             style={[
-                                                styles.historyCount,
+                                                styles.action,
                                                 { color: theme.colors.textMuted },
                                             ]}
                                         >
-                                            {history.length} de {config.service.historyLimit}
+                                            Borrar
                                         </Text>
-                                        <Pressable
-                                            accessibilityRole="button"
-                                            accessibilityLabel="Borrar historial de consultas"
-                                            accessibilityState={{ disabled: loading }}
-                                            disabled={loading}
-                                            hitSlop={8}
-                                            onPress={confirmClearHistory}
-                                            style={({ pressed }) => [
-                                                { opacity: loading ? 0.4 : 1 },
-                                                pressed && !loading && { opacity: 0.6 },
-                                            ]}
-                                        >
-                                            <Text
-                                                style={[
-                                                    styles.clearHistory,
-                                                    { color: theme.colors.danger },
-                                                ]}
-                                            >
-                                                Borrar
-                                            </Text>
-                                        </Pressable>
-                                    </View>
+                                    </Pressable>
                                 )}
                             </View>
-                            {history.length === 0 ? (
-                                <View
-                                    style={[
-                                        styles.empty,
-                                        { backgroundColor: theme.colors.surface },
-                                    ]}
-                                >
-                                    <View
-                                        style={[
-                                            styles.emptyIcon,
-                                            { backgroundColor: theme.colors.surfaceMuted },
+                            {history.length ? (
+                                history.map((item) => (
+                                    <Pressable
+                                        key={item.plate}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={`Ver consulta de ${displayPlate(item.plate)}`}
+                                        onPress={() => onOpenHistory(item.plate)}
+                                        style={({ pressed }) => [
+                                            styles.historyRow,
+                                            {
+                                                borderBottomColor: theme.colors.border,
+                                                opacity: pressed ? 0.55 : 1,
+                                            },
                                         ]}
                                     >
+                                        <View
+                                            style={[
+                                                styles.historyIcon,
+                                                { backgroundColor: theme.colors.surfaceMuted },
+                                            ]}
+                                        >
+                                            <Icon
+                                                name="clock"
+                                                size={21}
+                                                color={theme.colors.text}
+                                            />
+                                        </View>
+                                        <View style={styles.historyCopy}>
+                                            <Text
+                                                style={[
+                                                    styles.historyPlate,
+                                                    { color: theme.colors.text },
+                                                ]}
+                                            >
+                                                {displayPlate(item.plate)}
+                                            </Text>
+                                            <Text
+                                                style={[
+                                                    styles.historyAge,
+                                                    { color: theme.colors.textMuted },
+                                                ]}
+                                            >
+                                                {describeLookupAge(item.fetchedAt)} · Guardada
+                                            </Text>
+                                        </View>
                                         <Icon
-                                            name="clock"
-                                            size={25}
-                                            color={theme.colors.primaryPressed}
+                                            name="chevron"
+                                            size={18}
+                                            color={theme.colors.textMuted}
                                         />
-                                    </View>
-                                    <View style={styles.emptyCopy}>
+                                    </Pressable>
+                                ))
+                            ) : (
+                                <View style={[styles.empty, { borderColor: theme.colors.border }]}>
+                                    <Icon name="clock" color={theme.colors.textMuted} size={24} />
+                                    <View style={styles.historyCopy}>
                                         <Text
                                             style={[
                                                 styles.emptyTitle,
@@ -274,116 +320,54 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                                             ]}
                                         >
                                             {storageAvailable
-                                                ? 'Tu próxima consulta empieza aquí'
+                                                ? 'Tu historial empieza aquí'
                                                 : 'Historial no disponible'}
                                         </Text>
                                         <Text
                                             style={[
-                                                styles.emptyText,
+                                                styles.historyAge,
                                                 { color: theme.colors.textMuted },
                                             ]}
                                         >
                                             {storageAvailable
-                                                ? `Aquí encontrarás tus últimas consultas, disponibles durante ${config.service.ttlDays} ${
-                                                      config.service.ttlDays === 1 ? 'día' : 'días'
-                                                  }.`
-                                                : 'Las consultas funcionan, pero no se guardarán en este dispositivo.'}
+                                                ? `Tus últimas ${config.service.historyLimit} consultas, a mano durante ${config.service.ttlDays} días.`
+                                                : 'Puedes consultar sin guardar los resultados.'}
                                         </Text>
                                     </View>
                                 </View>
-                            ) : (
-                                <View
-                                    style={[
-                                        styles.historyList,
-                                        { backgroundColor: theme.colors.surface },
-                                    ]}
-                                >
-                                    {history.map((item, index) => (
-                                        <Pressable
-                                            accessibilityRole="button"
-                                            accessibilityLabel={`Abrir resumen de ${displayPlate(item.plate)}`}
-                                            accessibilityState={{ disabled: loading }}
-                                            disabled={loading}
-                                            key={item.plate}
-                                            onPress={() => {
-                                                Keyboard.dismiss();
-                                                onOpenHistory(item.plate);
-                                            }}
-                                            style={({ pressed }) => [
-                                                styles.historyRow,
-                                                {
-                                                    borderTopWidth:
-                                                        index > 0 ? StyleSheet.hairlineWidth : 0,
-                                                    borderTopColor: theme.colors.border,
-                                                    opacity: loading || pressed ? 0.5 : 1,
-                                                },
-                                            ]}
-                                        >
-                                            <View
-                                                style={[
-                                                    styles.historyIcon,
-                                                    { backgroundColor: theme.colors.surfaceMuted },
-                                                ]}
-                                            >
-                                                <Icon
-                                                    name="car"
-                                                    size={23}
-                                                    color={theme.colors.primaryPressed}
-                                                />
-                                            </View>
-                                            <View style={styles.historyCopy}>
-                                                <Text
-                                                    style={[
-                                                        styles.historyPlate,
-                                                        { color: theme.colors.text },
-                                                    ]}
-                                                >
-                                                    {displayPlate(item.plate)}
-                                                </Text>
-                                                <Text
-                                                    style={[
-                                                        styles.historyAge,
-                                                        { color: theme.colors.textMuted },
-                                                    ]}
-                                                >
-                                                    {describeLookupAge(item.fetchedAt)} · Ver
-                                                    resumen
-                                                </Text>
-                                            </View>
-                                            <Icon
-                                                name="chevron"
-                                                size={18}
-                                                color={theme.colors.primaryPressed}
-                                            />
-                                        </Pressable>
-                                    ))}
-                                </View>
                             )}
                         </View>
-
-                        {!storageAvailable && (
-                            <Text style={[styles.smallText, { color: theme.colors.textMuted }]}>
-                                El historial no está disponible en este dispositivo.
-                            </Text>
-                        )}
-                        <View style={styles.footer}>
-                            <Pressable
-                                accessibilityRole="link"
-                                onPress={onOpenLegal}
-                                style={styles.privacyLink}
+                        <Pressable
+                            accessibilityRole="button"
+                            onPress={onOpenLegal}
+                            style={({ pressed }) => [
+                                styles.privacy,
+                                { borderTopColor: theme.colors.border, opacity: pressed ? 0.6 : 1 },
+                            ]}
+                        >
+                            <View
+                                style={[
+                                    styles.privacyIcon,
+                                    { backgroundColor: theme.colors.surfaceMuted },
+                                ]}
                             >
-                                <Icon name="shield" size={17} color={theme.colors.primaryPressed} />
-                                <Text style={[styles.smallText, { color: theme.colors.textMuted }]}>
+                                <Icon name="shield" size={21} color={theme.colors.text} />
+                            </View>
+                            <View style={styles.historyCopy}>
+                                <Text style={[styles.privacyTitle, { color: theme.colors.text }]}>
+                                    Tu consulta, en tus manos
+                                </Text>
+                                <Text
+                                    style={[styles.historyAge, { color: theme.colors.textMuted }]}
+                                >
                                     Privacidad y uso responsable
                                 </Text>
-                            </Pressable>
-                            <Text style={[styles.disclaimer, { color: theme.colors.textMuted }]}>
-                                La información pública no certifica la seguridad de un vehículo.
-                            </Text>
-                        </View>
-                    </View>
+                            </View>
+                            <Icon name="chevron" size={18} color={theme.colors.textMuted} />
+                        </Pressable>
+                    </Animated.View>
                 </ScrollView>
             </KeyboardAvoidingView>
-        </SafeAreaView>
+        </View>
     );
 };

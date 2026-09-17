@@ -1,5 +1,8 @@
+import { useEffect, useState } from 'react';
+import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import * as ExpoSplashScreen from 'expo-splash-screen';
 import { useApp } from './src/hooks/useApp';
 
 import { ErrorBoundary } from './src/components/ErrorBoundary/ErrorBoundary';
@@ -7,6 +10,7 @@ import { ErrorScreen } from './src/screens/ErrorScreen/ErrorScreen';
 import { HistoryScreen } from './src/screens/HistoryScreen/HistoryScreen';
 import { HomeScreen } from './src/screens/HomeScreen/HomeScreen';
 import { LegalScreen } from './src/screens/LegalScreen/LegalScreen';
+import { ResultScreen } from './src/screens/ResultScreen/ResultScreen';
 import { SplashScreen } from './src/screens/SplashScreen/SplashScreen';
 
 const AppContent = () => {
@@ -18,6 +22,9 @@ const AppContent = () => {
         storageAvailable,
         theme,
         showLegal,
+        showResult,
+        closeResult,
+        refreshHistory,
         plate,
         history,
         result,
@@ -38,36 +45,66 @@ const AppContent = () => {
         clearHistory,
     } = useApp();
 
+    const [splashVisible, setSplashVisible] = useState(true);
+    const [headerHeight, setHeaderHeight] = useState(0);
+    const [revealHome, setRevealHome] = useState(false);
+
+    const fontsReady = fontsLoaded || Boolean(fontError);
+    const showingError = Boolean(configurationError);
+    const showApp = ready && fontsReady && !configurationError;
+
+    useEffect(() => {
+        if (fontsReady) {
+            void ExpoSplashScreen.hideAsync().catch(() => undefined);
+        }
+    }, [fontsReady]);
+
+    if (!fontsReady) {
+        return null;
+    }
+
     return (
-        <>
-            <StatusBar style={(!showLegal && !savedPlate) || !theme.dark ? 'dark' : 'light'} />
-            {!ready || (!fontsLoaded && !fontError) ? (
-                <SplashScreen />
-            ) : configurationError ? (
+        <View style={{ flex: 1 }}>
+            <StatusBar style={theme.dark && showingError && !splashVisible ? 'light' : 'dark'} />
+            {configurationError ? (
                 <ErrorScreen
                     theme={theme}
                     title="Esta instalación no puede consultar"
                     message={configurationError}
                 />
-            ) : (
+            ) : showApp ? (
                 <>
-                    {!showLegal && !savedPlate && (
+                    {!showLegal && !savedPlate && !showResult && (
                         <HomeScreen
                             theme={theme}
                             plate={plate}
-                            result={result}
                             history={history}
                             loading={loading}
                             error={error}
                             storageAvailable={storageAvailable}
                             onPlateChange={changePlate}
                             onSubmit={() => void runSearch(plate)}
-                            onRefresh={() => void runSearch(plate, { refresh: true })}
-                            onCancel={cancelSearch}
                             onOpenHistory={(recentPlate) => void openHistory(recentPlate)}
                             onOpenLegal={openLegal}
                             onToggleTheme={toggleTheme}
                             onClearHistory={clearHistory}
+                            hideBrand={splashVisible}
+                            revealContent={revealHome || !splashVisible}
+                            onHeaderLayout={setHeaderHeight}
+                        />
+                    )}
+                    {!showLegal && !savedPlate && showResult && (
+                        <ResultScreen
+                            theme={theme}
+                            plate={plate}
+                            result={result}
+                            loading={loading}
+                            error={error}
+                            onBack={closeResult}
+                            onCancel={cancelSearch}
+                            onRefresh={() => void runSearch(plate, { refresh: true })}
+                            onToggleTheme={toggleTheme}
+                            onOpenLegal={openLegal}
                         />
                     )}
                     {!showLegal && savedPlate && (
@@ -78,6 +115,7 @@ const AppContent = () => {
                             loading={savedLoading}
                             error={savedError}
                             onBack={closeHistory}
+                            onRefresh={refreshHistory}
                             onToggleTheme={toggleTheme}
                             onOpenLegal={openLegal}
                         />
@@ -90,8 +128,17 @@ const AppContent = () => {
                         />
                     )}
                 </>
+            ) : null}
+            {splashVisible && !configurationError && (
+                <SplashScreen
+                    theme={theme}
+                    ready={showApp && headerHeight > 0}
+                    headerHeight={headerHeight}
+                    onMorphStart={() => setRevealHome(true)}
+                    onFinished={() => setSplashVisible(false)}
+                />
             )}
-        </>
+        </View>
     );
 };
 

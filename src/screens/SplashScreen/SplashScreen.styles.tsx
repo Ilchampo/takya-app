@@ -1,26 +1,48 @@
 import { StyleSheet } from 'react-native';
 
-import { palette } from '../../theme/palette';
-
-const colors = palette.light;
-
 const styles = StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.primary, paddingHorizontal: 28 },
-    hero: {
-        flex: 1,
+    overlay: {
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+        zIndex: 20,
+        backgroundColor: 'transparent',
+    },
+    sheet: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        overflow: 'hidden',
+    },
+    center: {
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingTop: 70,
+        gap: 14,
+        paddingBottom: 48,
     },
-    taxi: { width: 238, height: 220, marginBottom: 6 },
-    wordmark: { color: colors.onPrimary, fontSize: 58, lineHeight: 80 },
-    tagline: { color: colors.onPrimaryMuted, fontSize: 15, fontWeight: '600', marginTop: 4 },
-    madeBy: { alignItems: 'center', gap: 10, paddingBottom: 36 },
-    created: {
-        color: colors.onPrimaryFaint,
-        fontSize: 9,
-        fontWeight: '800',
-        letterSpacing: 2.2,
+    flyer: { position: 'absolute' },
+    credit: {
+        position: 'absolute',
+        left: 24,
+        right: 24,
+        bottom: 0,
+        alignItems: 'center',
+        gap: 10,
+    },
+    developed: {
+        fontSize: 12,
+        lineHeight: 16,
+        fontWeight: '700',
+        letterSpacing: 1.4,
+        textTransform: 'uppercase',
     },
 });
 
