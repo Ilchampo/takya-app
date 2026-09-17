@@ -1,0 +1,15 @@
+appId: com.astrobit.takya
+tags:
+    - theme
+---
+- launchApp:
+      clearState: true
+- runFlow: _waitForHome.yaml
+- tapOn:
+      id: toggle-theme
+- assertVisible:
+      id: plate-input
+- assertVisible: '¿Cuál es la placa?'
+- tapOn:
+      id: toggle-theme
+- assertVisible: 'Consultar vehículo'

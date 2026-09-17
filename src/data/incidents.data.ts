@@ -120,14 +120,24 @@ export const flaggedPersonFromSubject = (subject: FiscaliaSubject): FlaggedPerso
     };
 };
 
+const fiscaliaHeader = (data: unknown): unknown[] | null => {
+    if (Array.isArray(data)) {
+        return data;
+    }
+
+    const header = asRecord(data)?.cabecera;
+
+    return Array.isArray(header) ? header : null;
+};
+
 export const fiscaliaIncidents = (
     data: unknown,
     endDate = Date.now(),
     months = 24,
 ): FiscaliaIncident[] | null => {
-    const header = asRecord(data)?.cabecera;
+    const header = fiscaliaHeader(data);
 
-    if (!Array.isArray(header)) {
+    if (!header) {
         return null;
     }
 
@@ -159,9 +169,9 @@ export const fiscaliaIncidents = (
 };
 
 export const projectedIncidentRecords = (data: unknown): FiscaliaIncident[] | null => {
-    const header = asRecord(data)?.cabecera;
+    const header = fiscaliaHeader(data);
 
-    if (!Array.isArray(header)) {
+    if (!header) {
         return null;
     }
 

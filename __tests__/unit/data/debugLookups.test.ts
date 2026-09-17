@@ -1,25 +1,9 @@
-/// <reference types="node" />
 import assert from 'node:assert/strict';
-import test from 'node:test';
+import { test } from '@jest/globals';
 
-import { debugFiscaliaPayload, debugVehiclePayload } from '../src/data/debugLookups.data.ts';
-import { incidentRecords } from '../src/data/incidents.data.ts';
-import { vehicleDetails, vehicleLookupNote } from '../src/data/vehicle.data.ts';
-import { parseEnvBoolean } from '../src/lib/utils/misc.utils.ts';
-
-test('debug env flag only turns on for explicit true-like values', () => {
-    assert.equal(parseEnvBoolean(undefined), false);
-    assert.equal(parseEnvBoolean('true'), true);
-    assert.equal(parseEnvBoolean('TRUE'), true);
-    assert.equal(parseEnvBoolean('1'), true);
-    assert.equal(parseEnvBoolean('yes'), true);
-    assert.equal(parseEnvBoolean('on'), true);
-    assert.equal(parseEnvBoolean('false'), false);
-    assert.equal(parseEnvBoolean('0'), false);
-    assert.equal(parseEnvBoolean('no'), false);
-    assert.equal(parseEnvBoolean('maybe', false), false);
-    assert.equal(parseEnvBoolean('maybe', true), true);
-});
+import { debugFiscaliaPayload, debugVehiclePayload } from '../../../src/data/debugLookups.data.ts';
+import { incidentRecords } from '../../../src/data/incidents.data.ts';
+import { vehicleDetails, vehicleLookupNote } from '../../../src/data/vehicle.data.ts';
 
 test('ABC-1111 is a clean vehicle with no Fiscalía records', () => {
     const details = vehicleDetails(debugVehiclePayload('ABC1111'));

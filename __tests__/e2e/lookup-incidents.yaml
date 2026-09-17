@@ -1,0 +1,25 @@
+appId: com.astrobit.takya
+tags:
+    - lookup
+---
+- launchApp:
+      clearState: true
+- runFlow:
+      file: _searchPlate.yaml
+      env:
+          PLATE: ABC2222
+- assertVisible: 'HYUNDAI'
+- assertVisible: 'ACCENT'
+- scrollUntilVisible:
+      element: 'ROBO A PERSONAS'
+      direction: DOWN
+      timeout: 8000
+- assertVisible: '1 registro encontrado'
+- tapOn: '.*Ver detalle'
+- scrollUntilVisible:
+      element: 'PAREDES S. L. F.'
+      direction: DOWN
+      timeout: 8000
+- assertVisible: 'Identidad protegida · Nombre parcialmente oculto'
+- assertVisible: 'Estado: SOSPECHOSO'
+- assertNotVisible: 'PAREDES SALAZAR LUIS FERNANDO'

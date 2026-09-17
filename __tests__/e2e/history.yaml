@@ -1,0 +1,33 @@
+appId: com.astrobit.takya
+tags:
+    - history
+---
+- launchApp:
+      clearState: true
+- runFlow:
+      file: _searchPlate.yaml
+      env:
+          PLATE: ABC1111
+- extendedWaitUntil:
+      visible: 'CHEVROLET'
+      timeout: 15000
+- tapOn:
+      id: search-another-plate
+- runFlow: _waitForHome.yaml
+- assertVisible: 'ABC-1111'
+- tapOn:
+      id: history-ABC1111
+- extendedWaitUntil:
+      visible: 'Consulta guardada'
+      timeout: 8000
+- assertVisible: 'CHEVROLET'
+- tapOn:
+      id: nav-back
+- runFlow: _waitForHome.yaml
+- tapOn:
+      id: clear-history
+- tapOn: 'Borrar'
+- extendedWaitUntil:
+      visible: 'Tu historial empieza aquí'
+      timeout: 8000
+- assertNotVisible: 'ABC-1111'

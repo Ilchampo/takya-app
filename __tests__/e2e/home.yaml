@@ -1,0 +1,12 @@
+appId: com.astrobit.takya
+tags:
+    - home
+---
+- launchApp:
+      clearState: true
+- runFlow: _waitForHome.yaml
+- assertVisible: 'Consulta su placa en fuentes públicas de Ecuador.'
+- assertVisible: 'Consultar vehículo'
+- assertVisible: 'Tu historial empieza aquí'
+- assertVisible: 'SRI'
+- assertVisible: 'Fiscalía General del Estado'

@@ -1,0 +1,76 @@
+[
+    {
+        "0": "090101811110952",
+        "1": "090101811110952",
+        "2": "2011-11-09",
+        "3": "11:01:05",
+        "4": "BERNAL LEON MARGARITA KETTY",
+        "5": "0040833",
+        "6": "0",
+        "7": "PARTE POLICIAL - TRANSITO - NO FLAGRANTE",
+        "8": "GUAYAS",
+        "9": "GUAYAQUIL",
+        "10": "2419",
+        "11": "ACCIDENTE DE TRANSITO CON SOLO DANOS MATERIALES INDETERMINADOS.",
+        "12": "ATENCION AL PUBLICO TRANSITO - Edi.  - EDIFICIO MONTECRISTI - GYE - Dir.  - CALLE JOSE DE ANTEPARA Y AV. 9 DE OCTUBRE - Telef. - 04-3707800",
+        "13": "1",
+        "ndd1": "090101811110952",
+        "ndd": "090101811110952",
+        "fecha": "2011-11-09",
+        "hora": "11:01:05",
+        "digitador": "BERNAL LEON MARGARITA KETTY",
+        "numeroinf": "0040833",
+        "tipodelito": "0",
+        "tipoincidente": "PARTE POLICIAL - TRANSITO - NO FLAGRANTE",
+        "pro_descripcion": "GUAYAS",
+        "ciudad": "GUAYAQUIL",
+        "infraccion": "2419",
+        "gen_delito_tipopenal": "ACCIDENTE DE TRANSITO CON SOLO DANOS MATERIALES INDETERMINADOS.",
+        "unidad": "ATENCION AL PUBLICO TRANSITO - Edi.  - EDIFICIO MONTECRISTI - GYE - Dir.  - CALLE JOSE DE ANTEPARA Y AV. 9 DE OCTUBRE - Telef. - 04-3707800",
+        "fiscalia": "1",
+        "sujetos": [
+            {
+                "0": "21222111233",
+                "1": "FISCALIA GENERAL DEL ESTADO",
+                "2": "DENUNCIANTE",
+                "cedula": "21222111233",
+                "persona": "FISCALIA GENERAL DEL ESTADO",
+                "tipo": "DENUNCIANTE"
+            },
+            {
+                "0": "111111111111",
+                "1": "  CRESPO GARCIA JONNY MANOLO ",
+                "2": "VICTIMA",
+                "cedula": "111111111111",
+                "persona": "  CRESPO GARCIA JONNY MANOLO ",
+                "tipo": "VICTIMA"
+            },
+            {
+                "0": "3122412312",
+                "1": "  VILLOTA GUERRERO JUAN ARTURO ",
+                "2": "VICTIMA",
+                "cedula": "3122412312",
+                "persona": "  VILLOTA GUERRERO JUAN ARTURO ",
+                "tipo": "VICTIMA"
+            }
+        ],
+        "vehiculos": [
+            {
+                "0": "SD",
+                "1": "NA",
+                "2": "GGY0334",
+                "marca": "SD",
+                "modelo": "NA",
+                "placa": "GGY0334"
+            },
+            {
+                "0": "SD",
+                "1": "NA",
+                "2": "GMJ0622",
+                "marca": "SD",
+                "modelo": "NA",
+                "placa": "GMJ0622"
+            }
+        ]
+    }
+]

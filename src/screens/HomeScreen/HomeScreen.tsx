@@ -219,6 +219,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                                     </Text>
                                 )}
                                 <Button
+                                    testID="search-vehicle"
                                     label="Consultar vehículo"
                                     onPress={submit}
                                     theme={theme}
@@ -259,6 +260,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                                 </Text>
                                 {history.length > 0 && (
                                     <Pressable
+                                        testID="clear-history"
                                         accessibilityRole="button"
                                         accessibilityLabel="Borrar historial"
                                         onPress={confirmClearHistory}
@@ -279,6 +281,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                                 history.map((item) => (
                                     <Pressable
                                         key={item.plate}
+                                        testID={`history-${item.plate}`}
                                         accessibilityRole="button"
                                         accessibilityLabel={`Ver consulta de ${displayPlate(item.plate)}`}
                                         onPress={() => onOpenHistory(item.plate)}
@@ -356,7 +359,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                             )}
                         </View>
                         <Pressable
+                            testID="open-legal"
                             accessibilityRole="button"
+                            accessibilityLabel="Privacidad y uso responsable"
                             onPress={onOpenLegal}
                             style={({ pressed }) => [
                                 styles.privacy,

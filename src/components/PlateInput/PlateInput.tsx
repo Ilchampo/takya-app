@@ -75,6 +75,7 @@ export const PlateInput: React.FC<PlateInputProps> = (props) => {
                         ))}
                     </View>
                     <TextInput
+                        testID="plate-input"
                         accessibilityLabel="Placa"
                         accessibilityHint="Tres letras y tres o cuatro números, tal como aparecen en el vehículo."
                         autoCapitalize="characters"

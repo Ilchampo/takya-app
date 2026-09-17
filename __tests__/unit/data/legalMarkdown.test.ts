@@ -1,22 +1,20 @@
-/// <reference types="node" />
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import test from 'node:test';
+import { join } from 'node:path';
+import { test } from '@jest/globals';
 
-import { privacyPolicy, termsOfService } from '../src/data/legal.data.ts';
-import { privacyPolicyMarkdown } from '../src/data/privacyPolicy.data.ts';
-import { termsOfServiceMarkdown } from '../src/data/termsOfService.data.ts';
+import { privacyPolicy, termsOfService } from '../../../src/data/legal.data.ts';
+import { privacyPolicyMarkdown } from '../../../src/data/privacyPolicy.data.ts';
+import { termsOfServiceMarkdown } from '../../../src/data/termsOfService.data.ts';
 import {
     flattenLegalText,
     legalHeadingText,
     parseLegalInline,
     parseLegalMarkdown,
     unwrapMarkdownFence,
-} from '../src/lib/utils/legalMarkdown.utils.ts';
+} from '../../../src/lib/utils/legalMarkdown.utils.ts';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const root = join(__dirname, '../../..');
 
 const headingTexts = (document: { blocks: { type: string; text?: string }[] }): string[] =>
     document.blocks

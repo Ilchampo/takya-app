@@ -98,9 +98,15 @@ export const ResultScreen: React.FC<ResultScreenProps> = (props) => {
                         seguridad.
                     </Text>
                 </View>
-                <Button label="Consultar otra placa" theme={theme} onPress={onBack} />
+                <Button
+                    testID="search-another-plate"
+                    label="Consultar otra placa"
+                    theme={theme}
+                    onPress={onBack}
+                />
                 {loading && onCancel ? (
                     <Button
+                        testID="cancel-lookup"
                         label="Cancelar consulta"
                         theme={theme}
                         variant="secondary"
@@ -108,6 +114,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = (props) => {
                     />
                 ) : (
                     <Button
+                        testID="refresh-lookup"
                         label="Actualizar consulta"
                         theme={theme}
                         variant="secondary"
@@ -115,6 +122,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = (props) => {
                     />
                 )}
                 <Button
+                    testID="open-legal-from-result"
                     label="Privacidad y uso responsable"
                     theme={theme}
                     variant="ghost"

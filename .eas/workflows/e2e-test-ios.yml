@@ -1,0 +1,22 @@
+name: e2e-test-ios
+
+jobs:
+    build_ios_for_e2e:
+        type: build
+        params:
+            platform: ios
+            profile: e2e-test
+
+    maestro_test:
+        needs: [build_ios_for_e2e]
+        type: maestro
+        params:
+            build_id: ${{ needs.build_ios_for_e2e.outputs.build_id }}
+            flow_path:
+                - __tests__/e2e/home.yaml
+                - __tests__/e2e/lookup-clean.yaml
+                - __tests__/e2e/lookup-incidents.yaml
+                - __tests__/e2e/lookup-not-found.yaml
+                - __tests__/e2e/history.yaml
+                - __tests__/e2e/legal.yaml
+                - __tests__/e2e/theme.yaml
