@@ -147,7 +147,7 @@ test('Fiscalía projection allowlists UI fields and is idempotent', () => {
                 gen_delito_tipopenal: 'Registro de prueba',
                 sujetos: [
                     {
-                        persona: 'CRESPO GARCIA JONNY MANOLO',
+                        persona: 'CRESPO G. J. M.',
                         tipo: 'SOSPECHOSO',
                     },
                 ],
@@ -156,6 +156,7 @@ test('Fiscalía projection allowlists UI fields and is idempotent', () => {
     });
     assert.deepEqual(projectFiscaliaData(projected, requestDate), projected);
     assert.equal(raw.cabecera[0]?.sujetos[0]?.cedula, '0123456789');
+    assert.equal(JSON.stringify(projected).includes('CRESPO GARCIA JONNY MANOLO'), false);
 });
 
 test('incident parser keeps only general Fiscalía fields and ignores the rest', () => {
@@ -234,12 +235,12 @@ test('incident parser keeps flagged people without exposing identity documents',
                 gen_delito_tipopenal: 'Registro de prueba',
                 personasSenaladas: [
                     {
-                        nombreCompleto: 'CRESPO GARCIA JONNY MANOLO',
+                        nombreCompleto: 'CRESPO G. J. M.',
                         primerApellido: 'CRESPO',
                         estado: 'SOSPECHOSO',
                     },
                     {
-                        nombreCompleto: 'VELEZ MARCO',
+                        nombreCompleto: 'VELEZ M.',
                         primerApellido: 'VELEZ',
                         estado: 'SOSPECHOSO',
                     },

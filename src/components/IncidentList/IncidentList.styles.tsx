@@ -20,6 +20,7 @@ const styles = StyleSheet.create({
     details: { gap: 12, paddingVertical: 8 },
     person: { padding: 14, borderRadius: 12, gap: 5 },
     personName: { fontSize: 15, lineHeight: 23, fontWeight: '600' },
+    privacyLabel: { fontSize: 13, lineHeight: 20 },
 });
 
 export default styles;

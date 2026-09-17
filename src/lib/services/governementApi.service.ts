@@ -309,7 +309,13 @@ export const lookupFiscalia = async (value: string, options: types.FiscaliaOptio
             options.onSessionInitialized?.();
         }
 
-        return mockLookup(plate, debugFiscaliaPayload(plate), DEBUG_FISCALIA_DELAY_MS, options);
+        const projected = projectFiscaliaData(
+            debugFiscaliaPayload(plate),
+            Date.now(),
+            config.service.incidentMonths,
+        ) ?? { cabecera: [] };
+
+        return mockLookup(plate, projected, DEBUG_FISCALIA_DELAY_MS, options);
     }
 
     const lookupEndpoint = configuredSourceUrl(config.source.fiscaliaLookup, 'Fiscalía');

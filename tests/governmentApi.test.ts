@@ -82,13 +82,14 @@ test('Fiscalía lookup initializes its session and sends the captured form contr
                 gen_delito_tipopenal: 'Registro de prueba',
                 sujetos: [
                     {
-                        persona: 'CRESPO GARCIA JONNY MANOLO',
+                        persona: 'CRESPO G. J. M.',
                         tipo: 'SOSPECHOSO',
                     },
                 ],
             },
         ],
     });
+    assert.equal(JSON.stringify(result).includes('CRESPO GARCIA JONNY MANOLO'), false);
 });
 
 test('SRI treats an explicit vehicle-not-found payload as a usable response', async () => {

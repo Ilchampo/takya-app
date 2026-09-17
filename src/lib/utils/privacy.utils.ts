@@ -1,5 +1,6 @@
 import { fiscaliaIncidents } from '../../data/incidents.data.ts';
 import { asRecord, asText } from './misc.utils.ts';
+import { maskPersonName } from './personName.utils.ts';
 
 const MAX_VEHICLE_FIELD_LENGTH = 120;
 const MAX_INCIDENTS = 100;
@@ -124,7 +125,7 @@ export const projectFiscaliaData = (
     return {
         cabecera: incidents.slice(0, MAX_INCIDENTS).map((incident) => {
             const people = incident.sujetos.slice(0, remainingPeople).map((person) => ({
-                persona: clip(person.persona, MAX_PERSON_NAME_LENGTH),
+                persona: clip(maskPersonName(person.persona), MAX_PERSON_NAME_LENGTH),
                 tipo: person.tipo,
             }));
 
