@@ -108,7 +108,8 @@ export const useApp = (): AppState => {
     const closeResult = useCallback((): void => {
         cancelSearch();
         setShowResult(false);
-    }, [cancelSearch]);
+        changePlate('');
+    }, [cancelSearch, changePlate]);
 
     const refreshHistory = useCallback((): void => {
         if (!savedPlate) {

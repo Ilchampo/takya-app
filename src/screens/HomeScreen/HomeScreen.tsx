@@ -74,6 +74,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
     const [bodyOpacity] = useState(() => new Animated.Value(revealContent ? 1 : 0));
 
     useEffect(() => {
+        onPlateChange('');
+    }, [onPlateChange]);
+
+    useEffect(() => {
         Animated.timing(bodyOpacity, {
             toValue: revealContent ? 1 : 0,
             duration: revealContent ? CONTENT_REVEAL_MS : 0,
@@ -192,38 +196,57 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                                 },
                             ]}
                         >
-                            <Text style={[styles.formTitle, { color: theme.colors.text }]}>
-                                ¿Cuál es la placa?
-                            </Text>
-                            <PlateInput
-                                value={plate}
-                                onChange={onPlateChange}
-                                onSubmit={submit}
-                                theme={theme}
-                            />
-                            {error && (
-                                <Text
-                                    accessibilityRole="alert"
-                                    style={[styles.error, { color: theme.colors.danger }]}
-                                >
-                                    {error}
+                            <View style={styles.formPadded}>
+                                <Text style={[styles.formTitle, { color: theme.colors.text }]}>
+                                    ¿Cuál es la placa?
                                 </Text>
-                            )}
-                            <Button
-                                label="Consultar vehículo"
-                                onPress={submit}
-                                theme={theme}
-                                disabled={!isValidPlate(plate) || loading}
-                                loading={loading}
-                            />
-                            <View style={[styles.sources, { borderTopColor: theme.colors.border }]}>
-                                <Icon name="database" color={theme.colors.textMuted} size={16} />
-                                <Text
-                                    style={[styles.sourceText, { color: theme.colors.textMuted }]}
+                            </View>
+                            <View style={styles.plateSlot}>
+                                <PlateInput
+                                    value={plate}
+                                    onChange={onPlateChange}
+                                    onSubmit={submit}
+                                    theme={theme}
+                                />
+                            </View>
+                            <View style={styles.formPadded}>
+                                {error && (
+                                    <Text
+                                        accessibilityRole="alert"
+                                        style={[styles.error, { color: theme.colors.danger }]}
+                                    >
+                                        {error}
+                                    </Text>
+                                )}
+                                <Button
+                                    label="Consultar vehículo"
+                                    onPress={submit}
+                                    theme={theme}
+                                    disabled={!isValidPlate(plate) || loading}
+                                    loading={loading}
+                                />
+                                <View
+                                    style={[
+                                        styles.sources,
+                                        { borderTopColor: theme.colors.border },
+                                    ]}
                                 >
-                                    SRI <Text style={{ color: theme.colors.textFaint }}> · </Text>{' '}
-                                    Fiscalía General del Estado
-                                </Text>
+                                    <Icon
+                                        name="database"
+                                        color={theme.colors.textMuted}
+                                        size={16}
+                                    />
+                                    <Text
+                                        style={[
+                                            styles.sourceText,
+                                            { color: theme.colors.textMuted },
+                                        ]}
+                                    >
+                                        SRI{' '}
+                                        <Text style={{ color: theme.colors.textFaint }}> · </Text>{' '}
+                                        Fiscalía General del Estado
+                                    </Text>
+                                </View>
                             </View>
                         </View>
                         <View style={styles.recent}>
