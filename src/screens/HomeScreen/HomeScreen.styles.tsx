@@ -2,27 +2,31 @@ import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
     safe: { flex: 1 },
-    header: {
-        paddingHorizontal: 24,
-        paddingTop: 12,
-        paddingBottom: 16,
-        width: '100%',
-        maxWidth: 600,
-        alignSelf: 'center',
-    },
-    content: {
+    statusFill: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1 },
+    content: { paddingBottom: 28 },
+    body: {
         width: '100%',
         maxWidth: 600,
         alignSelf: 'center',
         paddingHorizontal: 24,
-        paddingBottom: 28,
         gap: 28,
     },
-    intro: { gap: 10, paddingTop: 10 },
+    intro: { gap: 10, paddingBottom: 8 },
     eyebrow: { fontSize: 11, lineHeight: 17, fontWeight: '800', letterSpacing: 1.6 },
     title: { fontSize: 31, lineHeight: 37, fontWeight: '800', letterSpacing: -1.1 },
     subtitle: { fontSize: 16, lineHeight: 24, maxWidth: 320 },
-    form: { borderRadius: 24, borderWidth: 1, padding: 20, gap: 18 },
+    form: {
+        marginTop: -28,
+        borderRadius: 24,
+        borderWidth: 1,
+        padding: 20,
+        gap: 18,
+        shadowOpacity: 0.1,
+        shadowRadius: 18,
+        shadowOffset: { width: 0, height: 8 },
+        elevation: 4,
+        zIndex: 1,
+    },
     formTitle: { fontSize: 18, lineHeight: 25, fontWeight: '700' },
     error: { fontSize: 15, lineHeight: 22 },
     sources: {

@@ -18,7 +18,10 @@ interface TopBarProps {
 }
 
 export const TopBar: React.FC<TopBarProps> = (props) => {
-    const { theme, onToggleTheme, onBack, title } = props;
+    const { theme, onToggleTheme, onBack, title, onPrimary = false } = props;
+
+    const ink = onPrimary ? theme.colors.onPrimary : theme.colors.text;
+    const buttonBackground = onPrimary ? theme.colors.onPrimaryOverlay : theme.colors.surfaceMuted;
 
     return (
         <View style={styles.row}>
@@ -29,19 +32,16 @@ export const TopBar: React.FC<TopBarProps> = (props) => {
                     onPress={onBack}
                     style={({ pressed }) => [
                         styles.back,
-                        { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.6 : 1 },
+                        { backgroundColor: buttonBackground, opacity: pressed ? 0.6 : 1 },
                     ]}
                 >
-                    <Icon name="back" color={theme.colors.text} size={20} />
+                    <Icon name="back" color={ink} size={20} />
                 </Pressable>
             ) : (
-                <TakyaBrand theme={theme} />
+                <TakyaBrand theme={theme} onPrimary={onPrimary} />
             )}
             {title && (
-                <Text
-                    accessibilityRole="header"
-                    style={[styles.title, { color: theme.colors.text }]}
-                >
+                <Text accessibilityRole="header" style={[styles.title, { color: ink }]}>
                     {title}
                 </Text>
             )}
@@ -51,10 +51,10 @@ export const TopBar: React.FC<TopBarProps> = (props) => {
                 onPress={onToggleTheme}
                 style={({ pressed }) => [
                     styles.appearance,
-                    { backgroundColor: theme.colors.surfaceMuted, opacity: pressed ? 0.6 : 1 },
+                    { backgroundColor: buttonBackground, opacity: pressed ? 0.6 : 1 },
                 ]}
             >
-                <Icon name={theme.dark ? 'sun' : 'moon'} size={19} color={theme.colors.text} />
+                <Icon name={theme.dark ? 'sun' : 'moon'} size={19} color={ink} />
             </Pressable>
         </View>
     );

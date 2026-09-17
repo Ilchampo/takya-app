@@ -2,11 +2,12 @@ import type { AppTheme } from '../../theme/theme';
 import type * as types from '../../lib/types';
 
 import { ActivityIndicator, ScrollView, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { displayPlate, tryNormalizePlate } from '../../lib/utils/licensePlate.utils';
 import { formatLookupDate } from '../../lib/utils/date.utils';
 
 import { Button } from '../../components/Button/Button';
+import { Hero } from '../../components/Hero/Hero';
 import { Icon } from '../../components/Icon/Icon';
 import { QueryStatus } from '../../components/QueryStatus/QueryStatus';
 import { Text } from '../../components/Text/Text';
@@ -43,16 +44,24 @@ export const ResultScreen: React.FC<ResultScreenProps> = (props) => {
         onOpenLegal,
     } = props;
 
+    const insets = useSafeAreaInsets();
+
     return (
-        <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
-            <View style={styles.header}>
+        <View
+            style={[
+                styles.safe,
+                { backgroundColor: theme.colors.background, paddingBottom: insets.bottom },
+            ]}
+        >
+            <Hero theme={theme} compact>
                 <TopBar
                     theme={theme}
                     onToggleTheme={onToggleTheme}
                     onBack={onBack}
                     title={saved ? 'Consulta guardada' : 'Tu consulta'}
+                    onPrimary
                 />
-            </View>
+            </Hero>
             <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
                 <View style={styles.heading}>
                     <Text style={[styles.eyebrow, { color: theme.colors.textMuted }]}>
@@ -129,6 +138,6 @@ export const ResultScreen: React.FC<ResultScreenProps> = (props) => {
                     onPress={onOpenLegal}
                 />
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 };

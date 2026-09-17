@@ -13,7 +13,6 @@ interface LogoProps {
     onPrimary?: boolean;
 }
 
-// All paths come from the original full logo, including the outlined wordmark.
 export const TakyaBrand: React.FC<LogoProps> = (props) => {
     const { theme, full = false, width, onPrimary = false } = props;
 
@@ -31,7 +30,11 @@ export const TakyaBrand: React.FC<LogoProps> = (props) => {
             {full ? (
                 <G transform="translate(-3081.4359,671.749)">
                     {logoPaths.map((p) => (
-                        <Path key={p.id} d={p.d} fill={p.yellow ? theme.colors.primary : ink} />
+                        <Path
+                            key={p.id}
+                            d={p.d}
+                            fill={p.yellow && !onPrimary ? theme.colors.primary : ink}
+                        />
                     ))}
                 </G>
             ) : (
@@ -43,7 +46,7 @@ export const TakyaBrand: React.FC<LogoProps> = (props) => {
                                 <Path
                                     key={p.id}
                                     d={p.d}
-                                    fill={p.yellow ? theme.colors.primary : ink}
+                                    fill={p.yellow && !onPrimary ? theme.colors.primary : ink}
                                 />
                             ))}
                     </G>

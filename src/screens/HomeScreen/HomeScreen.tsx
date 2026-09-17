@@ -11,10 +11,11 @@ import {
     View,
 } from 'react-native';
 import { displayPlate, isValidPlate } from '../../lib/utils/licensePlate.utils';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { describeLookupAge } from '../../lib/utils/date.utils';
 
 import { Button } from '../../components/Button/Button';
+import { Hero } from '../../components/Hero/Hero';
 import { Icon } from '../../components/Icon/Icon';
 import { PlateInput } from '../../components/PlateInput/PlateInput';
 import { Text } from '../../components/Text/Text';
@@ -54,6 +55,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
         onClearHistory,
     } = props;
 
+    const insets = useSafeAreaInsets();
+
     const submit = (): void => {
         if (!loading && isValidPlate(plate)) {
             Keyboard.dismiss();
@@ -88,10 +91,19 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
     };
 
     return (
-        <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
-            <View style={styles.header}>
-                <TopBar theme={theme} onToggleTheme={onToggleTheme} />
-            </View>
+        <View
+            style={[
+                styles.safe,
+                { backgroundColor: theme.colors.background, paddingBottom: insets.bottom },
+            ]}
+        >
+            <View
+                pointerEvents="none"
+                style={[
+                    styles.statusFill,
+                    { height: insets.top, backgroundColor: theme.colors.primary },
+                ]}
+            />
             <KeyboardAvoidingView
                 style={styles.safe}
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -101,115 +113,159 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                     contentContainerStyle={styles.content}
                     showsVerticalScrollIndicator={false}
                 >
-                    <View style={styles.intro}>
-                        <Text style={[styles.eyebrow, { color: theme.colors.textMuted }]}>
-                            ANTES DE SUBIR
-                        </Text>
-                        <Text
-                            accessibilityRole="header"
-                            style={[styles.title, { color: theme.colors.text }]}
-                        >
-                            Conoce el vehículo.{'\n'}Elige con información.
-                        </Text>
-                        <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
-                            Consulta su placa en fuentes públicas de Ecuador.
-                        </Text>
-                    </View>
-                    <View
-                        style={[
-                            styles.form,
-                            {
-                                backgroundColor: theme.colors.surface,
-                                borderColor: theme.colors.border,
-                            },
-                        ]}
-                    >
-                        <Text style={[styles.formTitle, { color: theme.colors.text }]}>
-                            ¿Cuál es la placa?
-                        </Text>
-                        <PlateInput
-                            value={plate}
-                            onChange={onPlateChange}
-                            onSubmit={submit}
-                            theme={theme}
-                        />
-                        {error && (
-                            <Text
-                                accessibilityRole="alert"
-                                style={[styles.error, { color: theme.colors.danger }]}
-                            >
-                                {error}
+                    <Hero theme={theme}>
+                        <TopBar theme={theme} onToggleTheme={onToggleTheme} onPrimary />
+                        <View style={styles.intro}>
+                            <Text style={[styles.eyebrow, { color: theme.colors.onPrimaryFaint }]}>
+                                ANTES DE SUBIR
                             </Text>
-                        )}
-                        <Button
-                            label="Consultar vehículo"
-                            onPress={submit}
-                            theme={theme}
-                            disabled={!isValidPlate(plate) || loading}
-                            loading={loading}
-                        />
-                        <View style={[styles.sources, { borderTopColor: theme.colors.border }]}>
-                            <Icon name="database" color={theme.colors.textMuted} size={16} />
-                            <Text style={[styles.sourceText, { color: theme.colors.textMuted }]}>
-                                SRI <Text style={{ color: theme.colors.textFaint }}> · </Text>{' '}
-                                Fiscalía General del Estado
-                            </Text>
-                        </View>
-                    </View>
-                    <View style={styles.recent}>
-                        <View style={styles.sectionHeader}>
                             <Text
                                 accessibilityRole="header"
-                                style={[styles.sectionTitle, { color: theme.colors.text }]}
+                                style={[styles.title, { color: theme.colors.onPrimary }]}
                             >
-                                Consultas recientes
+                                Conoce el vehículo.{'\n'}Elige con información.
                             </Text>
-                            {history.length > 0 && (
-                                <Pressable
-                                    accessibilityRole="button"
-                                    accessibilityLabel="Borrar historial"
-                                    onPress={confirmClearHistory}
-                                    style={styles.clear}
-                                >
-                                    <Text
-                                        style={[styles.action, { color: theme.colors.textMuted }]}
-                                    >
-                                        Borrar
-                                    </Text>
-                                </Pressable>
-                            )}
+                            <Text style={[styles.subtitle, { color: theme.colors.onPrimaryMuted }]}>
+                                Consulta su placa en fuentes públicas de Ecuador.
+                            </Text>
                         </View>
-                        {history.length ? (
-                            history.map((item) => (
-                                <Pressable
-                                    key={item.plate}
-                                    accessibilityRole="button"
-                                    accessibilityLabel={`Ver consulta de ${displayPlate(item.plate)}`}
-                                    onPress={() => onOpenHistory(item.plate)}
-                                    style={({ pressed }) => [
-                                        styles.historyRow,
-                                        {
-                                            borderBottomColor: theme.colors.border,
-                                            opacity: pressed ? 0.55 : 1,
-                                        },
-                                    ]}
+                    </Hero>
+                    <View style={styles.body}>
+                        <View
+                            style={[
+                                styles.form,
+                                {
+                                    backgroundColor: theme.colors.surface,
+                                    borderColor: theme.colors.border,
+                                    shadowColor: theme.colors.shadow,
+                                },
+                            ]}
+                        >
+                            <Text style={[styles.formTitle, { color: theme.colors.text }]}>
+                                ¿Cuál es la placa?
+                            </Text>
+                            <PlateInput
+                                value={plate}
+                                onChange={onPlateChange}
+                                onSubmit={submit}
+                                theme={theme}
+                            />
+                            {error && (
+                                <Text
+                                    accessibilityRole="alert"
+                                    style={[styles.error, { color: theme.colors.danger }]}
                                 >
-                                    <View
-                                        style={[
-                                            styles.historyIcon,
-                                            { backgroundColor: theme.colors.surfaceMuted },
+                                    {error}
+                                </Text>
+                            )}
+                            <Button
+                                label="Consultar vehículo"
+                                onPress={submit}
+                                theme={theme}
+                                disabled={!isValidPlate(plate) || loading}
+                                loading={loading}
+                            />
+                            <View style={[styles.sources, { borderTopColor: theme.colors.border }]}>
+                                <Icon name="database" color={theme.colors.textMuted} size={16} />
+                                <Text
+                                    style={[styles.sourceText, { color: theme.colors.textMuted }]}
+                                >
+                                    SRI <Text style={{ color: theme.colors.textFaint }}> · </Text>{' '}
+                                    Fiscalía General del Estado
+                                </Text>
+                            </View>
+                        </View>
+                        <View style={styles.recent}>
+                            <View style={styles.sectionHeader}>
+                                <Text
+                                    accessibilityRole="header"
+                                    style={[styles.sectionTitle, { color: theme.colors.text }]}
+                                >
+                                    Consultas recientes
+                                </Text>
+                                {history.length > 0 && (
+                                    <Pressable
+                                        accessibilityRole="button"
+                                        accessibilityLabel="Borrar historial"
+                                        onPress={confirmClearHistory}
+                                        style={styles.clear}
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.action,
+                                                { color: theme.colors.textMuted },
+                                            ]}
+                                        >
+                                            Borrar
+                                        </Text>
+                                    </Pressable>
+                                )}
+                            </View>
+                            {history.length ? (
+                                history.map((item) => (
+                                    <Pressable
+                                        key={item.plate}
+                                        accessibilityRole="button"
+                                        accessibilityLabel={`Ver consulta de ${displayPlate(item.plate)}`}
+                                        onPress={() => onOpenHistory(item.plate)}
+                                        style={({ pressed }) => [
+                                            styles.historyRow,
+                                            {
+                                                borderBottomColor: theme.colors.border,
+                                                opacity: pressed ? 0.55 : 1,
+                                            },
                                         ]}
                                     >
-                                        <Icon name="clock" size={21} color={theme.colors.text} />
-                                    </View>
+                                        <View
+                                            style={[
+                                                styles.historyIcon,
+                                                { backgroundColor: theme.colors.surfaceMuted },
+                                            ]}
+                                        >
+                                            <Icon
+                                                name="clock"
+                                                size={21}
+                                                color={theme.colors.text}
+                                            />
+                                        </View>
+                                        <View style={styles.historyCopy}>
+                                            <Text
+                                                style={[
+                                                    styles.historyPlate,
+                                                    { color: theme.colors.text },
+                                                ]}
+                                            >
+                                                {displayPlate(item.plate)}
+                                            </Text>
+                                            <Text
+                                                style={[
+                                                    styles.historyAge,
+                                                    { color: theme.colors.textMuted },
+                                                ]}
+                                            >
+                                                {describeLookupAge(item.fetchedAt)} · Guardada
+                                            </Text>
+                                        </View>
+                                        <Icon
+                                            name="chevron"
+                                            size={18}
+                                            color={theme.colors.textMuted}
+                                        />
+                                    </Pressable>
+                                ))
+                            ) : (
+                                <View style={[styles.empty, { borderColor: theme.colors.border }]}>
+                                    <Icon name="clock" color={theme.colors.textMuted} size={24} />
                                     <View style={styles.historyCopy}>
                                         <Text
                                             style={[
-                                                styles.historyPlate,
+                                                styles.emptyTitle,
                                                 { color: theme.colors.text },
                                             ]}
                                         >
-                                            {displayPlate(item.plate)}
+                                            {storageAvailable
+                                                ? 'Tu historial empieza aquí'
+                                                : 'Historial no disponible'}
                                         </Text>
                                         <Text
                                             style={[
@@ -217,63 +273,45 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                                                 { color: theme.colors.textMuted },
                                             ]}
                                         >
-                                            {describeLookupAge(item.fetchedAt)} · Guardada
+                                            {storageAvailable
+                                                ? `Tus últimas ${config.service.historyLimit} consultas, a mano durante ${config.service.ttlDays} días.`
+                                                : 'Puedes consultar sin guardar los resultados.'}
                                         </Text>
                                     </View>
-                                    <Icon name="chevron" size={18} color={theme.colors.textMuted} />
-                                </Pressable>
-                            ))
-                        ) : (
-                            <View style={[styles.empty, { borderColor: theme.colors.border }]}>
-                                <Icon name="clock" color={theme.colors.textMuted} size={24} />
-                                <View style={styles.historyCopy}>
-                                    <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>
-                                        {storageAvailable
-                                            ? 'Tu historial empieza aquí'
-                                            : 'Historial no disponible'}
-                                    </Text>
-                                    <Text
-                                        style={[
-                                            styles.historyAge,
-                                            { color: theme.colors.textMuted },
-                                        ]}
-                                    >
-                                        {storageAvailable
-                                            ? `Tus últimas ${config.service.historyLimit} consultas, a mano durante ${config.service.ttlDays} días.`
-                                            : 'Puedes consultar sin guardar los resultados.'}
-                                    </Text>
                                 </View>
-                            </View>
-                        )}
-                    </View>
-                    <Pressable
-                        accessibilityRole="button"
-                        onPress={onOpenLegal}
-                        style={({ pressed }) => [
-                            styles.privacy,
-                            { borderTopColor: theme.colors.border, opacity: pressed ? 0.6 : 1 },
-                        ]}
-                    >
-                        <View
-                            style={[
-                                styles.privacyIcon,
-                                { backgroundColor: theme.colors.surfaceMuted },
+                            )}
+                        </View>
+                        <Pressable
+                            accessibilityRole="button"
+                            onPress={onOpenLegal}
+                            style={({ pressed }) => [
+                                styles.privacy,
+                                { borderTopColor: theme.colors.border, opacity: pressed ? 0.6 : 1 },
                             ]}
                         >
-                            <Icon name="shield" size={21} color={theme.colors.text} />
-                        </View>
-                        <View style={styles.historyCopy}>
-                            <Text style={[styles.privacyTitle, { color: theme.colors.text }]}>
-                                Tu consulta, en tus manos
-                            </Text>
-                            <Text style={[styles.historyAge, { color: theme.colors.textMuted }]}>
-                                Privacidad y uso responsable
-                            </Text>
-                        </View>
-                        <Icon name="chevron" size={18} color={theme.colors.textMuted} />
-                    </Pressable>
+                            <View
+                                style={[
+                                    styles.privacyIcon,
+                                    { backgroundColor: theme.colors.surfaceMuted },
+                                ]}
+                            >
+                                <Icon name="shield" size={21} color={theme.colors.text} />
+                            </View>
+                            <View style={styles.historyCopy}>
+                                <Text style={[styles.privacyTitle, { color: theme.colors.text }]}>
+                                    Tu consulta, en tus manos
+                                </Text>
+                                <Text
+                                    style={[styles.historyAge, { color: theme.colors.textMuted }]}
+                                >
+                                    Privacidad y uso responsable
+                                </Text>
+                            </View>
+                            <Icon name="chevron" size={18} color={theme.colors.textMuted} />
+                        </Pressable>
+                    </View>
                 </ScrollView>
             </KeyboardAvoidingView>
-        </SafeAreaView>
+        </View>
     );
 };

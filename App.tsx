@@ -42,9 +42,12 @@ const AppContent = () => {
         clearHistory,
     } = useApp();
 
+    const showingSplash = !ready || (!fontsLoaded && !fontError);
+    const showingError = Boolean(configurationError);
+
     return (
         <>
-            <StatusBar style={theme.dark ? 'light' : 'dark'} />
+            <StatusBar style={theme.dark && (showingSplash || showingError) ? 'light' : 'dark'} />
             {!ready || (!fontsLoaded && !fontError) ? (
                 <SplashScreen theme={theme} />
             ) : configurationError ? (

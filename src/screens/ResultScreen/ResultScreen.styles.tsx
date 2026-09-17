@@ -2,19 +2,12 @@ import { StyleSheet } from 'react-native';
 
 const styles = StyleSheet.create({
     safe: { flex: 1 },
-    header: {
-        paddingHorizontal: 24,
-        paddingTop: 12,
-        paddingBottom: 16,
-        width: '100%',
-        maxWidth: 600,
-        alignSelf: 'center',
-    },
     content: {
         width: '100%',
         maxWidth: 600,
         alignSelf: 'center',
         paddingHorizontal: 24,
+        paddingTop: 8,
         paddingBottom: 32,
         gap: 16,
     },

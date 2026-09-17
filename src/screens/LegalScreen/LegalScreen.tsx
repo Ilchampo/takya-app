@@ -1,7 +1,8 @@
 import type { AppTheme } from '../../theme/theme';
 
 import { ScrollView, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Hero } from '../../components/Hero/Hero';
 import { Icon } from '../../components/Icon/Icon';
 import { Text } from '../../components/Text/Text';
 import { TopBar } from '../../components/TopBar/TopBar';
@@ -17,17 +18,24 @@ interface LegalScreenProps {
 
 export const LegalScreen: React.FC<LegalScreenProps> = (props) => {
     const { theme, onBack, onToggleTheme } = props;
+    const insets = useSafeAreaInsets();
 
     return (
-        <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]}>
-            <View style={styles.header}>
+        <View
+            style={[
+                styles.safe,
+                { backgroundColor: theme.colors.background, paddingBottom: insets.bottom },
+            ]}
+        >
+            <Hero theme={theme} compact>
                 <TopBar
                     theme={theme}
                     onBack={onBack}
                     title="Privacidad"
                     onToggleTheme={onToggleTheme}
+                    onPrimary
                 />
-            </View>
+            </Hero>
             <ScrollView contentContainerStyle={styles.content}>
                 <View style={[styles.symbol, { backgroundColor: theme.colors.primary }]}>
                     <Icon name="shield" size={29} color={theme.colors.onPrimary} />
@@ -89,6 +97,6 @@ export const LegalScreen: React.FC<LegalScreenProps> = (props) => {
                     </Text>
                 </View>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 };
