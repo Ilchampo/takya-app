@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+    - name: Report a security vulnerability
+      url: https://github.com/Ilchampo/takya-app/security/advisories/new
+      about: Please do not file public issues for security reports.
+    - name: Read the contributing guide
+      url: https://github.com/Ilchampo/takya-app/blob/main/CONTRIBUTING.md
+      about: Setup, tests, pull request process, and coding standards.
