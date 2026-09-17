@@ -2,12 +2,13 @@ import type { AppTheme } from '../../theme/theme';
 import type * as types from '../../lib/types';
 
 import { ActivityIndicator, ScrollView, View } from 'react-native';
-import { displayPlate, tryNormalizePlate } from '../../lib/utils/licensePlate.utils';
+import { tryNormalizePlate } from '../../lib/utils/licensePlate.utils';
 import { formatLookupDate } from '../../lib/utils/date.utils';
 
 import { Button } from '../../components/Button/Button';
 import { Hero } from '../../components/Hero/Hero';
 import { Icon } from '../../components/Icon/Icon';
+import { LicensePlate } from '../../components/LicensePlate/LicensePlate';
 import { QueryStatus } from '../../components/QueryStatus/QueryStatus';
 import { Text } from '../../components/Text/Text';
 import { TopBar } from '../../components/TopBar/TopBar';
@@ -61,13 +62,7 @@ export const ResultScreen: React.FC<ResultScreenProps> = (props) => {
                             ? 'GUARDADA EN TU DISPOSITIVO'
                             : 'INFORMACIÓN DEL VEHÍCULO'}
                     </Text>
-                    <Text
-                        selectable
-                        accessibilityRole="header"
-                        style={[styles.plate, { color: theme.colors.text }]}
-                    >
-                        {displayPlate(result?.plate ?? tryNormalizePlate(plate) ?? plate)}
-                    </Text>
+                    <LicensePlate plate={result?.plate ?? tryNormalizePlate(plate) ?? plate} />
                     <Text style={[styles.meta, { color: theme.colors.textMuted }]}>
                         {loading
                             ? 'Consultando fuentes públicas…'
@@ -103,9 +98,8 @@ export const ResultScreen: React.FC<ResultScreenProps> = (props) => {
                         seguridad.
                     </Text>
                 </View>
-                {saved ? (
-                    <Button label="Consultar otra placa" theme={theme} onPress={onBack} />
-                ) : loading && onCancel ? (
+                <Button label="Consultar otra placa" theme={theme} onPress={onBack} />
+                {loading && onCancel ? (
                     <Button
                         label="Cancelar consulta"
                         theme={theme}
@@ -113,21 +107,11 @@ export const ResultScreen: React.FC<ResultScreenProps> = (props) => {
                         onPress={onCancel}
                     />
                 ) : (
-                    <Button label="Consultar de nuevo" theme={theme} onPress={onRefresh} />
-                )}
-                {saved ? (
                     <Button
                         label="Actualizar consulta"
                         theme={theme}
                         variant="secondary"
                         onPress={onRefresh}
-                    />
-                ) : (
-                    <Button
-                        label="Consultar otra placa"
-                        theme={theme}
-                        variant="ghost"
-                        onPress={onBack}
                     />
                 )}
                 <Button
