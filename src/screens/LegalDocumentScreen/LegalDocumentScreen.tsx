@@ -4,6 +4,7 @@ import type { AppTheme } from '../../theme/theme';
 import type { LegalBlock, LegalDocument, LegalSpan } from '../../lib/interfaces/legal.interface.ts';
 import { Linking, ScrollView, View } from 'react-native';
 
+import { EdgeSwipeBack } from '../../components/EdgeSwipeBack/EdgeSwipeBack';
 import { Hero } from '../../components/Hero/Hero';
 import { Icon } from '../../components/Icon/Icon';
 import { Text } from '../../components/Text/Text';
@@ -226,29 +227,31 @@ export const LegalDocumentScreen: React.FC<LegalDocumentScreenProps> = (props) =
     const { theme, document, onBack, onToggleTheme, onOpenPrivacyPolicy } = props;
 
     return (
-        <View style={[styles.safe, { backgroundColor: theme.colors.background }]}>
-            <Hero theme={theme} compact>
-                <TopBar
-                    theme={theme}
-                    onBack={onBack}
-                    title={document.shortTitle}
-                    onToggleTheme={onToggleTheme}
-                    onPrimary
-                />
-            </Hero>
-            <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator>
-                <View style={[styles.symbol, { backgroundColor: theme.colors.primary }]}>
-                    <Icon name={document.icon} size={29} color={theme.colors.onPrimary} />
-                </View>
-                {document.blocks.map((block, index) => (
-                    <DocumentBlock
-                        key={`${block.type}-${index}`}
+        <EdgeSwipeBack onBack={onBack}>
+            <View style={[styles.safe, { backgroundColor: theme.colors.background }]}>
+                <Hero theme={theme} compact>
+                    <TopBar
                         theme={theme}
-                        block={block}
-                        onOpenPrivacyPolicy={onOpenPrivacyPolicy}
+                        onBack={onBack}
+                        title={document.shortTitle}
+                        onToggleTheme={onToggleTheme}
+                        onPrimary
                     />
-                ))}
-            </ScrollView>
-        </View>
+                </Hero>
+                <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator>
+                    <View style={[styles.symbol, { backgroundColor: theme.colors.primary }]}>
+                        <Icon name={document.icon} size={29} color={theme.colors.onPrimary} />
+                    </View>
+                    {document.blocks.map((block, index) => (
+                        <DocumentBlock
+                            key={`${block.type}-${index}`}
+                            theme={theme}
+                            block={block}
+                            onOpenPrivacyPolicy={onOpenPrivacyPolicy}
+                        />
+                    ))}
+                </ScrollView>
+            </View>
+        </EdgeSwipeBack>
     );
 };
