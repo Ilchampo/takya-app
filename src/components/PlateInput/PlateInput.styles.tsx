@@ -41,10 +41,15 @@ const styles = StyleSheet.create({
         fontFamily: fonts.black,
         fontSize: 24,
         lineHeight: 30,
-        fontWeight: '900',
         color: '#2B2B2B',
         textAlign: 'center',
+        width: '100%',
         includeFontPadding: false,
+    },
+    stem: {
+        width: 4,
+        height: 20,
+        backgroundColor: '#2B2B2B',
     },
     dash: {
         fontFamily: fonts.black,

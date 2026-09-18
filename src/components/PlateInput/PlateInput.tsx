@@ -30,7 +30,12 @@ const Cell: React.FC<CellProps> = (props) => {
 
     return (
         <View style={[styles.cell, filled && styles.cellFilled, active && styles.cellActive]}>
-            <Text style={styles.glyph}>{value}</Text>
+            {/* For some weird reason "I" was not rendering normally. Had to implement this manual handle */}
+            {value === 'I' ? (
+                <View accessibilityElementsHidden style={styles.stem} />
+            ) : (
+                <Text style={styles.glyph}>{value}</Text>
+            )}
         </View>
     );
 };
@@ -57,23 +62,6 @@ export const PlateInput: React.FC<PlateInputProps> = (props) => {
         <View style={styles.wrapper}>
             <PlateFrame size="input" focused={focused}>
                 <View style={styles.field}>
-                    <View pointerEvents="none" accessibilityElementsHidden style={styles.cells}>
-                        {Array.from({ length: LETTER_SLOTS }, (_, index) => (
-                            <Cell
-                                key={`letter-${index}`}
-                                value={letters[index] ?? ''}
-                                active={activeIndex === index}
-                            />
-                        ))}
-                        <Text style={styles.dash}>-</Text>
-                        {Array.from({ length: NUMBER_SLOTS }, (_, index) => (
-                            <Cell
-                                key={`number-${index}`}
-                                value={numbers[index] ?? ''}
-                                active={activeIndex === LETTER_SLOTS + index}
-                            />
-                        ))}
-                    </View>
                     <TextInput
                         testID="plate-input"
                         accessibilityLabel="Placa"
@@ -93,6 +81,23 @@ export const PlateInput: React.FC<PlateInputProps> = (props) => {
                         selectionColor="transparent"
                         style={styles.hiddenInput}
                     />
+                    <View pointerEvents="none" accessibilityElementsHidden style={styles.cells}>
+                        {Array.from({ length: LETTER_SLOTS }, (_, index) => (
+                            <Cell
+                                key={`letter-${index}`}
+                                value={letters[index] ?? ''}
+                                active={activeIndex === index}
+                            />
+                        ))}
+                        <Text style={styles.dash}>-</Text>
+                        {Array.from({ length: NUMBER_SLOTS }, (_, index) => (
+                            <Cell
+                                key={`number-${index}`}
+                                value={numbers[index] ?? ''}
+                                active={activeIndex === LETTER_SLOTS + index}
+                            />
+                        ))}
+                    </View>
                 </View>
             </PlateFrame>
             <Text style={[styles.help, { color: theme.colors.textMuted }]}>

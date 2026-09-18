@@ -1,8 +1,14 @@
 import { StyleSheet } from 'react-native';
 
+const TOP_OVERSCROLL_FILL = 320;
+
 const styles = StyleSheet.create({
     safe: { flex: 1 },
     statusFill: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1 },
+    topOverscroll: {
+        height: TOP_OVERSCROLL_FILL,
+        marginTop: -TOP_OVERSCROLL_FILL,
+    },
     content: { paddingBottom: 28 },
     body: {
         width: '100%',
