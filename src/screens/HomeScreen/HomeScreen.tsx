@@ -136,7 +136,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                     keyboardShouldPersistTaps="handled"
                     contentContainerStyle={styles.content}
                     showsVerticalScrollIndicator={false}
+                    alwaysBounceVertical
                 >
+                    <View
+                        pointerEvents="none"
+                        style={[styles.topOverscroll, { backgroundColor: theme.colors.primary }]}
+                    />
                     <Hero theme={theme}>
                         <View
                             onLayout={(event) =>
