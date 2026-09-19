@@ -53,6 +53,12 @@
                     }
                 }
             ]
-        ]
+        ],
+        "extra": {
+            "eas": {
+                "projectId": "e0948f91-9f55-490c-ac75-9905df0dcc9d"
+            }
+        },
+        "owner": "pablo_beltran"
     }
 }
