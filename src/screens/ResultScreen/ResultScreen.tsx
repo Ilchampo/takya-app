@@ -14,6 +14,7 @@ import { QueryStatus } from '../../components/QueryStatus/QueryStatus';
 import { Text } from '../../components/Text/Text';
 import { TopBar } from '../../components/TopBar/TopBar';
 
+import { GOVERNMENT_DISCLAIMER } from '../../lib/utils/source.utils';
 import styles from './ResultScreen.styles';
 
 export interface ResultScreenProps {
@@ -95,6 +96,13 @@ export const ResultScreen: React.FC<ResultScreenProps> = (props) => {
                             </Text>
                         </View>
                     )}
+                    <View style={[styles.notice, { backgroundColor: theme.colors.surfaceMuted }]}>
+                        <Icon name="info" size={20} color={theme.colors.textMuted} />
+                        <Text style={[styles.noticeText, { color: theme.colors.textMuted }]}>
+                            {GOVERNMENT_DISCLAIMER} Cada sección enlaza la fuente oficial de sus
+                            datos.
+                        </Text>
+                    </View>
                     {result && <QueryStatus theme={theme} result={result} />}
                     <View style={[styles.notice, { backgroundColor: theme.colors.surfaceMuted }]}>
                         <Icon name="info" size={20} color={theme.colors.textMuted} />

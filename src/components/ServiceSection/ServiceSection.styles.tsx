@@ -19,6 +19,7 @@ const styles = StyleSheet.create({
     copy: { flex: 1, gap: 2 },
     title: { fontSize: 18, lineHeight: 25, fontWeight: '700' },
     subtitle: { fontSize: 12, lineHeight: 18 },
+    sourceLink: { fontSize: 12, lineHeight: 18, alignSelf: 'flex-start' },
     body: { padding: 18 },
     state: { padding: 18, gap: 8 },
     stateTitle: { fontSize: 16, lineHeight: 23, fontWeight: '600' },

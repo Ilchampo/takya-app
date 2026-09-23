@@ -6,10 +6,12 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { EdgeSwipeBack } from '../../components/EdgeSwipeBack/EdgeSwipeBack';
 import { Hero } from '../../components/Hero/Hero';
 import { Icon } from '../../components/Icon/Icon';
+import { OfficialSourceLink } from '../../components/OfficialSourceLink/OfficialSourceLink';
 import { Text } from '../../components/Text/Text';
 import { TopBar } from '../../components/TopBar/TopBar';
 
 import config from '../../lib/configs/app.config';
+import { GOVERNMENT_DISCLAIMER, officialSources } from '../../lib/utils/source.utils';
 import styles from './LegalScreen.styles';
 
 interface LegalScreenProps {
@@ -97,6 +99,26 @@ export const LegalScreen: React.FC<LegalScreenProps> = (props) => {
                             necesitas una cuenta y Takya no utiliza un servidor propio para
                             recolectar tus búsquedas.
                         </Text>
+                        <Text style={[styles.body, { color: theme.colors.textMuted }]}>
+                            {GOVERNMENT_DISCLAIMER}
+                        </Text>
+                        <View style={styles.sources}>
+                            {officialSources().map((source) => (
+                                <View key={source.id} style={styles.source}>
+                                    <Text style={[styles.sourceName, { color: theme.colors.text }]}>
+                                        {source.name}
+                                    </Text>
+                                    <OfficialSourceLink
+                                        testID={`legal-source-${source.id}`}
+                                        theme={theme}
+                                        source={source}
+                                        style={styles.sourceUrl}
+                                    >
+                                        {source.url}
+                                    </OfficialSourceLink>
+                                </View>
+                            ))}
+                        </View>
                     </View>
                     <View style={[styles.section, { borderTopColor: theme.colors.border }]}>
                         <Text

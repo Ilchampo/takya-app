@@ -5,9 +5,10 @@ import type * as types from '../../lib/types';
 
 import { ActivityIndicator, View } from 'react-native';
 import { Icon } from '../Icon/Icon';
+import { OfficialSourceLink } from '../OfficialSourceLink/OfficialSourceLink';
 import { Text } from '../Text/Text';
 import { getServiceConfig } from '../../lib/configs/serviceSection.config';
-import { sourcePresentation } from '../../lib/utils/source.utils';
+import { officialSource, sourcePresentation } from '../../lib/utils/source.utils';
 
 import styles from './ServiceSection.styles';
 
@@ -23,6 +24,7 @@ export const ServiceSection: React.FC<ServiceSectionProps> = (props) => {
 
     const { title, subtitle, icon, Success } = getServiceConfig(service);
     const presentation = sourcePresentation(source);
+    const citation = officialSource(service);
 
     return (
         <View
@@ -45,6 +47,16 @@ export const ServiceSection: React.FC<ServiceSectionProps> = (props) => {
                     <Text style={[styles.subtitle, { color: theme.colors.textMuted }]}>
                         {subtitle}
                     </Text>
+                    {citation && (
+                        <OfficialSourceLink
+                            testID={`section-source-${service}`}
+                            theme={theme}
+                            source={citation}
+                            style={styles.sourceLink}
+                        >
+                            {citation.host}
+                        </OfficialSourceLink>
+                    )}
                 </View>
                 {source?.status === 'loading' && (
                     <ActivityIndicator

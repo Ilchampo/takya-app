@@ -46,11 +46,16 @@ const styles = StyleSheet.create({
     sources: {
         borderTopWidth: StyleSheet.hairlineWidth,
         paddingTop: 15,
+        gap: 8,
+    },
+    sourcesLabel: {
         flexDirection: 'row',
         gap: 8,
         alignItems: 'center',
     },
-    sourceText: { fontSize: 12, lineHeight: 18, flex: 1 },
+    sourceText: { fontSize: 12, lineHeight: 18 },
+    sourceLink: { fontSize: 12, lineHeight: 18 },
+    disclaimer: { fontSize: 12, lineHeight: 18 },
     recent: { gap: 12 },
     sectionHeader: {
         flexDirection: 'row',

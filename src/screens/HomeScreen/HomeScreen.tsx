@@ -20,11 +20,13 @@ import { describeLookupAge } from '../../lib/utils/date.utils';
 import { Button } from '../../components/Button/Button';
 import { Hero } from '../../components/Hero/Hero';
 import { Icon } from '../../components/Icon/Icon';
+import { OfficialSourceLink } from '../../components/OfficialSourceLink/OfficialSourceLink';
 import { PlateInput } from '../../components/PlateInput/PlateInput';
 import { Text } from '../../components/Text/Text';
 import { TopBar } from '../../components/TopBar/TopBar';
 
 import config from '../../lib/configs/app.config';
+import { GOVERNMENT_DISCLAIMER, officialSources } from '../../lib/utils/source.utils';
 import styles from './HomeScreen.styles';
 
 const HERO_TOP_GAP = 12;
@@ -237,20 +239,51 @@ export const HomeScreen: React.FC<HomeScreenProps> = (props) => {
                                         { borderTopColor: theme.colors.border },
                                     ]}
                                 >
-                                    <Icon
-                                        name="database"
-                                        color={theme.colors.textMuted}
-                                        size={16}
-                                    />
+                                    <View style={styles.sourcesLabel}>
+                                        <Icon
+                                            name="database"
+                                            color={theme.colors.textMuted}
+                                            size={16}
+                                        />
+                                        <Text
+                                            style={[
+                                                styles.sourceText,
+                                                { color: theme.colors.textMuted },
+                                            ]}
+                                        >
+                                            Fuentes oficiales
+                                        </Text>
+                                    </View>
+                                    {officialSources().map((source) => (
+                                        <Text
+                                            key={source.id}
+                                            style={[
+                                                styles.sourceText,
+                                                { color: theme.colors.textMuted },
+                                            ]}
+                                        >
+                                            {source.name}
+                                            <Text style={{ color: theme.colors.textFaint }}>
+                                                {' '}
+                                                ·{' '}
+                                            </Text>
+                                            <OfficialSourceLink
+                                                testID={`source-${source.id}`}
+                                                theme={theme}
+                                                source={source}
+                                                style={styles.sourceLink}
+                                            >
+                                                {source.host}
+                                            </OfficialSourceLink>
+                                        </Text>
+                                    ))}
                                     <Text
                                         style={[
-                                            styles.sourceText,
+                                            styles.disclaimer,
                                             { color: theme.colors.textMuted },
                                         ]}
                                     >
-                                        SRI{' '}
-                                        <Text style={{ color: theme.colors.textFaint }}> · </Text>{' '}
-                                        Fiscalía General del Estado
+                                        {GOVERNMENT_DISCLAIMER}
                                     </Text>
                                 </View>
                             </View>
