@@ -9,4 +9,10 @@ tags:
 - assertVisible: 'Consultar vehículo'
 - assertVisible: 'Tu historial empieza aquí'
 - assertVisible: 'SRI'
+- assertVisible: 'srienlinea.sri.gob.ec'
 - assertVisible: 'Fiscalía General del Estado'
+- assertVisible: 'www.gestiondefiscalias.gob.ec'
+- scrollUntilVisible:
+      element: 'Takya no es una aplicación oficial del Gobierno del Ecuador y no representa a una entidad gubernamental.'
+      direction: DOWN
+      timeout: 8000
