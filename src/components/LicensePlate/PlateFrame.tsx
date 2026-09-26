@@ -61,7 +61,15 @@ export const PlateFrame: React.FC<PlateFrameProps> = (props) => {
                     </View>
                     <Text style={[styles.ant, input && styles.antInput]}>TKY</Text>
                 </View>
-                <Text style={[styles.country, input && styles.countryInput]}>ECUADOR</Text>
+                <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.7}
+                    maxFontSizeMultiplier={1.15}
+                    style={[styles.country, input && styles.countryInput]}
+                >
+                    ECUADOR
+                </Text>
             </View>
             {children}
         </View>
