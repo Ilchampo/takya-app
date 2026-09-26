@@ -42,6 +42,9 @@ test('SRI lookup uses a normalized encoded plate and a GET request', async () =>
     assert.equal(result.diagnostics.status, 200);
 });
 
+const fiscaliaHeaders = (init: RequestInit | undefined): Record<string, string> =>
+    (init?.headers ?? {}) as Record<string, string>;
+
 test('Fiscalía lookup initializes its session and sends the captured form contract', async () => {
     const urls: unknown[] = [];
     const fecha = calendarStamp();
@@ -52,17 +55,32 @@ test('Fiscalía lookup initializes its session and sends the captured form contr
 
             if (url === config.source.fiscaliaEntry) {
                 assert.equal(init?.credentials, 'include');
+                assert.match(fiscaliaHeaders(init)['User-Agent'] ?? '', /CFNetwork/);
+                assert.doesNotMatch(fiscaliaHeaders(init)['User-Agent'] ?? '', /okhttp/i);
 
-                return new Response('<html>Sesión</html>');
+                return new Response('<html>Sesión</html>', {
+                    headers: {
+                        'set-cookie': [
+                            'PHPSESSID=session-token; path=/',
+                            'visid_incap_1894955=visitor; expires=Sat, 25 Sep 2027 07:04:30 GMT; HttpOnly; path=/',
+                            'incap_ses_926_1894955=edge+token==; path=/',
+                        ].join(', '),
+                    },
+                });
             }
 
             assert.equal(url, config.source.fiscaliaLookup);
             assert.equal(init?.method, 'POST');
-            assert.equal(init?.credentials, 'include');
+            assert.equal(init?.credentials, 'omit');
             assert.equal(init?.body, 'tipo=buscar_general&criterio=5&valor=ABC0123');
             assert.equal(
-                (init?.headers as Record<string, string>)['Content-Type'],
+                fiscaliaHeaders(init)['Content-Type'],
                 'application/x-www-form-urlencoded',
+            );
+            assert.match(fiscaliaHeaders(init)['User-Agent'] ?? '', /CFNetwork/);
+            assert.equal(
+                fiscaliaHeaders(init).Cookie,
+                'PHPSESSID=session-token; visid_incap_1894955=visitor; incap_ses_926_1894955=edge+token==',
             );
 
             return Response.json({
@@ -228,6 +246,54 @@ test('caller cancellation aborts the HTTP request without waiting for its timeou
     controller.abort();
 
     await assert.rejects(running, { name: 'AbortError' });
+});
+
+test('Fiscalía reuses the session cookies without opening the entry page again', async () => {
+    const urls: unknown[] = [];
+
+    const fetchImpl: typeof fetch = async (url) => {
+        urls.push(String(url));
+
+        return String(url) === config.source.fiscaliaEntry
+            ? new Response('session', {
+                  headers: { 'set-cookie': 'PHPSESSID=reused; path=/' },
+              })
+            : Response.json({ cabecera: [] });
+    };
+
+    await lookupFiscalia('PBC1234', { initializeSession: true, fetchImpl });
+    await lookupFiscalia('PBC1234', {
+        initializeSession: false,
+        fetchImpl: async (url, init) => {
+            urls.push(String(url));
+            assert.equal(init?.credentials, 'omit');
+            assert.equal((init?.headers as Record<string, string>).Cookie, 'PHPSESSID=reused');
+
+            return Response.json({ cabecera: [] });
+        },
+    });
+
+    assert.deepEqual(urls, [
+        config.source.fiscaliaEntry,
+        config.source.fiscaliaLookup,
+        config.source.fiscaliaLookup,
+    ]);
+});
+
+test('Fiscalía keeps the platform cookie store when the session sets no cookie', async () => {
+    await lookupFiscalia('PBC1234', {
+        initializeSession: true,
+        fetchImpl: async (url, init) => {
+            if (url === config.source.fiscaliaLookup) {
+                assert.equal(init?.credentials, 'include');
+                assert.equal((init?.headers as Record<string, string>).Cookie, undefined);
+            }
+
+            return url === config.source.fiscaliaEntry
+                ? new Response('session')
+                : Response.json({ cabecera: [] });
+        },
+    });
 });
 
 test('Fiscalía session and lookup receive separate timeout signals', async () => {

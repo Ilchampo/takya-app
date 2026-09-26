@@ -166,6 +166,7 @@ export type FiscaliaOptions = RequestOptions & {
 export type RequestResult = {
     data: unknown;
     diagnostics: Diagnostics;
+    cookieHeader?: string;
 };
 
 export type ParsedCacheJson = { valid: true; data: Record<string, unknown> } | { valid: false };
