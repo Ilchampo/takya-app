@@ -16,6 +16,13 @@ import config from '../configs/app.config.ts';
 const DEBUG_SRI_DELAY_MS = 420;
 const DEBUG_FISCALIA_DELAY_MS = 780;
 
+// Imperva blocks Android's default okhttp agent. This CFNetwork agent is
+// accepted, and the session cookies are copied onto the lookup because
+// Android's cookie store is updated asynchronously.
+const FISCALIA_USER_AGENT = 'Takya/1.0 CFNetwork/1496.0.7 Darwin/23.6.0';
+
+let fiscaliaCookieHeader: string | undefined;
+
 const allowedSourceHosts = {
     SRI: 'srienlinea.sri.gob.ec',
     Fiscalía: 'www.gestiondefiscalias.gob.ec',
@@ -135,6 +142,39 @@ const mockLookup = async (
 
 type LookupProjector = (data: unknown) => unknown;
 
+const cookiePair = (setCookie: string): string | undefined => {
+    const separator = setCookie.indexOf(';');
+    const pair = (separator === -1 ? setCookie : setCookie.slice(0, separator)).trim();
+
+    return pair.includes('=') ? pair : undefined;
+};
+
+const setCookieList = (headers: Headers): string[] => {
+    const withGetSetCookie = headers as Headers & { getSetCookie?: () => string[] };
+    const separate = withGetSetCookie.getSetCookie?.() ?? [];
+
+    if (separate.length > 1) {
+        return separate;
+    }
+
+    const combined = headers.get('set-cookie') ?? separate[0] ?? '';
+
+    return combined.split(/,(?=\s*[^;,\s]+=)/);
+};
+
+const cookieHeaderFrom = (headers: Headers): string | undefined => {
+    const pairs = setCookieList(headers)
+        .map(cookiePair)
+        .filter((pair): pair is string => pair !== undefined);
+
+    return pairs.length > 0 ? pairs.join('; ') : undefined;
+};
+
+const fiscaliaRequestHeaders = (headers: Record<string, string> = {}): Record<string, string> => ({
+    'User-Agent': FISCALIA_USER_AGENT,
+    ...headers,
+});
+
 function request(
     url: string,
     init: RequestInit,
@@ -222,7 +262,11 @@ function request(
                 }
 
                 if (stage === 'session' || !project) {
-                    return { data: null, diagnostics };
+                    return {
+                        data: null,
+                        diagnostics,
+                        cookieHeader: cookieHeaderFrom(response.headers),
+                    };
                 }
 
                 let parsed: unknown;
@@ -322,20 +366,28 @@ export const lookupFiscalia = async (value: string, options: types.FiscaliaOptio
 
     if (options.initializeSession) {
         const entryEndpoint = configuredSourceUrl(config.source.fiscaliaEntry, 'Fiscalía');
+        const session = await request(
+            entryEndpoint,
+            { credentials: 'include', headers: fiscaliaRequestHeaders() },
+            options,
+            'session',
+        );
 
-        await request(entryEndpoint, { credentials: 'include' }, options, 'session');
+        fiscaliaCookieHeader = session.cookieHeader;
         options.onSessionInitialized?.();
     }
 
+    const cookieHeader = fiscaliaCookieHeader;
     const { data, diagnostics } = await request(
         lookupEndpoint,
         {
             method: 'POST',
-            credentials: 'include',
-            headers: {
+            credentials: cookieHeader ? 'omit' : 'include',
+            headers: fiscaliaRequestHeaders({
                 Accept: 'application/json',
                 'Content-Type': 'application/x-www-form-urlencoded',
-            },
+                ...(cookieHeader ? { Cookie: cookieHeader } : {}),
+            }),
             body: `tipo=buscar_general&criterio=5&valor=${encodeURIComponent(plate)}`,
         },
         options,

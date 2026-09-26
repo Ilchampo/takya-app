@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
         paddingBottom: 12,
         borderRadius: 12,
         borderWidth: 1.5,
-        overflow: 'visible',
+        overflow: 'hidden',
     },
     plateFocused: {
         borderColor: '#111111',
@@ -96,11 +96,13 @@ const styles = StyleSheet.create({
         color: '#5C5C5C',
         textAlign: 'center',
         includeFontPadding: false,
+        width: '100%',
     },
     countryInput: {
         fontSize: 16,
         lineHeight: 20,
         letterSpacing: 5,
+        paddingHorizontal: 46,
     },
     serial: {
         fontFamily: fonts.black,
